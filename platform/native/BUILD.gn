@@ -9,7 +9,6 @@ mojo_sdk_source_set("system") {
     "system_thunks.c",
     "system_thunks.h",
   ]
-  defines = [ "MOJO_SYSTEM_IMPLEMENTATION" ]
   mojo_sdk_deps = [ "mojo/public/c/system" ]
 
   # The GYP target analogous to this one builds this code into a
@@ -28,7 +27,6 @@ mojo_sdk_source_set("system_impl_private") {
     "system_impl_private_thunks.c",
     "system_impl_private_thunks.h",
   ]
-  defines = [ "MOJO_SYSTEM_IMPLEMENTATION" ]
   deps = [
     ":system_impl_private_api",
   ]

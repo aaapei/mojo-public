@@ -9,7 +9,6 @@
 #ifndef MOJO_PUBLIC_C_SYSTEM_FUNCTIONS_H_
 #define MOJO_PUBLIC_C_SYSTEM_FUNCTIONS_H_
 
-#include "mojo/public/c/system/system_export.h"
 #include "mojo/public/c/system/types.h"
 
 #ifdef __cplusplus
@@ -29,7 +28,7 @@ extern "C" {
 // guaranteed to be monotonically non-decreasing with the passage of real time.
 // Although the units are microseconds, the resolution of the clock may vary and
 // is typically in the range of ~1-15 ms.
-MOJO_SYSTEM_EXPORT MojoTimeTicks MojoGetTimeTicksNow(void);
+MojoTimeTicks MojoGetTimeTicksNow(void);
 
 // Closes the given |handle|.
 //
@@ -41,7 +40,7 @@ MOJO_SYSTEM_EXPORT MojoTimeTicks MojoGetTimeTicksNow(void);
 // happen before the close, be cancelled with result |MOJO_RESULT_CANCELLED| if
 // they properly overlap (this is likely the case with |MojoWait()|, etc.), or
 // fail with |MOJO_RESULT_INVALID_ARGUMENT| if they happen after.
-MOJO_SYSTEM_EXPORT MojoResult MojoClose(MojoHandle handle);
+MojoResult MojoClose(MojoHandle handle);
 
 // Waits on the given handle until one of the following happens:
 //   - A signal indicated by |signals| is satisfied.
@@ -74,11 +73,11 @@ MOJO_SYSTEM_EXPORT MojoResult MojoClose(MojoHandle handle);
 // If there are multiple waiters (on different threads, obviously) waiting on
 // the same handle and signal, and that signal becomes satisfied, all waiters
 // will be awoken.
-MOJO_SYSTEM_EXPORT MojoResult
-MojoWait(MojoHandle handle,
-         MojoHandleSignals signals,
-         MojoDeadline deadline,
-         struct MojoHandleSignalsState* signals_state);  // Optional out.
+MojoResult MojoWait(
+    MojoHandle handle,
+    MojoHandleSignals signals,
+    MojoDeadline deadline,
+    struct MojoHandleSignalsState* signals_state);  // Optional out.
 
 // Waits on |handles[0]|, ..., |handles[num_handles-1]| until:
 //   - (At least) one handle satisfies a signal indicated in its respective
@@ -119,13 +118,13 @@ MojoWait(MojoHandle handle,
 //       handles satisfying any of its signals.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if it is or becomes impossible that SOME
 //       |handle[i]| will ever satisfy any of the signals in |signals[i]|.
-MOJO_SYSTEM_EXPORT MojoResult
-MojoWaitMany(const MojoHandle* handles,
-             const MojoHandleSignals* signals,
-             uint32_t num_handles,
-             MojoDeadline deadline,
-             uint32_t* result_index,                          // Optional out
-             struct MojoHandleSignalsState* signals_states);  // Optional out
+MojoResult MojoWaitMany(
+    const MojoHandle* handles,
+    const MojoHandleSignals* signals,
+    uint32_t num_handles,
+    MojoDeadline deadline,
+    uint32_t* result_index,                          // Optional out
+    struct MojoHandleSignalsState* signals_states);  // Optional out
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -13,7 +13,6 @@
 #define MOJO_PUBLIC_C_SYSTEM_BUFFER_H_
 
 #include "mojo/public/c/system/macros.h"
-#include "mojo/public/c/system/system_export.h"
 #include "mojo/public/c/system/types.h"
 
 // |MojoCreateSharedBufferOptions|: Used to specify creation parameters for a
@@ -114,7 +113,7 @@ extern "C" {
 //       been reached (e.g., if the requested size was too large, or if the
 //       maximum number of handles was exceeded).
 //   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
-MOJO_SYSTEM_EXPORT MojoResult MojoCreateSharedBuffer(
+MojoResult MojoCreateSharedBuffer(
     const struct MojoCreateSharedBufferOptions* options,  // Optional.
     uint64_t num_bytes,                                   // In.
     MojoHandle* shared_buffer_handle);                    // Out.
@@ -135,7 +134,7 @@ MOJO_SYSTEM_EXPORT MojoResult MojoCreateSharedBuffer(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |buffer_handle| is not a valid buffer handle or |*options| is invalid).
 //   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
-MOJO_SYSTEM_EXPORT MojoResult MojoDuplicateBufferHandle(
+MojoResult MojoDuplicateBufferHandle(
     MojoHandle buffer_handle,
     const struct MojoDuplicateBufferHandleOptions* options,  // Optional.
     MojoHandle* new_buffer_handle);                          // Out.
@@ -162,11 +161,11 @@ MOJO_SYSTEM_EXPORT MojoResult MojoDuplicateBufferHandle(
 //       |offset| and |num_bytes| is not valid).
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the mapping operation itself failed
 //       (e.g., due to not having appropriate address space available).
-MOJO_SYSTEM_EXPORT MojoResult MojoMapBuffer(MojoHandle buffer_handle,
-                                            uint64_t offset,
-                                            uint64_t num_bytes,
-                                            void** buffer,  // Out.
-                                            MojoMapBufferFlags flags);
+MojoResult MojoMapBuffer(MojoHandle buffer_handle,
+                         uint64_t offset,
+                         uint64_t num_bytes,
+                         void** buffer,  // Out.
+                         MojoMapBufferFlags flags);
 
 // Unmaps a buffer pointer that was mapped by |MojoMapBuffer()|. |buffer| must
 // have been the result of |MojoMapBuffer()| (not some other pointer inside
@@ -177,7 +176,7 @@ MOJO_SYSTEM_EXPORT MojoResult MojoMapBuffer(MojoHandle buffer_handle,
 //   |MOJO_RESULT_OK| on success.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if |buffer| is invalid (e.g., is not the
 //       result of |MojoMapBuffer()| or has already been unmapped).
-MOJO_SYSTEM_EXPORT MojoResult MojoUnmapBuffer(void* buffer);  // In.
+MojoResult MojoUnmapBuffer(void* buffer);  // In.
 
 #ifdef __cplusplus
 }  // extern "C"

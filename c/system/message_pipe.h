@@ -10,7 +10,6 @@
 #define MOJO_PUBLIC_C_SYSTEM_MESSAGE_PIPE_H_
 
 #include "mojo/public/c/system/macros.h"
-#include "mojo/public/c/system/system_export.h"
 #include "mojo/public/c/system/types.h"
 
 // |MojoCreateMessagePipeOptions|: Used to specify creation parameters for a
@@ -90,7 +89,7 @@ extern "C" {
 //       |*options| is invalid).
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
 //       been reached.
-MOJO_SYSTEM_EXPORT MojoResult MojoCreateMessagePipe(
+MojoResult MojoCreateMessagePipe(
     const struct MojoCreateMessagePipeOptions* options,  // Optional.
     MojoHandle* message_pipe_handle0,                    // Out.
     MojoHandle* message_pipe_handle1);                   // Out.
@@ -123,13 +122,12 @@ MOJO_SYSTEM_EXPORT MojoResult MojoCreateMessagePipe(
 //
 // TODO(vtl): Add a notion of capacity for message pipes, and return
 // |MOJO_RESULT_SHOULD_WAIT| if the message pipe is full.
-MOJO_SYSTEM_EXPORT MojoResult
-    MojoWriteMessage(MojoHandle message_pipe_handle,
-                     const void* bytes,  // Optional.
-                     uint32_t num_bytes,
-                     const MojoHandle* handles,  // Optional.
-                     uint32_t num_handles,
-                     MojoWriteMessageFlags flags);
+MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,
+                            const void* bytes,  // Optional.
+                            uint32_t num_bytes,
+                            const MojoHandle* handles,  // Optional.
+                            uint32_t num_handles,
+                            MojoWriteMessageFlags flags);
 
 // Reads the next message from a message pipe, or indicates the size of the
 // message if it cannot fit in the provided buffers. The message will be read
@@ -162,13 +160,12 @@ MOJO_SYSTEM_EXPORT MojoResult
 //
 // TODO(vtl): Reconsider the |MOJO_RESULT_RESOURCE_EXHAUSTED| error code; should
 // distinguish this from the hitting-system-limits case.
-MOJO_SYSTEM_EXPORT MojoResult
-    MojoReadMessage(MojoHandle message_pipe_handle,
-                    void* bytes,            // Optional out.
-                    uint32_t* num_bytes,    // Optional in/out.
-                    MojoHandle* handles,    // Optional out.
-                    uint32_t* num_handles,  // Optional in/out.
-                    MojoReadMessageFlags flags);
+MojoResult MojoReadMessage(MojoHandle message_pipe_handle,
+                           void* bytes,            // Optional out.
+                           uint32_t* num_bytes,    // Optional in/out.
+                           MojoHandle* handles,    // Optional out.
+                           uint32_t* num_handles,  // Optional in/out.
+                           MojoReadMessageFlags flags);
 
 #ifdef __cplusplus
 }  // extern "C"
