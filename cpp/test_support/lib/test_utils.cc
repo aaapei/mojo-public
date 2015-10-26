@@ -69,29 +69,5 @@ bool DiscardMessage(const MessagePipeHandle& handle) {
   return rv == MOJO_RESULT_OK;
 }
 
-void IterateAndReportPerf(const char* test_name,
-                          const char* sub_test_name,
-                          PerfTestSingleIteration single_iteration,
-                          void* closure) {
-  // TODO(vtl): These should be specifiable using command-line flags.
-  static const size_t kGranularity = 100;
-  static const MojoTimeTicks kPerftestTimeMicroseconds = 3 * 1000000;
-
-  const MojoTimeTicks start_time = GetTimeTicksNow();
-  MojoTimeTicks end_time;
-  size_t iterations = 0;
-  do {
-    for (size_t i = 0; i < kGranularity; i++)
-      (*single_iteration)(closure);
-    iterations += kGranularity;
-
-    end_time = GetTimeTicksNow();
-  } while (end_time - start_time < kPerftestTimeMicroseconds);
-
-  MojoTestSupportLogPerfResult(test_name, sub_test_name,
-                               1000000.0 * iterations / (end_time - start_time),
-                               "iterations/second");
-}
-
 }  // namespace test
 }  // namespace mojo

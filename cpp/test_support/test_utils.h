@@ -25,15 +25,6 @@ bool ReadTextMessage(const MessagePipeHandle& handle, std::string* text);
 // block. It will fail if no message is available to discard.)
 bool DiscardMessage(const MessagePipeHandle& handle);
 
-// Run |single_iteration| an appropriate number of times and report its
-// performance appropriately. (This actually runs |single_iteration| for a fixed
-// amount of time and reports the number of iterations per unit time.)
-typedef void (*PerfTestSingleIteration)(void* closure);
-void IterateAndReportPerf(const char* test_name,
-                          const char* sub_test_name,
-                          PerfTestSingleIteration single_iteration,
-                          void* closure);
-
 }  // namespace test
 }  // namespace mojo
 
