@@ -40,6 +40,6 @@ mojo_sdk_source_set("perftests") {
   mojo_sdk_deps = [
     "mojo/public/c/environment",
     "mojo/public/cpp/system",
-    "mojo/public/cpp/test_support:test_utils",
+    "mojo/public/cpp/test_support",
   ]
 }
