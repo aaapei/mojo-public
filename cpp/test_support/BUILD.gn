@@ -4,19 +4,17 @@
 
 import("../../mojo_sdk.gni")
 
-# This target depends on mojo/public/c/test_support.
+# This target does not come with an implementation. Currently, the
+# implementation is provided by the EDK targets that actually produce the
+# (native) test binary (see //mojo/edk/test:test_support_impl).
 mojo_sdk_source_set("test_support") {
   testonly = true
 
   sources = [
-    "lib/test_support.cc",
     "test_support.h",
   ]
 
-  mojo_sdk_deps = [
-    "mojo/public/c/test_support",
-    "mojo/public/cpp/system",
-  ]
+  mojo_sdk_deps = [ "mojo/public/cpp/system" ]
 }
 
 # This target should be "pure Mojo" and have no external dependencies.

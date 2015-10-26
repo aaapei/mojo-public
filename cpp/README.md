@@ -50,9 +50,8 @@ especially used to communicate with Mojo services.
 Test Support
 ------------
 
-The test_support/ subdirectory contains C++ wrappers of the test-only API
-defined in mojo/public/c/test_support/. It is not meant for general use by Mojo
-applications.
+The test_support/ subdirectory contains C++ test support functionality for
+"internal" tests. It is not meant for general use by Mojo applications.
 
 Utility
 -------

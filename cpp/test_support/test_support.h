@@ -8,22 +8,16 @@
 #include <string>
 #include <vector>
 
-#include "mojo/public/c/test_support/test_support.h"
-
 namespace mojo {
 namespace test {
 
-inline void LogPerfResult(const char* test_name,
-                          const char* sub_test_name,
-                          double value,
-                          const char* units) {
-  MojoTestSupportLogPerfResult(test_name, sub_test_name, value, units);
-}
+void LogPerfResult(const char* test_name,
+                   const char* sub_test_name,
+                   double value,
+                   const char* units);
 
 // Opens text file relative to the source root for reading.
-inline FILE* OpenSourceRootRelativeFile(const std::string& relative_path) {
-  return MojoTestSupportOpenSourceRootRelativeFile(relative_path.c_str());
-}
+FILE* OpenSourceRootRelativeFile(const std::string& relative_path);
 
 // Returns the list of regular files in a directory relative to the source root.
 std::vector<std::string> EnumerateSourceRootRelativeDirectory(
