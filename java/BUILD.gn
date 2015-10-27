@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import("//build/config/android/rules.gni")
-import("../mojo.gni")
 
 android_library("system") {
   java_files = [
@@ -21,6 +20,22 @@ android_library("system") {
     "system/src/org/chromium/mojo/system/SharedBufferHandle.java",
     "system/src/org/chromium/mojo/system/UntypedHandle.java",
     "system/src/org/chromium/mojo/system/RunLoop.java",
+  ]
+}
+
+android_library("application") {
+  java_files = [
+    "application/src/org/chromium/mojo/application/ApplicationConnection.java",
+    "application/src/org/chromium/mojo/application/ApplicationDelegate.java",
+    "application/src/org/chromium/mojo/application/ApplicationImpl.java",
+    "application/src/org/chromium/mojo/application/ApplicationRunner.java",
+    "application/src/org/chromium/mojo/application/ServiceFactoryBinder.java",
+    "application/src/org/chromium/mojo/application/ShellHelper.java",
+  ]
+  deps = [
+    ":bindings",
+    ":system",
+    "../interfaces/application:application_java",
   ]
 }
 
@@ -59,22 +74,4 @@ android_library("bindings") {
   ]
 
   srcjar_deps = [ "../interfaces/bindings:bindings_java_sources" ]
-}
-
-if (mojo_use_application_in_sdk) {
-  android_library("application") {
-    java_files = [
-      "application/src/org/chromium/mojo/application/ApplicationConnection.java",
-      "application/src/org/chromium/mojo/application/ApplicationDelegate.java",
-      "application/src/org/chromium/mojo/application/ApplicationImpl.java",
-      "application/src/org/chromium/mojo/application/ApplicationRunner.java",
-      "application/src/org/chromium/mojo/application/ServiceFactoryBinder.java",
-      "application/src/org/chromium/mojo/application/ShellHelper.java",
-    ]
-    deps = [
-      ":bindings",
-      ":system",
-      "../interfaces/application:application_java",
-    ]
-  }
 }

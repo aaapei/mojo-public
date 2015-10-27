@@ -10,15 +10,12 @@ group("public") {
   deps = [
     ":libmojo_sdk",
     ":sdk",
+    "cpp/application:standalone",
     "cpp/bindings",
     "cpp/environment:standalone",
     "cpp/utility",
     "interfaces/bindings/tests:test_interfaces",
   ]
-
-  if (mojo_use_application_in_sdk) {
-    deps += [ "cpp/application:standalone" ]
-  }
 
   if (is_linux && !is_fnl) {
     deps += [
@@ -29,32 +26,24 @@ group("public") {
 
   if (is_android) {
     deps += [
+      "java:application",
       "java:system",
       "java:bindings",
     ]
-  }
-
-  if (is_android && mojo_use_application_in_sdk) {
-    deps += [ "java:application" ]
   }
 }
 
 group("sdk") {
   deps = [
     "c/system",
+    "cpp/application:standalone",
     "cpp/bindings",
     "cpp/environment:standalone",
     "cpp/utility",
+    "interfaces/application",
     "interfaces/bindings",
     "js",
   ]
-
-  if (mojo_use_application_in_sdk) {
-    deps += [
-      "cpp/application:standalone",
-      "interfaces/application",
-    ]
-  }
 
   if (mojo_use_network_in_sdk) {
     deps += [ "interfaces/network" ]
