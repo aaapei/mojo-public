@@ -34,7 +34,7 @@ Array<Array<ScopedHandle>> CreateTestNestedHandleArray() {
     array[i] = nested_array.Pass();
   }
 
-  return array.Pass();
+  return array;
 }
 
 class SerializationWarningTest : public testing::Test {

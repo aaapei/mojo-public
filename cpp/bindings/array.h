@@ -139,7 +139,7 @@ class Array {
     Array result;
     result.is_null_ = is_null_;
     Traits::Clone(vec_, &result.vec_);
-    return result.Pass();
+    return result;
   }
 
   // Indicates whether the contents of this array are equal to |other|. A null
@@ -255,7 +255,7 @@ struct TypeConverter<Array<T>, std::vector<E>> {
     auto result = Array<T>::New(input.size());
     for (size_t i = 0; i < input.size(); ++i)
       result[i] = TypeConverter<T, E>::Convert(input[i]);
-    return result.Pass();
+    return result;
   }
 };
 
@@ -284,7 +284,7 @@ struct TypeConverter<Array<T>, std::set<E>> {
     Array<T> result = Array<T>::New(0u);
     for (auto i : input)
       result.push_back(TypeConverter<T, E>::Convert(i));
-    return result.Pass();
+    return result;
   }
 };
 

@@ -98,7 +98,7 @@ FooPtr MakeFoo() {
   foo->output_streams = output_streams.Pass();
   foo->array_of_array_of_bools = array_of_array_of_bools.Pass();
 
-  return foo.Pass();
+  return foo;
 }
 
 // Check that the given |Foo| is identical to the one made by |MakeFoo()|.

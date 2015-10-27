@@ -178,7 +178,7 @@ InterfacePtr<Interface> MakeProxy(
   InterfacePtr<Interface> ptr;
   if (info.is_valid())
     ptr.Bind(info.Pass(), waiter);
-  return ptr.Pass();
+  return ptr;
 }
 
 }  // namespace mojo

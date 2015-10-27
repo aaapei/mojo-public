@@ -176,7 +176,7 @@ class Binding {
     DestroyRouter();
     // TODO(vtl): The |.Pass()| below is only needed due to an MSVS bug; remove
     // it once that's fixed.
-    return request.Pass();
+    return request;
   }
 
   // Sets an error handler that will be called if a connection error occurs on

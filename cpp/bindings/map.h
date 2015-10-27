@@ -136,7 +136,7 @@ class Map {
     Map result;
     result.is_null_ = is_null_;
     Traits::Clone(map_, &result.map_);
-    return result.Pass();
+    return result;
   }
 
   // Indicates whether the contents of this map are equal to those of another
@@ -274,7 +274,7 @@ struct TypeConverter<Map<MojoKey, MojoValue>, std::map<STLKey, STLValue>> {
       result.insert(TypeConverter<MojoKey, STLKey>::Convert(pair.first),
                     TypeConverter<MojoValue, STLValue>::Convert(pair.second));
     }
-    return result.Pass();
+    return result;
   }
 };
 

@@ -67,7 +67,7 @@ template <typename Interface>
 InterfaceRequest<Interface> MakeRequest(ScopedMessagePipeHandle handle) {
   InterfaceRequest<Interface> request;
   request.Bind(handle.Pass());
-  return request.Pass();
+  return request;
 }
 
 // Creates a new message pipe over which Interface is to be served. Binds the

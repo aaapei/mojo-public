@@ -26,7 +26,7 @@ RectPtr MakeRect(int32_t factor = 1) {
   rect->y = 2 * factor;
   rect->width = 10 * factor;
   rect->height = 20 * factor;
-  return rect.Pass();
+  return rect;
 }
 
 void CheckRect(const Rect& rect, int32_t factor = 1) {
@@ -49,7 +49,7 @@ MultiVersionStructPtr MakeMultiVersionStruct() {
   output->f_message_pipe = pipe.handle0.Pass();
   output->f_int16 = 42;
 
-  return output.Pass();
+  return output;
 }
 
 template <typename U, typename T>
@@ -77,7 +77,7 @@ U SerializeAndDeserialize(T input) {
   using RawUType = typename mojo::internal::RemoveStructPtr<U>::type;
   U output(RawUType::New());
   Deserialize_(output_data, output.get());
-  return output.Pass();
+  return output;
 }
 
 class StructTest : public testing::Test {

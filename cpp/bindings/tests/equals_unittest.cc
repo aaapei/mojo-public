@@ -17,7 +17,7 @@ RectPtr CreateRect() {
   r->y = 2;
   r->width = 3;
   r->height = 4;
-  return r.Pass();
+  return r;
 }
 
 class EqualsTest : public testing::Test {
