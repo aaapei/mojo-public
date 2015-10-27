@@ -31,7 +31,7 @@ class MojoEventStream extends Stream<List<int>> {
       : _handle = handle,
         _signals = signals,
         _isListening = false {
-    MojoResult result = MojoHandle.register(this);
+    MojoResult result = MojoHandle.registerFinalizer(this);
     if (!result.isOk) {
       throw "Failed to register the MojoHandle: $result.";
     }
@@ -98,6 +98,7 @@ class MojoEventStream extends Stream<List<int>> {
   Future _handleWatcherClose({bool immediate: false}) {
     assert(_handle != null);
     assert(MojoHandle._removeUnclosedHandle(_handle));
+    MojoHandleNatives.removeUnclosed(_handle.h);
     return MojoHandleWatcher.close(_handle.h, wait: !immediate).then((r) {
       if (_receivePort != null) {
         _receivePort.close();

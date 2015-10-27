@@ -9,13 +9,39 @@ class MojoCoreNatives {
 }
 
 class MojoHandleNatives {
-  static int register(Object eventStream, int handle)
-      native "MojoHandle_Register";
+  static Set<int> _unclosedHandles = new Set<int>();
+
+  static void addUnclosed(int handle) {
+    _unclosedHandles.add(handle);
+  }
+
+  static void removeUnclosed(int handle) {
+    _unclosedHandles.remove(handle);
+  }
+
+  static int registerFinalizer(Object eventStream, int handle)
+      native "MojoHandle_RegisterFinalizer";
+
   static int close(int handle) native "MojoHandle_Close";
+
   static List wait(int handle, int signals, int deadline)
       native "MojoHandle_Wait";
+
   static List waitMany(List<int> handles, List<int> signals, int deadline)
       native "MojoHandle_WaitMany";
+
+  // Called from the embedder's unhandled exception callback.
+  // Returns the number of successfully closed handles.
+  static int _closeUnclosedHandles() {
+    int count = 0;
+    _unclosedHandles.forEach((h) {
+      if (MojoHandleNatives.close(h) == 0) {
+        count++;
+      }
+    });
+    _unclosedHandles.clear();
+    return count;
+  }
 }
 
 class MojoHandleWatcherNatives {

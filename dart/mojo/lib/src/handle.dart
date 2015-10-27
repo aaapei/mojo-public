@@ -19,7 +19,9 @@ class MojoHandle {
   int get h => _h;
 
   MojoHandle(this._h, {String description}) {
+    // TODO(zra): Merge unclosed handle tracking.
     assert(_addUnclosedHandle(this, description: description));
+    MojoHandleNatives.addUnclosed(_h);
   }
 
   MojoHandle._internal(this._h);
@@ -28,6 +30,7 @@ class MojoHandle {
 
   MojoResult close() {
     assert(_removeUnclosedHandle(this));
+    MojoHandleNatives.removeUnclosed(_h);
     int result = MojoHandleNatives.close(_h);
     _h = INVALID;
     return new MojoResult(result);
@@ -35,6 +38,7 @@ class MojoHandle {
 
   MojoHandle pass() {
     assert(_removeUnclosedHandle(this));
+    MojoHandleNatives.removeUnclosed(_h);
     return this;
   }
 
@@ -87,9 +91,9 @@ class MojoHandle {
     return new MojoWaitManyResult(new MojoResult(result[0]), result[1], states);
   }
 
-  static MojoResult register(MojoEventStream eventStream) {
-    return new MojoResult(
-        MojoHandleNatives.register(eventStream, eventStream._handle.h));
+  static MojoResult registerFinalizer(MojoEventStream eventStream) {
+    return new MojoResult(MojoHandleNatives.registerFinalizer(
+        eventStream, eventStream._handle.h));
   }
 
   static HashMap<int, _HandleCreationRecord> _unclosedHandles = new HashMap();
@@ -104,8 +108,8 @@ class MojoHandle {
       stack = s;
     }
 
-    var handleCreate = new _HandleCreationRecord(
-        handle, stack, description: description);
+    var handleCreate =
+        new _HandleCreationRecord(handle, stack, description: description);
     _unclosedHandles[handle.h] = handleCreate;
     return true;
   }
