@@ -218,11 +218,11 @@ template("mojo_native_application") {
       if (current_cpu == "pnacl") {
         input_file_extension = ".pexe"
         output_file_extension = ".pexe.mojo"
-        content_handler = "pexe_content_handler"
+        content_handler = "content_handler_nonsfi_pexe"
       } else {
         input_file_extension = ".nexe"
         output_file_extension = "_${target_cpu}.nexe.mojo"
-        content_handler = "nacl_content_handler"
+        content_handler = "content_handler_sfi"
       }
       input_file = "${base_target_name}${input_file_extension}"
       output_file = "${base_target_name}${output_file_extension}"
