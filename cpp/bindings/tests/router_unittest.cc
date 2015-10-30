@@ -301,8 +301,8 @@ TEST_F(RouterTest, LazyResponses) {
 }
 
 // Tests that if the receiving application destroys the responder_ without
-// sending a response, then we close the Pipe as a way of signalling an
-// error condition to the caller.
+// sending a response, then we close the Pipe as a way of signaling an error
+// condition to the caller.
 TEST_F(RouterTest, MissingResponses) {
   internal::Router router0(handle0_.Pass(), internal::FilterChain());
   internal::Router router1(handle1_.Pass(), internal::FilterChain());
