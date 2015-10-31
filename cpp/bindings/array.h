@@ -37,6 +37,9 @@ class Array {
   // Constructs a new array that is null.
   Array() : is_null_(true) {}
 
+  // Makes null arrays implicitly constructible from |nullptr|.
+  Array(decltype(nullptr)) : is_null_(true) {}
+
   ~Array() {}
 
   // Moves the contents of |other| into this array.

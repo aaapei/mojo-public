@@ -40,21 +40,23 @@ TEST_F(ArrayTest, Basic) {
   }
 }
 
-TEST_F(ArrayTest, DefaultConstructor) {
-  Array<int32_t> array;
+void NullptrConstructorTestHelper(Array<int32_t> array) {
+  EXPECT_TRUE(array.is_null());
+  EXPECT_EQ(0u, array.size());
+}
+
+TEST_F(ArrayTest, NullptrConstructor) {
+  Array<int32_t> array(nullptr);
   EXPECT_TRUE(array.is_null());
   EXPECT_EQ(0u, array.size());
 
   array.push_back(123);
   EXPECT_FALSE(array.is_null());
   EXPECT_EQ(1u, array.size());
-  EXPECT_EQ(123, array[0]);
 
-  array.push_back(456);
-  EXPECT_FALSE(array.is_null());
-  EXPECT_EQ(2u, array.size());
-  EXPECT_EQ(123, array[0]);
-  EXPECT_EQ(456, array[1]);
+  // Test some implicit constructions of |Array<int32_t>| from a |nullptr|.
+  array = nullptr;
+  NullptrConstructorTestHelper(nullptr);
 }
 
 // Tests that basic Array<bool> operations work.
