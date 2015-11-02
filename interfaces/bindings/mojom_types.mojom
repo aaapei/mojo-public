@@ -227,7 +227,15 @@ struct EnumValue {
   // The type key of the enum that this value belongs to.
   string enum_type_key;
 
-  // The integer value corresponding to this enum value.
+  // This is the value specified in the right-hand-side of the optional
+  // initializer of an enum value declaration. The value must be a literal value
+  // of integer type or a UserValueReference whose |resolved_concrete_value| is
+  // one of those.
+  Value? initializer_value;
+
+  // The resolved concrete integer value corresponding to this enum value.
+  // This number is computed based on the |specified_value|s of all of the
+  // EnumValues in a MojomEnum.
   int32 int_value;
 };
 
