@@ -100,6 +100,7 @@ abstract class Stub extends core.MojoEventStreamListener {
   Future close({bool immediate: false}) {
     if (isOpen &&
         !immediate &&
+        !isPeerClosed &&
         (isInHandler || (_outstandingResponseFutures > 0))) {
       // Either close() is being called from within handleRead() or
       // handleWrite(), or close() is being called while there are outstanding
