@@ -13,3 +13,15 @@ part of core;
 int getTimeTicksNow() {
   return MojoCoreNatives.getTimeTicksNow();
 }
+
+class MojoInternalError {
+  final String _msg;
+  MojoInternalError(this._msg);
+  String toString() => "MojoInternalError: $_msg";
+}
+
+class MojoApiError {
+  final String _msg;
+  MojoApiError(this._msg);
+  String toString() => "MojoApiError: $_msg";
+}

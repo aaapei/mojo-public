@@ -4,83 +4,107 @@
 
 part of bindings;
 
-class ProxyCloseException {
+class ProxyError {
   final String message;
-  ProxyCloseException(this.message);
-  String toString() => message;
+  ProxyError(this.message);
+  String toString() => "ProxyError: $message";
 }
 
 abstract class Proxy extends core.MojoEventStreamListener {
-  Map<int, Completer> _completerMap;
+  final Map<int, Completer> _completerMap = {};
+  Completer _errorCompleter = new Completer();
+  Set<Completer> _errorCompleters;
   int _nextId = 0;
   int _version = 0;
+  int _pendingCount = 0;
+
+  Proxy.fromEndpoint(core.MojoMessagePipeEndpoint endpoint)
+      : super.fromEndpoint(endpoint);
+
+  Proxy.fromHandle(core.MojoHandle handle) : super.fromHandle(handle);
+
+  Proxy.unbound() : super.unbound();
+
+  void handleResponse(ServiceMessage reader);
+
+  /// If there is an error in using this proxy, this future completes with
+  /// a ProxyError.
+  Future get errorFuture => _errorCompleter.future;
 
   /// Version of this interface that the remote side supports. Updated when a
   /// call to [queryVersion] or [requireVersion] is made.
   int get version => _version;
 
-  Proxy.fromEndpoint(core.MojoMessagePipeEndpoint endpoint)
-      : _completerMap = {},
-        super.fromEndpoint(endpoint);
-
-  Proxy.fromHandle(core.MojoHandle handle)
-      : _completerMap = {},
-        super.fromHandle(handle);
-
-  Proxy.unbound()
-      : _completerMap = {},
-        super.unbound();
-
-  void handleResponse(ServiceMessage reader);
-
   void handleRead() {
     // Query how many bytes are available.
     var result = endpoint.query();
-    assert(result.status.isOk || result.status.isResourceExhausted);
+    if (!result.status.isOk && !result.status.isResourceExhausted) {
+      proxyError("Query of message pipe endpoint failed");
+      return;
+    }
 
     // Read the data.
     var bytes = new ByteData(result.bytesRead);
     var handles = new List<core.MojoHandle>(result.handlesRead);
     result = endpoint.read(bytes, result.bytesRead, handles);
-    assert(result.status.isOk || result.status.isResourceExhausted);
-    var message = new ServiceMessage.fromMessage(new Message(bytes, handles));
-    if (ControlMessageHandler.isControlMessage(message)) {
-      _handleControlMessageResponse(message);
+    if (!result.status.isOk && !result.status.isResourceExhausted) {
+      proxyError("Read from message pipe endpoint failed");
       return;
     }
-    handleResponse(message);
+    try {
+      var message = new ServiceMessage.fromMessage(new Message(bytes, handles));
+      _pendingCount--;
+      if (ControlMessageHandler.isControlMessage(message)) {
+        _handleControlMessageResponse(message);
+        return;
+      }
+      handleResponse(message);
+    } on MojoCodecError catch (e) {
+      proxyError(e.toString());
+      close(immediate: true);
+    }
   }
 
   void handleWrite() {
-    throw 'Unexpected write signal in proxy.';
+    proxyError("Unexpected writable signal");
   }
 
   @override
   Future close({bool immediate: false}) {
-    for (var completer in _completerMap.values) {
-      completer.completeError(new ProxyCloseException('Proxy closed'));
-    }
+    // Drop the completers for outstanding calls. The Futures will never
+    // complete.
     _completerMap.clear();
+
+    // Signal to any pending calls that the Proxy is closed.
+    if (_pendingCount > 0) {
+      proxyError("The Proxy is closed.");
+    }
+
     return super.close(immediate: immediate);
   }
 
   void sendMessage(Struct message, int name) {
+    if (!isBound) {
+      proxyError("The Proxy is closed.");
+      return;
+    }
     if (!isOpen) {
       listen();
     }
     var header = new MessageHeader(name);
+
     var serviceMessage = message.serializeWithHeader(header);
     endpoint.write(serviceMessage.buffer, serviceMessage.buffer.lengthInBytes,
         serviceMessage.handles);
     if (!endpoint.status.isOk) {
-      throw "message pipe write failed - ${endpoint.status}";
+      proxyError("Write to message pipe endpoint failed.");
     }
   }
 
   Future sendMessageWithRequestId(Struct message, int name, int id, int flags) {
     var completer = new Completer();
     if (!isBound) {
-      completer.completeError(new ProxyCloseException('Proxy closed'));
+      proxyError("The Proxy is closed.");
       return completer.future;
     }
     if (!isOpen) {
@@ -97,8 +121,9 @@ abstract class Proxy extends core.MojoEventStreamListener {
 
     if (endpoint.status.isOk) {
       _completerMap[id] = completer;
+      _pendingCount++;
     } else {
-      completer.completeError(new ProxyCloseException('Proxy closed'));
+      proxyError("Write to message pipe endpoint failed.");
     }
     return completer.future;
   }
@@ -144,24 +169,80 @@ abstract class Proxy extends core.MojoEventStreamListener {
     params.requireVersion = new icm.RequireVersion();
     params.requireVersion.version = requiredVersion;
     // TODO(johnmccutchan): We've set _version above but if this sendMessage
-    // throws an exception we may not have sent the RunOrClose message. Should
+    // fails we may not have sent the RunOrClose message. Should
     // we reset _version in that case?
     sendMessage(params, icm.kRunOrClosePipeMessageId);
   }
 
+  void proxyError(String msg) {
+    if (!_errorCompleter.isCompleted) {
+      errorFuture.whenComplete(() {
+        _errorCompleter = new Completer();
+      });
+      _errorCompleter.complete(new ProxyError(msg));
+    }
+  }
+
+  /// [responseOrError] returns a [Future] that completes to whatever [f]
+  /// completes to unless [errorFuture] completes first. When [errorFuture]
+  /// completes first, the [Future] returned by [responseOrError] completes with
+  /// an error using the object that [errorFuture] completed with.
+  ///
+  /// Example usage:
+  ///
+  /// try {
+  ///   result = await MyProxy.responseOrError(MyProxy.ptr.call(a,b,c));
+  /// } catch (e) {
+  ///   ...
+  /// }
+  Future responseOrError(Future f) {
+    assert(f != null);
+    if (_errorCompleters == null) {
+      _errorCompleters = new Set<Completer>();
+      errorFuture.then((e) {
+        for (var completer in _errorCompleters) {
+          assert(!completer.isCompleted);
+          completer.completeError(e);
+        }
+        _errorCompleters.clear();
+        _errorCompleters = null;
+      });
+    }
+
+    Completer callCompleter = new Completer();
+    f.then((callResult) {
+      if (!callCompleter.isCompleted) {
+        _errorCompleters.remove(callCompleter);
+        callCompleter.complete(callResult);
+      }
+    });
+    _errorCompleters.add(callCompleter);
+    return callCompleter.future;
+  }
+
   _handleControlMessageResponse(ServiceMessage message) {
     // We only expect to see Run messages.
-    assert(message.header.type == icm.kRunMessageId);
+    if (message.header.type != icm.kRunMessageId) {
+      proxyError("Unexpected header type in control message response: "
+          "${message.header.type}");
+      return;
+    }
+
     var response = icm.RunResponseMessageParams.deserialize(message.payload);
     if (!message.header.hasRequestId) {
-      throw 'Expected a message with a valid request Id.';
+      proxyError("Expected a message with a valid request Id.");
+      return;
     }
     Completer c = completerMap[message.header.requestId];
     if (c == null) {
-      throw 'Message had unknown request Id: ${message.header.requestId}';
+      proxyError("Message had unknown request Id: ${message.header.requestId}");
+      return;
     }
     completerMap.remove(message.header.requestId);
-    assert(!c.isCompleted);
+    if (c.isCompleted) {
+      proxyError("Control message response completer already completed");
+      return;
+    }
     c.complete(response);
   }
 }

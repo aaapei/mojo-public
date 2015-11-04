@@ -33,7 +33,8 @@ class MojoEventStream extends Stream<List<int>> {
         _isListening = false {
     MojoResult result = MojoHandle.registerFinalizer(this);
     if (!result.isOk) {
-      throw "Failed to register the MojoHandle: $result.";
+      throw new MojoInternalError(
+          "Failed to register the MojoHandle: $result.");
     }
   }
 
@@ -42,7 +43,7 @@ class MojoEventStream extends Stream<List<int>> {
   StreamSubscription<List<int>> listen(void onData(List event),
       {Function onError, void onDone(), bool cancelOnError}) {
     if (_isListening) {
-      throw "Listen has already been called: $_handle.";
+      throw new MojoApiError("Listen has already been called: $_handle.");
     }
     _receivePort = new ReceivePort();
     _sendPort = _receivePort.sendPort;
@@ -56,7 +57,7 @@ class MojoEventStream extends Stream<List<int>> {
       var res = new MojoResult(
           MojoHandleWatcher.add(_handle.h, _sendPort, _signals.value));
       if (!res.isOk) {
-        throw "MojoHandleWatcher add failed: $res";
+        throw new MojoInternalError("MojoHandleWatcher add failed: $res");
       }
     }
 
@@ -96,7 +97,6 @@ class MojoEventStream extends Stream<List<int>> {
   }
 
   Future _handleWatcherClose({bool immediate: false}) {
-    assert(_handle != null);
     assert(MojoHandle._removeUnclosedHandle(_handle));
     MojoHandleNatives.removeUnclosed(_handle.h);
     return MojoHandleWatcher.close(_handle.h, wait: !immediate).then((r) {
@@ -109,7 +109,6 @@ class MojoEventStream extends Stream<List<int>> {
   }
 
   void _localClose() {
-    assert(_handle != null);
     _handle.close();
     _handle = null;
     if (_receivePort != null) {
@@ -122,13 +121,13 @@ class MojoEventStream extends Stream<List<int>> {
     if (_controller.isPaused) {
       var res = new MojoResult(MojoHandleWatcher.remove(_handle.h));
       if (!res.isOk) {
-        throw "MojoHandleWatcher add failed: $res";
+        throw new MojoInternalError("MojoHandleWatcher add failed: $res");
       }
     } else {
       var res = new MojoResult(
           MojoHandleWatcher.add(_handle.h, _sendPort, _signals.value));
       if (!res.isOk) {
-        throw "MojoHandleWatcher add failed: $res";
+        throw new MojoInternalError("MojoHandleWatcher add failed: $res");
       }
     }
   }
@@ -166,7 +165,9 @@ class MojoEventStreamListener {
   MojoEventStreamListener.unbound();
 
   void bind(MojoMessagePipeEndpoint endpoint) {
-    assert(!isBound);
+    if (isBound) {
+      throw new MojoApiError("MojoEventStreamListener is already bound.");
+    }
     _endpoint = endpoint;
     _eventStream = new MojoEventStream(endpoint.handle);
     _isOpen = false;
@@ -175,7 +176,9 @@ class MojoEventStreamListener {
   }
 
   void bindFromHandle(MojoHandle handle) {
-    assert(!isBound);
+    if (isBound) {
+      throw new MojoApiError("MojoEventStreamListener is already bound.");
+    }
     _endpoint = new MojoMessagePipeEndpoint(handle);
     _eventStream = new MojoEventStream(handle);
     _isOpen = false;
@@ -184,7 +187,12 @@ class MojoEventStreamListener {
   }
 
   StreamSubscription<List<int>> listen() {
-    assert(isBound && (subscription == null));
+    if (!isBound) {
+      throw new MojoApiError("MojoEventStreamListener is unbound.");
+    }
+    if (subscription != null) {
+      throw new MojoApiError("Listen has already been called.");
+    }
     _isOpen = true;
     subscription = _eventStream.listen((List<int> event) {
       if (!_isOpen) {
