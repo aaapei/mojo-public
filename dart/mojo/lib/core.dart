@@ -14,6 +14,7 @@ part 'src/buffer.dart';
 part 'src/data_pipe.dart';
 part 'src/drain_data.dart';
 part 'src/event_stream.dart';
+part 'src/fill_data.dart';
 part 'src/handle.dart';
 part 'src/message_pipe.dart';
 part 'src/types.dart';
