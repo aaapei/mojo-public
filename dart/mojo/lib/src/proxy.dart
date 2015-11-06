@@ -36,23 +36,14 @@ abstract class Proxy extends core.MojoEventStreamListener {
   int get version => _version;
 
   void handleRead() {
-    // Query how many bytes are available.
-    var result = endpoint.query();
-    if (!result.status.isOk && !result.status.isResourceExhausted) {
-      proxyError("Query of message pipe endpoint failed");
-      return;
-    }
-
-    // Read the data.
-    var bytes = new ByteData(result.bytesRead);
-    var handles = new List<core.MojoHandle>(result.handlesRead);
-    result = endpoint.read(bytes, result.bytesRead, handles);
-    if (!result.status.isOk && !result.status.isResourceExhausted) {
+    var result = endpoint.queryAndRead();
+    if ((result.data == null) || (result.dataLength == 0)) {
       proxyError("Read from message pipe endpoint failed");
       return;
     }
     try {
-      var message = new ServiceMessage.fromMessage(new Message(bytes, handles));
+      var message = new ServiceMessage.fromMessage(new Message(result.data,
+          result.handles, result.dataLength, result.handlesLength));
       _pendingCount--;
       if (ControlMessageHandler.isControlMessage(message)) {
         _handleControlMessageResponse(message);

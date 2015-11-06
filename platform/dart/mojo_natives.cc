@@ -37,6 +37,7 @@ namespace dart {
   V(MojoMessagePipe_Create, 1)             \
   V(MojoMessagePipe_Write, 5)              \
   V(MojoMessagePipe_Read, 5)               \
+  V(MojoMessagePipe_QueryAndRead, 3)       \
   V(Mojo_GetTimeTicksNow, 0)               \
   V(MojoHandle_Close, 1)                   \
   V(MojoHandle_Wait, 3)                    \
@@ -716,6 +717,127 @@ void MojoMessagePipe_Read(Dart_NativeArguments arguments) {
   Dart_ListSetAt(list, 1, Dart_NewInteger(blen));
   Dart_ListSetAt(list, 2, Dart_NewInteger(hlen));
   Dart_SetReturnValue(arguments, list);
+}
+
+void ByteArrayFinalizer(void* isolate_callback_data,
+                        Dart_WeakPersistentHandle handle,
+                        void* peer) {
+  uint8_t* byte_array = reinterpret_cast<uint8_t*>(peer);
+  delete[] byte_array;
+}
+
+void HandleArrayFinalizer(void* isolate_callback_data,
+                          Dart_WeakPersistentHandle handle,
+                          void* peer) {
+  uint32_t* handle_array = reinterpret_cast<uint32_t*>(peer);
+  delete[] handle_array;
+}
+
+void MojoMessagePipe_QueryAndRead(Dart_NativeArguments arguments) {
+  Dart_Handle err;
+  int64_t dart_handle;
+  int64_t flags = 0;
+  CHECK_INTEGER_ARGUMENT(arguments, 0, &dart_handle, Null);
+  CHECK_INTEGER_ARGUMENT(arguments, 1, &flags, Null);
+  Dart_Handle result = Dart_GetNativeArgument(arguments, 2);
+
+  Dart_Handle data = Dart_ListGetAt(result, 1);
+  Dart_Handle handles = Dart_ListGetAt(result, 2);
+
+  // Query the number of bytes and handles available.
+  uint32_t blen = 0;
+  uint32_t hlen = 0;
+  MojoResult res =
+      MojoReadMessage(static_cast<MojoHandle>(dart_handle), nullptr, &blen,
+                      nullptr, &hlen, static_cast<MojoReadMessageFlags>(flags));
+
+  if ((res != MOJO_RESULT_OK) && (res != MOJO_RESULT_RESOURCE_EXHAUSTED)) {
+    Dart_ListSetAt(result, 0, Dart_NewInteger(res));
+    Dart_ListSetAt(result, 1, data);
+    Dart_ListSetAt(result, 2, handles);
+    Dart_ListSetAt(result, 3, Dart_NewInteger(0));
+    Dart_ListSetAt(result, 4, Dart_NewInteger(0));
+    return;
+  }
+
+  Dart_TypedData_Type typ;
+  void* bytes = nullptr;
+  intptr_t bytes_len = 0;
+  if ((blen > 0) && Dart_IsNull(data)) {
+    uint8_t* new_byte_data = new uint8_t[blen];
+    data = Dart_NewExternalTypedData(Dart_TypedData_kByteData, new_byte_data,
+                                     blen);
+    MOJO_DCHECK(!Dart_IsError(data));
+    Dart_NewWeakPersistentHandle(data, new_byte_data, blen, ByteArrayFinalizer);
+  } else if (blen > 0) {
+    err = Dart_TypedDataAcquireData(data, &typ, &bytes, &bytes_len);
+    MOJO_DCHECK(!Dart_IsError(err));
+    err = Dart_TypedDataReleaseData(data);
+    MOJO_DCHECK(!Dart_IsError(err));
+    if (static_cast<uintptr_t>(bytes_len) < blen) {
+      uint8_t* new_byte_data = new uint8_t[blen];
+      data = Dart_NewExternalTypedData(Dart_TypedData_kByteData, new_byte_data,
+                                       blen);
+      MOJO_DCHECK(!Dart_IsError(data));
+      Dart_NewWeakPersistentHandle(data, new_byte_data, blen,
+                                   ByteArrayFinalizer);
+    }
+  }
+
+  void* handle_bytes = nullptr;
+  intptr_t handles_len = 0;
+  if ((hlen > 0) && Dart_IsNull(handles)) {
+    uint32_t* new_handle_data = new uint32_t[hlen];
+    handles = Dart_NewExternalTypedData(Dart_TypedData_kUint32, new_handle_data,
+                                        hlen);
+    MOJO_DCHECK(!Dart_IsError(handles));
+    Dart_NewWeakPersistentHandle(handles, new_handle_data,
+                                 hlen * sizeof(uint32_t), HandleArrayFinalizer);
+  } else if (hlen > 0) {
+    err = Dart_TypedDataAcquireData(handles, &typ, &handle_bytes, &handles_len);
+    MOJO_DCHECK(!Dart_IsError(err));
+    err = Dart_TypedDataReleaseData(handles);
+    MOJO_DCHECK(!Dart_IsError(err));
+    if (static_cast<uintptr_t>(handles_len) < hlen) {
+      uint32_t* new_handle_data = new uint32_t[hlen];
+      handles = Dart_NewExternalTypedData(Dart_TypedData_kUint32,
+                                          new_handle_data, hlen);
+      MOJO_DCHECK(!Dart_IsError(handles));
+      Dart_NewWeakPersistentHandle(handles, new_handle_data,
+                                   hlen * sizeof(uint32_t),
+                                   HandleArrayFinalizer);
+    }
+  }
+
+  if (blen > 0) {
+    err = Dart_TypedDataAcquireData(data, &typ, &bytes, &bytes_len);
+    MOJO_DCHECK(!Dart_IsError(err));
+  }
+
+  if (hlen > 0) {
+    err = Dart_TypedDataAcquireData(handles, &typ, &handle_bytes, &handles_len);
+    MOJO_DCHECK(!Dart_IsError(err));
+  }
+
+  res = MojoReadMessage(static_cast<MojoHandle>(dart_handle), bytes, &blen,
+                        reinterpret_cast<MojoHandle*>(handle_bytes), &hlen,
+                        static_cast<MojoReadMessageFlags>(flags));
+
+  if (blen > 0) {
+    err = Dart_TypedDataReleaseData(data);
+    MOJO_DCHECK(!Dart_IsError(err));
+  }
+
+  if (hlen > 0) {
+    err = Dart_TypedDataReleaseData(handles);
+    MOJO_DCHECK(!Dart_IsError(err));
+  }
+
+  Dart_ListSetAt(result, 0, Dart_NewInteger(res));
+  Dart_ListSetAt(result, 1, data);
+  Dart_ListSetAt(result, 2, handles);
+  Dart_ListSetAt(result, 3, Dart_NewInteger(blen));
+  Dart_ListSetAt(result, 4, Dart_NewInteger(hlen));
 }
 
 struct MojoWaitManyState {

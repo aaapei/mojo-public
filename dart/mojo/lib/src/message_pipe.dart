@@ -19,10 +19,45 @@ class MojoMessagePipeReadResult {
   }
 }
 
+class MojoMessagePipeQueryAndReadState {
+  static final List _result = new List(5);
+
+  List<MojoHandle> _handles;
+
+  MojoResult get status => new MojoResult(_result[0]);
+  ByteData get data => _result[1];
+  List<MojoHandle> get handles => _handles;
+  int get dataLength => _result[3];
+  int get handlesLength => _result[4];
+
+  MojoMessagePipeQueryAndReadState();
+
+  void queryAndRead(int handle, int flags) {
+    MojoMessagePipeNatives.MojoQueryAndReadMessage(handle, flags, _result);
+
+    if (handlesLength == 0) {
+      _handles = null;
+    } else {
+      _handles = new List(handlesLength);
+      for (int i = 0; i < handlesLength; i++) {
+        _handles[i] = new MojoHandle(_result[2][i]);
+      }
+    }
+  }
+
+  String toString() {
+    return "MojoMessagePipeQueryAndReadState("
+        "status: $status, dataLength: $dataLength, "
+        "handlesLength: $handlesLength)";
+  }
+}
+
 class MojoMessagePipeEndpoint {
   static const int WRITE_FLAG_NONE = 0;
   static const int READ_FLAG_NONE = 0;
   static const int READ_FLAG_MAY_DISCARD = 1 << 0;
+
+  static final _queryAndReadState = new MojoMessagePipeQueryAndReadState();
 
   MojoHandle handle;
   MojoResult status;
@@ -108,6 +143,20 @@ class MojoMessagePipeEndpoint {
   }
 
   MojoMessagePipeReadResult query() => read(null);
+
+  /// Warning: The object returned by this function, and the buffers inside of
+  /// it are only valid until the next call to this function by the same
+  /// isolate.
+  MojoMessagePipeQueryAndReadState queryAndRead([int flags = 0]) {
+    if (handle == null) {
+      status = MojoResult.INVALID_ARGUMENT;
+      return null;
+    }
+
+    _queryAndReadState.queryAndRead(handle.h, flags);
+    status = _queryAndReadState.status;
+    return _queryAndReadState;
+  }
 
   bool setDescription(String description) {
     assert(MojoHandle._setHandleLeakDescription(handle, description));
