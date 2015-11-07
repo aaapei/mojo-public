@@ -26,3 +26,11 @@ interface IntegerAccessor {
   [MinVersion=1]
   SetInteger(int64 data, [MinVersion=3] Enum type);
 };
+
+// Used for testing that structs are generated for request params and response
+// params.  Also used to test the generated method ordinals.
+interface SampleInterface {
+  SampleMethod1@1(int32 in1, string? in2) => (string? out1, Enum out2);
+  SampleMethod0@0();
+  SampleMethod2@2();
+};
