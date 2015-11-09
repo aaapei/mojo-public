@@ -4,19 +4,65 @@
 
 part of internal;
 
+// Data associated with an open handle.
+class _OpenHandle {
+  final StackTrace stack;
+  String description;
+  _OpenHandle(this.stack, {this.description});
+}
+
 class MojoCoreNatives {
   static int getTimeTicksNow() native "Mojo_GetTimeTicksNow";
 }
 
 class MojoHandleNatives {
-  static Set<int> _unclosedHandles = new Set<int>();
+  static Map<int, _OpenHandle> _openHandles = new Map();
 
-  static void addUnclosed(int handle) {
-    _unclosedHandles.add(handle);
+  static void addOpenHandle(int handle, {String description}) {
+    // We only remember a stack trace when in checked mode.
+    var stack;
+    try {
+      // This will only throw when running in checked mode.
+      assert(false);
+    } catch (_, s) {
+      stack = s;
+    }
+    var openHandle = new _OpenHandle(stack, description: description);
+    _openHandles[handle] = openHandle;
   }
 
-  static void removeUnclosed(int handle) {
-    _unclosedHandles.remove(handle);
+  static void removeOpenHandle(int handle) {
+    _openHandles.remove(handle);
+  }
+
+  static void _reportOpenHandle(int handle, _OpenHandle openHandle) {
+    StringBuffer sb = new StringBuffer();
+    sb.writeln('HANDLE LEAK: handle: $handle');
+    if (openHandle.description != null) {
+      sb.writeln('HANDLE LEAK: description: ${openHandle.description}');
+    }
+    if (openHandle.stack != null) {
+      sb.writeln('HANDLE LEAK: creation stack trace: ${openHandle.stack}');
+    } else {
+      sb.writeln('HANDLE LEAK: creation stack trace available in strict mode.');
+    }
+    print(sb.toString());
+  }
+
+  static bool reportOpenHandles() {
+    if (_openHandles.length == 0) {
+      return true;
+    }
+    _openHandles.forEach(_reportOpenHandle);
+    return false;
+  }
+
+  static bool setDescription(int handle, String description) {
+    _OpenHandle openHandle = _openHandles[handle];
+    if (openHandle != null) {
+      openHandle.description = description;
+    }
+    return true;
   }
 
   static int registerFinalizer(Object eventStream, int handle)
@@ -32,14 +78,14 @@ class MojoHandleNatives {
 
   // Called from the embedder's unhandled exception callback.
   // Returns the number of successfully closed handles.
-  static int _closeUnclosedHandles() {
+  static int _closeOpenHandles() {
     int count = 0;
-    _unclosedHandles.forEach((h) {
-      if (MojoHandleNatives.close(h) == 0) {
+    _openHandles.forEach((int handle, _) {
+      if (MojoHandleNatives.close(handle) == 0) {
         count++;
       }
     });
-    _unclosedHandles.clear();
+    _openHandles.clear();
     return count;
   }
 }

@@ -4,12 +4,6 @@
 
 part of core;
 
-class _HandleCreationRecord {
-  final MojoHandle handle;
-  final StackTrace stack;
-  String description;
-  _HandleCreationRecord(this.handle, this.stack, {this.description});
-}
 
 class MojoHandle {
   static const int INVALID = 0;
@@ -19,9 +13,7 @@ class MojoHandle {
   int get h => _h;
 
   MojoHandle(this._h, {String description}) {
-    // TODO(zra): Merge unclosed handle tracking.
-    assert(_addUnclosedHandle(this, description: description));
-    MojoHandleNatives.addUnclosed(_h);
+    MojoHandleNatives.addOpenHandle(_h, description: description);
   }
 
   MojoHandle._internal(this._h);
@@ -29,16 +21,14 @@ class MojoHandle {
   MojoHandle.invalid() : this._internal(INVALID);
 
   MojoResult close() {
-    assert(_removeUnclosedHandle(this));
-    MojoHandleNatives.removeUnclosed(_h);
+    MojoHandleNatives.removeOpenHandle(_h);
     int result = MojoHandleNatives.close(_h);
     _h = INVALID;
     return new MojoResult(result);
   }
 
   MojoHandle pass() {
-    assert(_removeUnclosedHandle(this));
-    MojoHandleNatives.removeUnclosed(_h);
+    MojoHandleNatives.removeOpenHandle(_h);
     return this;
   }
 
@@ -96,49 +86,5 @@ class MojoHandle {
         eventStream, eventStream._handle.h));
   }
 
-  static HashMap<int, _HandleCreationRecord> _unclosedHandles = new HashMap();
-
-  // _addUnclosedHandle(), _removeUnclosedHandle(), and dumpLeakedHandles()
-  // should only be used inside of assert() statements.
-  static bool _addUnclosedHandle(MojoHandle handle, {String description}) {
-    var stack;
-    try {
-      assert(false);
-    } catch (_, s) {
-      stack = s;
-    }
-
-    var handleCreate =
-        new _HandleCreationRecord(handle, stack, description: description);
-    _unclosedHandles[handle.h] = handleCreate;
-    return true;
-  }
-
-  static bool _setHandleLeakDescription(MojoHandle handle, String description) {
-    if (_unclosedHandles.containsKey(handle.h)) {
-      _unclosedHandles[handle.h].description = description;
-    }
-    return true;
-  }
-
-  static bool _removeUnclosedHandle(MojoHandle handle) {
-    _unclosedHandles.remove(handle._h);
-    return true;
-  }
-
-  static bool reportLeakedHandles() {
-    var noleaks = true;
-    for (var handle in MojoHandle._unclosedHandles.keys) {
-      var handleCreation = MojoHandle._unclosedHandles[handle];
-      if (handleCreation != null) {
-        print("HANDLE LEAK: handle: $handle");
-        if (handleCreation.description != null) {
-          print("HANDLE LEAK: message: ${handleCreation.description}");
-        }
-        print("HANDLE LEAK: stack at creation:\n${handleCreation.stack}");
-        noleaks = false;
-      }
-    }
-    return noleaks;
-  }
+  static bool reportLeakedHandles() => MojoHandleNatives.reportOpenHandles();
 }

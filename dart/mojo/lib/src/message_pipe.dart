@@ -144,6 +144,9 @@ class MojoMessagePipeEndpoint {
 
   MojoMessagePipeReadResult query() => read(null);
 
+  bool setDescription(String description) =>
+      MojoHandleNatives.setDescription(handle.h, description);
+
   /// Warning: The object returned by this function, and the buffers inside of
   /// it are only valid until the next call to this function by the same
   /// isolate.
@@ -156,11 +159,6 @@ class MojoMessagePipeEndpoint {
     _queryAndReadState.queryAndRead(handle.h, flags);
     status = _queryAndReadState.status;
     return _queryAndReadState;
-  }
-
-  bool setDescription(String description) {
-    assert(MojoHandle._setHandleLeakDescription(handle, description));
-    return true;
   }
 
   void close() {

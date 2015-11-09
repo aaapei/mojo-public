@@ -304,7 +304,6 @@ class MojoHandleWatcher {
   // has actually been closed by the handle watcher. Otherwise, returns a
   // future that resolves immediately.
   static Future<int> close(int mojoHandle, {bool wait: false}) {
-    //assert(MojoHandle._removeUnclosedHandle(mojoHandle));
     if (!wait) {
       return new Future.value(
           _sendControlData(mojoHandle, null, _encodeCommand(CLOSE)));

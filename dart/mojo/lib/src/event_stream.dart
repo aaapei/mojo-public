@@ -97,8 +97,8 @@ class MojoEventStream extends Stream<List<int>> {
   }
 
   Future _handleWatcherClose({bool immediate: false}) {
-    assert(MojoHandle._removeUnclosedHandle(_handle));
-    MojoHandleNatives.removeUnclosed(_handle.h);
+    assert(_handle != null);
+    MojoHandleNatives.removeOpenHandle(_handle.h);
     return MojoHandleWatcher.close(_handle.h, wait: !immediate).then((r) {
       if (_receivePort != null) {
         _receivePort.close();

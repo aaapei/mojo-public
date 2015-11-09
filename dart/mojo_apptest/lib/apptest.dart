@@ -41,7 +41,7 @@ class _ConnectionToShellApplication extends Application {
     // tearDown callback.
     test('TERMINATE SHELL CONNECTION', () async {
       await close();
-      assert(MojoHandle.reportLeakedHandles());
+      MojoHandle.reportLeakedHandles();
     });
   }
 
