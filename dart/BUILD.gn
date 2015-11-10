@@ -5,7 +5,6 @@
 group("dart") {
   deps = [
     "mojo",
-    "mojo_apptest",
     "mojom",
     "third_party",
   ]
