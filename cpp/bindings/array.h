@@ -87,6 +87,12 @@ class Array {
   // Returns the size of the array, which will be zero if the array is null.
   size_t size() const { return vec_.size(); }
 
+  // For non-null arrays of non-bool types, returns a pointer to the first
+  // element, if any. (If the array is empty, the semantics are the same as for
+  // |std::vector<T>::data()|. The behavior is undefined if the array is null.)
+  const T* data() const { return vec_.data(); }
+  T* data() { return vec_.data(); }
+
   // Returns a reference to the element at zero-based |offset|. Calling this on
   // an array with size less than |offset|+1 causes undefined behavior.
   ConstRefType at(size_t offset) const { return vec_.at(offset); }

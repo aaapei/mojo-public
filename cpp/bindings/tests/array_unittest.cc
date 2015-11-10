@@ -32,12 +32,16 @@ class ArrayTest : public testing::Test {
 
 // Tests that basic Array operations work.
 TEST_F(ArrayTest, Basic) {
-  auto array = Array<char>::New(8);
-  for (size_t i = 0; i < array.size(); ++i) {
-    char val = static_cast<char>(i * 2);
+  auto array = Array<uint8_t>::New(8);
+  for (size_t i = 0u; i < array.size(); ++i) {
+    uint8_t val = static_cast<uint8_t>(i * 2);
     array[i] = val;
     EXPECT_EQ(val, array.at(i));
   }
+
+  EXPECT_EQ(0u, *array.data());
+  EXPECT_EQ(2u, *(array.data() + 1));
+  EXPECT_EQ(4u, *(array.data() + 2));
 }
 
 void NullptrConstructorTestHelper(Array<int32_t> array) {
