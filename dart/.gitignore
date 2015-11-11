@@ -1,4 +1,3 @@
-*.mojom.dart
 .packages
 packages
 pubspec.lock
