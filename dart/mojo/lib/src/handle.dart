@@ -4,7 +4,6 @@
 
 part of core;
 
-
 class MojoHandle {
   static const int INVALID = 0;
   static const int DEADLINE_INDEFINITE = -1;
@@ -81,9 +80,9 @@ class MojoHandle {
     return new MojoWaitManyResult(new MojoResult(result[0]), result[1], states);
   }
 
-  static MojoResult registerFinalizer(MojoEventStream eventStream) {
+  static MojoResult registerFinalizer(MojoEventSubscription eventSubscription) {
     return new MojoResult(MojoHandleNatives.registerFinalizer(
-        eventStream, eventStream._handle.h));
+        eventSubscription, eventSubscription._handle.h));
   }
 
   static bool reportLeakedHandles() => MojoHandleNatives.reportOpenHandles();

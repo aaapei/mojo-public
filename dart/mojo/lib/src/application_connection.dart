@@ -95,9 +95,9 @@ class ApplicationConnection {
     _nameToServiceFactory[interfaceName] = factory;
   }
 
-  void _errorHandler() {
+  void _errorHandler(Object e) {
     close().then((_) {
-      if (onError != null) onError();
+      if (onError != null) onError(e);
     });
   }
 

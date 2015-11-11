@@ -10,8 +10,8 @@ class ProxyError {
   String toString() => "ProxyError: $message";
 }
 
-abstract class Proxy extends core.MojoEventStreamListener {
-  final Map<int, Completer> _completerMap = {};
+abstract class Proxy extends core.MojoEventHandler {
+  Map<int, Completer> _completerMap = {};
   Completer _errorCompleter = new Completer();
   Set<Completer> _errorCompleters;
   int _nextId = 0;
@@ -80,10 +80,9 @@ abstract class Proxy extends core.MojoEventStreamListener {
       return;
     }
     if (!isOpen) {
-      listen();
+      beginHandlingEvents();
     }
     var header = new MessageHeader(name);
-
     var serviceMessage = message.serializeWithHeader(header);
     endpoint.write(serviceMessage.buffer, serviceMessage.buffer.lengthInBytes,
         serviceMessage.handles);
@@ -99,7 +98,7 @@ abstract class Proxy extends core.MojoEventStreamListener {
       return completer.future;
     }
     if (!isOpen) {
-      listen();
+      beginHandlingEvents();
     }
     if (id == -1) {
       id = _nextId++;

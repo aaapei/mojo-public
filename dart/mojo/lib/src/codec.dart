@@ -203,7 +203,7 @@ class Encoder {
       encodeHandle(value != null ? value.handle : null, offset, nullable);
 
   void encodeInterface(
-      core.MojoEventStreamListener interface, int offset, bool nullable) {
+      core.MojoEventHandler interface, int offset, bool nullable) {
     if (interface == null) {
       encodeInvalideHandle(offset, nullable);
       // Set the version field to 0.
@@ -214,7 +214,7 @@ class Encoder {
       assert(!interface.isBound);
       var pipe = new core.MojoMessagePipe();
       interface.bind(pipe.endpoints[0]);
-      interface.listen();
+      interface.beginHandlingEvents();
       encodeMessagePipeHandle(pipe.endpoints[1], offset, nullable);
       // Set the version to the version in the stub.
       encodeUint32(interface.version, offset + kSerializedHandleSize);
@@ -223,14 +223,13 @@ class Encoder {
       if (!interface.isOpen) {
         // Make sure that we are listening so that state for the proxy is
         // cleaned up when the message is sent and the handle is closed.
-        interface.listen();
+        interface.beginHandlingEvents();
       }
       encodeMessagePipeHandle(interface.endpoint, offset, nullable);
       // Set the version to the current version of the proxy.
       encodeUint32(interface.version, offset + kSerializedHandleSize);
     } else {
-      throw new MojoCodecError(
-          'Trying to encode an unknown MojoEventStreamListener');
+      throw new MojoCodecError('Trying to encode an unknown MojoEventHandler');
     }
   }
 
@@ -241,7 +240,7 @@ class Encoder {
     }
     var pipe = new core.MojoMessagePipe();
     client.impl.bind(pipe.endpoints[0]);
-    client.impl.listen();
+    client.impl.beginHandlingEvents();
     encodeMessagePipeHandle(pipe.endpoints[1], offset, nullable);
   }
 

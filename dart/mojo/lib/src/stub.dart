@@ -4,7 +4,7 @@
 
 part of bindings;
 
-abstract class Stub extends core.MojoEventStreamListener {
+abstract class Stub extends core.MojoEventHandler {
   int _outstandingResponseFutures = 0;
   bool _isClosing = false;
   Completer _closeCompleter;

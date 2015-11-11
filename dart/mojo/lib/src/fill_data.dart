@@ -7,20 +7,17 @@ part of core;
 class DataPipeFiller {
   final MojoDataPipeProducer _producer;
   final ByteData _data;
-  MojoEventStream _eventStream;
+  MojoEventSubscription _eventSubscription;
   int _dataPosition;
 
   DataPipeFiller(this._producer, this._data) {
-    _eventStream = new MojoEventStream(_producer.handle);
+    _eventSubscription = new MojoEventSubscription(_producer.handle);
     _dataPosition = 0;
   }
 
   MojoResult _doWrite() {
     ByteData view = new ByteData.view(
-      _data.buffer,
-      _dataPosition,
-      _data.lengthInBytes - _dataPosition
-    );
+        _data.buffer, _dataPosition, _data.lengthInBytes - _dataPosition);
     int written = _producer.write(view);
     if (!_producer.status.isOk) {
       throw 'Data pipe beginWrite failed: ${_producer.status}';
@@ -30,18 +27,18 @@ class DataPipeFiller {
   }
 
   void fill() {
-    _eventStream.enableWriteEvents();
-    _eventStream.listen((List<int> event) {
+    _eventSubscription.enableWriteEvents();
+    _eventSubscription.subscribe((List<int> event) {
       var mojoSignals = new MojoHandleSignals(event[1]);
       if (mojoSignals.isWritable) {
         MojoResult result = _doWrite();
         if (_dataPosition >= _data.lengthInBytes || !result.isOk) {
-          _eventStream.close();
-          _eventStream = null;
+          _eventSubscription.close();
+          _eventSubscription = null;
         }
       } else if (mojoSignals.isPeerClosed) {
-        _eventStream.close();
-        _eventStream = null;
+        _eventSubscription.close();
+        _eventSubscription = null;
       } else {
         throw 'Unexpected handle event: $mojoSignals';
       }

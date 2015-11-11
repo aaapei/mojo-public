@@ -13,13 +13,13 @@ class _ApplicationImpl implements application_mojom.Application {
       Application application, core.MojoMessagePipeEndpoint endpoint) {
     _application = application;
     _stub = new application_mojom.ApplicationStub.fromEndpoint(endpoint, this);
-    _stub.onError = close;
+    _stub.onError = ((_) => close());
   }
 
   _ApplicationImpl.fromHandle(Application application, core.MojoHandle handle) {
     _application = application;
     _stub = new application_mojom.ApplicationStub.fromHandle(handle, this);
-    _stub.onError = close;
+    _stub.onError = ((_) => close());
   }
 
   set onError(core.ErrorHandler f) {
@@ -101,9 +101,9 @@ abstract class Application implements bindings.ServiceConnector {
     close();
   }
 
-  void _errorHandler() {
+  void _errorHandler(Object e) {
     close().then((_) {
-      if (onError != null) onError();
+      if (onError != null) onError(e);
     });
   }
 
