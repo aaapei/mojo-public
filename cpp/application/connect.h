@@ -6,6 +6,7 @@
 #define MOJO_PUBLIC_CPP_APPLICATION_CONNECT_H_
 
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
+#include "mojo/public/interfaces/application/shell.mojom.h"
 
 namespace mojo {
 
@@ -16,6 +17,17 @@ inline void ConnectToService(ServiceProvider* service_provider,
   MessagePipe pipe;
   ptr->Bind(InterfacePtrInfo<Interface>(pipe.handle0.Pass(), 0u));
   service_provider->ConnectToService(Interface::Name_, pipe.handle1.Pass());
+}
+
+// Binds |ptr| to a remote implementation of Interface from |application_url|.
+template <typename Interface>
+inline void ConnectToService(Shell* shell,
+                             const std::string& application_url,
+                             InterfacePtr<Interface>* ptr) {
+  ServiceProviderPtr service_provider;
+  shell->ConnectToApplication(application_url,
+                              GetProxy(&service_provider), nullptr);
+  ConnectToService(service_provider.get(), ptr);
 }
 
 }  // namespace mojo
