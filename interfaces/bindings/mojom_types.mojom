@@ -331,6 +331,9 @@ struct UserValueReference {
   // EnumValue. If |value_key| referes to a DeclaredConstant then
   // |resolved_concrete_value| is defined recursively to be the resolved
   // concrete value of the DeclaredConstant's |value|.
+
+  // This field is not-populated and should not be read. It will be removed
+  // in the future. See DeclaredConstant.resolved_concrete_value.
   Value? resolved_concrete_value;
 };
 
@@ -351,6 +354,20 @@ struct DeclaredConstant {
   // the same type as |type| or a UserValueReference whose
   // |resolved_concrete_value| is one of those.
   Value value;
+
+  // The resolved concrete value. This must be a LiteralValue, a
+  // BuiltinConstantValue, or UserValueReference that resolves to an
+  // EnumValue. It may not be a UserValueReference that resolves
+  // to a DeclaredConstant. The resolved concrete value is defined as follows:
+  // If |value| is a LiteralValue, a BuiltinConstantValue or a
+  // UserValueReference that refers to an EnumValue then
+  // |resolved_concrete_value| is equal to |value|. Otherwise |value|
+  // is a UserValueReference that refers to a different DeclaredConstant
+  // and |resolved_concrete_value| is defined to be the
+  // |resolved_concrete_value| of that other DeclaredConstant. This chain
+  // of references must terminate in well-formed Mojom.
+  // TODO(rudominer) Add this field when we have a real need for it.
+  // Value? resolved_concrete_value;
 };
 
 ////////////////////////////////////////////////////////////////////////////
