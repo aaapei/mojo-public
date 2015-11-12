@@ -941,10 +941,11 @@ void MojoHandleWatcher_WaitMany(Dart_NativeArguments arguments) {
   MojoHandleSignalsState* out_signals =
       handle_watcher_wait_state.out_signals.data();
 
-  Dart_IsolateBlocked();
+  Dart_ThreadDisableProfiling();
+
   MojoResult mojo_result = MojoWaitMany(handles, signals, handles_len, deadline,
                                         out_index, out_signals);
-  Dart_IsolateUnblocked();
+  Dart_ThreadEnableProfiling();
 
   Dart_SetIntegerReturnValue(arguments, static_cast<int64_t>(mojo_result));
 }
