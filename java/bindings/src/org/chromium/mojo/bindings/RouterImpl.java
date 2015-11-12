@@ -177,11 +177,12 @@ public class RouterImpl implements Router {
             throw new IllegalStateException("Unable to find a new request identifier.");
         }
         messageWithHeader.setRequestId(requestId);
+        mResponders.put(requestId, responder);
         if (!mConnector.accept(messageWithHeader)) {
+            // Only keep the responder is the message has been accepted.
+            mResponders.remove(requestId);
             return false;
         }
-        // Only keep the responder is the message has been accepted.
-        mResponders.put(requestId, responder);
         return true;
     }
 
