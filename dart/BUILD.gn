@@ -4,8 +4,6 @@
 
 group("dart") {
   deps = [
-    "mojo",
-    "mojom",
     "third_party",
   ]
 }
