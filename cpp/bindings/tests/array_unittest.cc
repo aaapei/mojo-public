@@ -44,17 +44,30 @@ TEST_F(ArrayTest, Basic) {
   EXPECT_EQ(4u, *(array.data() + 2));
 }
 
+TEST_F(ArrayTest, Testability) {
+  Array<int32_t> array;
+  EXPECT_FALSE(array);
+  EXPECT_TRUE(array.is_null());
+
+  array.push_back(123);
+  EXPECT_TRUE(array);
+  EXPECT_FALSE(array.is_null());
+}
+
 void NullptrConstructorTestHelper(Array<int32_t> array) {
+  EXPECT_FALSE(array);
   EXPECT_TRUE(array.is_null());
   EXPECT_EQ(0u, array.size());
 }
 
 TEST_F(ArrayTest, NullptrConstructor) {
   Array<int32_t> array(nullptr);
+  EXPECT_FALSE(array);
   EXPECT_TRUE(array.is_null());
   EXPECT_EQ(0u, array.size());
 
   array.push_back(123);
+  EXPECT_TRUE(array);
   EXPECT_FALSE(array.is_null());
   EXPECT_EQ(1u, array.size());
 

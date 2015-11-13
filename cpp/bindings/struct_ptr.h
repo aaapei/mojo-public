@@ -58,6 +58,9 @@ class StructPtr {
     }
   }
 
+  // Tests as true if non-null, false if null.
+  explicit operator bool() const { return !!ptr_; }
+
   bool is_null() const { return ptr_ == nullptr; }
 
   Struct& operator*() const {
@@ -82,12 +85,6 @@ class StructPtr {
       return is_null() && other.is_null();
     return ptr_->Equals(*other.ptr_);
   }
-
- private:
-  typedef Struct* StructPtr::*Testable;
-
- public:
-  operator Testable() const { return ptr_ ? &StructPtr::ptr_ : 0; }
 
  private:
   friend class internal::StructHelper<Struct>;
@@ -138,6 +135,9 @@ class InlinedStructPtr {
     new (&value_) Struct();
   }
 
+  // Tests as true if non-null, false if null.
+  explicit operator bool() const { return !is_null_; }
+
   bool is_null() const { return is_null_; }
 
   Struct& operator*() const {
@@ -163,12 +163,6 @@ class InlinedStructPtr {
       return is_null() && other.is_null();
     return value_.Equals(other.value_);
   }
-
- private:
-  typedef Struct InlinedStructPtr::*Testable;
-
- public:
-  operator Testable() const { return is_null_ ? 0 : &InlinedStructPtr::value_; }
 
  private:
   friend class internal::StructHelper<Struct>;

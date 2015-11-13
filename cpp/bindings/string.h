@@ -70,6 +70,9 @@ class String {
     is_null_ = true;
   }
 
+  // Tests as true if non-null, false if null.
+  explicit operator bool() const { return !is_null_; }
+
   bool is_null() const { return is_null_; }
 
   size_t size() const { return value_.size(); }
@@ -94,12 +97,6 @@ class String {
     is_null_ = false;
     value_.swap(*other);
   }
-
- private:
-  typedef std::string String::*Testable;
-
- public:
-  operator Testable() const { return is_null_ ? 0 : &String::value_; }
 
  private:
   std::string value_;

@@ -196,8 +196,10 @@ class InterfacePtrTest : public testing::Test {
 TEST_F(InterfacePtrTest, IsBound) {
   math::CalculatorPtr calc;
   EXPECT_FALSE(calc.is_bound());
+  EXPECT_FALSE(calc);
   MathCalculatorImpl calc_impl(GetProxy(&calc));
   EXPECT_TRUE(calc.is_bound());
+  EXPECT_TRUE(calc);
 }
 
 TEST_F(InterfacePtrTest, EndToEnd) {

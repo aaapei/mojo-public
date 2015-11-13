@@ -111,6 +111,9 @@ class InterfacePtr {
     internal_state_.Swap(&doomed);
   }
 
+  // Tests as true if bound, false if not.
+  explicit operator bool() const { return internal_state_.is_bound(); }
+
   // Blocks the current thread until the next incoming response callback arrives
   // or an error occurs. Returns |true| if a response arrived, or |false| in
   // case of error.
@@ -148,17 +151,6 @@ class InterfacePtr {
   // DO NOT USE. Exposed only for internal use and for testing.
   internal::InterfacePtrState<Interface>* internal_state() {
     return &internal_state_;
-  }
-
-  // Allow InterfacePtr<> to be used in boolean expressions, but not
-  // implicitly convertible to a real bool (which is dangerous).
- private:
-  typedef internal::InterfacePtrState<Interface> InterfacePtr::*Testable;
-
- public:
-  operator Testable() const {
-    return internal_state_.is_bound() ? &InterfacePtr::internal_state_
-                                      : nullptr;
   }
 
  private:

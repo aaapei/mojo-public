@@ -76,6 +76,9 @@ class Array {
     is_null_ = true;
   }
 
+  // Tests as true if non-null, false if null.
+  explicit operator bool() const { return !is_null_; }
+
   // Indicates whether the array is null (which is distinct from empty).
   bool is_null() const { return is_null_; }
 
@@ -236,12 +239,6 @@ class Array {
 
   Iterator begin() { return Iterator(this, 0); }
   Iterator end() { return Iterator(this, size()); }
-
- private:
-  typedef std::vector<T> Array::*Testable;
-
- public:
-  operator Testable() const { return is_null_ ? 0 : &Array::vec_; }
 
  private:
   void Take(Array* other) {

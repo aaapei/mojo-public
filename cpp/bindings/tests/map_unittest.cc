@@ -45,6 +45,16 @@ class MapTest : public testing::Test {
   Environment env_;
 };
 
+TEST_F(MapTest, Testability) {
+  Map<int32_t, int32_t> map;
+  EXPECT_FALSE(map);
+  EXPECT_TRUE(map.is_null());
+
+  map[123] = 456;
+  EXPECT_TRUE(map);
+  EXPECT_FALSE(map.is_null());
+}
+
 // Tests that basic Map operations work.
 TEST_F(MapTest, InsertWorks) {
   Map<String, int> map;

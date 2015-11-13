@@ -238,6 +238,17 @@ struct ValueTraits<ScopedHandleBase<T>> {
   }
 };
 
+// |InterfacePtr|s hold message pipes uniquely, so they can only be equal if
+// they're the same object or are both "invalid".
+template <typename I>
+struct ValueTraits<InterfacePtr<I>> {
+  static bool Equals(const InterfacePtr<I>& a, const InterfacePtr<I>& b) {
+    return (&a == &b) || (!a.is_bound() && !b.is_bound());
+  }
+};
+
+// |InterfaceRequest|s hold message pipes uniquely, so they can only be equal if
+// they're the same object or are both "invalid".
 template <typename I>
 struct ValueTraits<InterfaceRequest<I>> {
   static bool Equals(const InterfaceRequest<I>& a,

@@ -81,6 +81,9 @@ class Map {
     is_null_ = true;
   }
 
+  // Tests as true if non-null, false if null.
+  explicit operator bool() const { return !is_null_; }
+
   bool is_null() const { return is_null_; }
 
   // Indicates the number of keys in the map.
@@ -237,15 +240,6 @@ class Map {
     return ConstMapIterator(map_.find(key));
   }
   MapIterator find(const KeyType& key) { return MapIterator(map_.find(key)); }
-
- private:
-  typedef std::map<KeyType, ValueType> Map::*Testable;
-
- public:
-  // The Map may be used in boolean expressions to determine if it is non-null,
-  // but is not implicitly convertible to an actual bool value (which would be
-  // dangerous).
-  operator Testable() const { return is_null_ ? 0 : &Map::map_; }
 
  private:
   void Take(Map* other) {

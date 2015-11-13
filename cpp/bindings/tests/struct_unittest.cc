@@ -92,21 +92,25 @@ class StructTest : public testing::Test {
 
 TEST_F(StructTest, Rect) {
   RectPtr rect;
+  EXPECT_FALSE(rect);
   EXPECT_TRUE(rect.is_null());
   EXPECT_TRUE(!rect);
   EXPECT_FALSE(rect);
 
   rect = nullptr;
+  EXPECT_FALSE(rect);
   EXPECT_TRUE(rect.is_null());
   EXPECT_TRUE(!rect);
   EXPECT_FALSE(rect);
 
   rect = MakeRect();
+  EXPECT_TRUE(rect);
   EXPECT_FALSE(rect.is_null());
   EXPECT_FALSE(!rect);
   EXPECT_TRUE(rect);
 
   RectPtr null_rect = nullptr;
+  EXPECT_FALSE(null_rect);
   EXPECT_TRUE(null_rect.is_null());
   EXPECT_TRUE(!null_rect);
   EXPECT_FALSE(null_rect);
