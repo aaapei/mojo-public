@@ -406,6 +406,12 @@ struct DeclarationData {
   // enums and constants may be declared. Some implementations may populate
   // this field in order to describe that containment.
   ContainedDeclarations? contained_declarations;
+
+  // If this DeclarationData is for an enum or a constant that is contained
+  // in a struct or interface, then this field, if populated, is the type_key
+  // that refers to the containing struct or interface. This field plays a
+  // role inverse to that of |contained_declarations|.
+  string? container_type_key;
 };
 
 struct SourceFileInfo {
