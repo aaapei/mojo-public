@@ -5,6 +5,7 @@
 #ifndef MOJO_PUBLIC_CPP_APPLICATION_CONNECT_H_
 #define MOJO_PUBLIC_CPP_APPLICATION_CONNECT_H_
 
+#include "mojo/public/interfaces/application/application_connector.mojom.h"
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
 #include "mojo/public/interfaces/application/shell.mojom.h"
 
@@ -27,6 +28,17 @@ inline void ConnectToService(Shell* shell,
   ServiceProviderPtr service_provider;
   shell->ConnectToApplication(application_url,
                               GetProxy(&service_provider), nullptr);
+  ConnectToService(service_provider.get(), ptr);
+}
+
+// Binds |ptr| to a remote implementation of Interface from |application_url|.
+template <typename Interface>
+inline void ConnectToService(ApplicationConnector* application_connector,
+                             const std::string& application_url,
+                             InterfacePtr<Interface>* ptr) {
+  ServiceProviderPtr service_provider;
+  application_connector->ConnectToApplication(
+      application_url, GetProxy(&service_provider), nullptr);
   ConnectToService(service_provider.get(), ptr);
 }
 

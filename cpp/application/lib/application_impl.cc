@@ -4,37 +4,34 @@
 
 #include "mojo/public/cpp/application/application_impl.h"
 
+#include <utility>
+
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/application/lib/service_registry.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
+#include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/cpp/environment/logging.h"
+#include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
 
 ApplicationImpl::ApplicationImpl(ApplicationDelegate* delegate,
                                  InterfaceRequest<Application> request)
-    : delegate_(delegate), binding_(this, request.Pass()) {
-}
+    : delegate_(delegate), binding_(this, request.Pass()) {}
+
+ApplicationImpl::~ApplicationImpl() {}
 
 bool ApplicationImpl::HasArg(const std::string& arg) const {
   return std::find(args_.begin(), args_.end(), arg) != args_.end();
 }
 
-void ApplicationImpl::ClearConnections() {
-  for (ServiceRegistryList::iterator i(incoming_service_registries_.begin());
-       i != incoming_service_registries_.end();
-       ++i)
-    delete *i;
-  for (ServiceRegistryList::iterator i(outgoing_service_registries_.begin());
-       i != outgoing_service_registries_.end();
-       ++i)
-    delete *i;
-  incoming_service_registries_.clear();
-  outgoing_service_registries_.clear();
-}
-
-ApplicationImpl::~ApplicationImpl() {
-  ClearConnections();
+InterfacePtrInfo<ApplicationConnector>
+ApplicationImpl::CreateApplicationConnector() {
+  MOJO_CHECK(shell_);
+  MessagePipe pipe;
+  shell_->CreateApplicationConnector(
+      MakeRequest<ApplicationConnector>(pipe.handle1.Pass()));
+  return InterfacePtrInfo<ApplicationConnector>(pipe.handle0.Pass(), 0u);
 }
 
 ApplicationConnection* ApplicationImpl::ConnectToApplication(
@@ -48,18 +45,8 @@ ApplicationConnection* ApplicationImpl::ConnectToApplication(
   internal::ServiceRegistry* registry = new internal::ServiceRegistry(
       this, application_url, application_url, remote_services.Pass(),
       local_request.Pass());
-  outgoing_service_registries_.push_back(registry);
+  outgoing_service_registries_.emplace_back(registry);
   return registry;
-}
-
-void ApplicationImpl::Initialize(ShellPtr shell,
-                                 Array<String> args,
-                                 const mojo::String& url) {
-  shell_ = shell.Pass();
-  shell_.set_connection_error_handler([this]() { OnShellError(); });
-  url_ = url;
-  args_ = args.To<std::vector<std::string>>();
-  delegate_->Initialize(this);
 }
 
 void ApplicationImpl::WaitForInitialize() {
@@ -74,18 +61,32 @@ void ApplicationImpl::UnbindConnections(
   shell->Bind(shell_.PassInterface());
 }
 
+void ApplicationImpl::Initialize(ShellPtr shell,
+                                 Array<String> args,
+                                 const mojo::String& url) {
+  shell_ = shell.Pass();
+  shell_.set_connection_error_handler([this]() {
+    delegate_->Quit();
+    incoming_service_registries_.clear();
+    outgoing_service_registries_.clear();
+    Terminate();
+  });
+  url_ = url;
+  args_ = args.To<std::vector<std::string>>();
+  delegate_->Initialize(this);
+}
+
 void ApplicationImpl::AcceptConnection(
     const String& requestor_url,
     InterfaceRequest<ServiceProvider> services,
     ServiceProviderPtr exposed_services,
     const String& url) {
-  internal::ServiceRegistry* registry = new internal::ServiceRegistry(
-      this, url, requestor_url, exposed_services.Pass(), services.Pass());
-  if (!delegate_->ConfigureIncomingConnection(registry)) {
-    delete registry;
+  std::unique_ptr<internal::ServiceRegistry> registry(
+      new internal::ServiceRegistry(this, url, requestor_url,
+                                    exposed_services.Pass(), services.Pass()));
+  if (!delegate_->ConfigureIncomingConnection(registry.get()))
     return;
-  }
-  incoming_service_registries_.push_back(registry);
+  incoming_service_registries_.push_back(std::move(registry));
 }
 
 void ApplicationImpl::RequestQuit() {

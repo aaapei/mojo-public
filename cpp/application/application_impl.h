@@ -5,6 +5,7 @@
 #ifndef MOJO_PUBLIC_APPLICATION_APPLICATION_IMPL_H_
 #define MOJO_PUBLIC_APPLICATION_APPLICATION_IMPL_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,7 @@
 #include "mojo/public/cpp/application/lib/service_registry.h"
 #include "mojo/public/cpp/system/core.h"
 #include "mojo/public/interfaces/application/application.mojom.h"
+#include "mojo/public/interfaces/application/application_connector.mojom.h"
 #include "mojo/public/interfaces/application/shell.mojom.h"
 
 namespace mojo {
@@ -39,6 +41,11 @@ class ApplicationImpl : public Application {
                   InterfaceRequest<Application> request);
   ~ApplicationImpl() override;
 
+  // Quits the main run loop for this application.
+  // TODO(vtl): This is implemented in application_runner.cc (for example). Its
+  // presence here is pretty dubious.
+  static void Terminate();
+
   // The Mojo shell. This will return a valid pointer after Initialize() has
   // been invoked. It will remain valid until UnbindConnections() is invoked or
   // the ApplicationImpl is destroyed.
@@ -50,27 +57,31 @@ class ApplicationImpl : public Application {
   const std::vector<std::string>& args() const { return args_; }
   bool HasArg(const std::string& arg) const;
 
+  // Creates a new |ApplicationConnector|. The result can be bound to an
+  // |ApplicationConnectorPtr| and used to connect to other applications. (It
+  // returns an |InterfacePtrInfo| instead of an |InterfacePtr| to facilitate
+  // passing it to another thread.)
+  InterfacePtrInfo<ApplicationConnector> CreateApplicationConnector();
+
   // Requests a new connection to an application. Returns a pointer to the
   // connection if the connection is permitted by this application's delegate,
   // or nullptr otherwise. Caller does not take ownership. The pointer remains
   // valid until an error occurs on the connection with the Shell, or until the
   // ApplicationImpl is destroyed, whichever occurs first.
+  // TODO(vtl): Deprecate/remove this.
   ApplicationConnection* ConnectToApplication(const String& application_url);
 
   // Connect to application identified by |application_url| and connect to the
   // service implementation of the interface identified by |Interface|.
+  // TODO(vtl): Deprecate/remove this.
   template <typename Interface>
   void ConnectToService(const std::string& application_url,
                         InterfacePtr<Interface>* ptr) {
     ConnectToApplication(application_url)->ConnectToService(ptr);
   }
 
-  // Application implementation.
-  void Initialize(ShellPtr shell,
-                  Array<String> args,
-                  const mojo::String& url) override;
-
-  // Block until the Application is initialized, if it is not already.
+  // Blocks until the |Application| is initialized (i.e., |Initialize()| is
+  // received), if it is not already.
   void WaitForInitialize();
 
   // Unbinds the Shell and Application connections. Can be used to re-bind the
@@ -79,30 +90,19 @@ class ApplicationImpl : public Application {
   void UnbindConnections(InterfaceRequest<Application>* application_request,
                          ShellPtr* shell);
 
-  // Quits the main run loop for this application.
-  static void Terminate();
-
- protected:
-  // Application implementation.
+  // |Application| implementation.
+  void Initialize(ShellPtr shell,
+                  Array<String> args,
+                  const mojo::String& url) override;
   void AcceptConnection(const String& requestor_url,
                         InterfaceRequest<ServiceProvider> services,
                         ServiceProviderPtr exposed_services,
                         const String& url) override;
-
- private:
-  void ClearConnections();
-
-  void OnShellError() {
-    delegate_->Quit();
-    ClearConnections();
-    Terminate();
-  }
-
-  // Application implementation.
   void RequestQuit() override;
 
-  typedef std::vector<internal::ServiceRegistry*> ServiceRegistryList;
-
+ private:
+  using ServiceRegistryList =
+      std::vector<std::unique_ptr<internal::ServiceRegistry>>;
   ServiceRegistryList incoming_service_registries_;
   ServiceRegistryList outgoing_service_registries_;
   ApplicationDelegate* delegate_;
