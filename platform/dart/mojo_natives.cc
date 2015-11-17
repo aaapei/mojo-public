@@ -127,13 +127,7 @@ static void MojoHandleCloserCallback(void* isolate_data,
   CloserCallbackPeer* callback_peer =
       reinterpret_cast<CloserCallbackPeer*>(peer);
   if (callback_peer->handle != MOJO_HANDLE_INVALID) {
-    MojoResult res = MojoClose(callback_peer->handle);
-    if (res == MOJO_RESULT_OK) {
-      // If this finalizer callback successfully closes a handle, it means that
-      // the handle has leaked from the Dart code, which is an error.
-      MOJO_LOG(ERROR) << "Handle Finalizer closing handle:\n\tisolate: "
-                      << "\n\thandle: " << callback_peer->handle;
-    }
+    MojoClose(callback_peer->handle);
   }
   delete callback_peer;
 }
