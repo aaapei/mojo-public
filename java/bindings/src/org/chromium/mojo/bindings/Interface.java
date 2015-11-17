@@ -308,6 +308,23 @@ public interface Interface extends ConnectionErrorHandler, Closeable {
     }
 
     /**
+     * Enables managing the bindings from an implementation to a message pipe.
+     */
+    interface Binding {
+        /**
+         * Unbinds the implementation from the message pipe. Returns the handle that will be owned
+         * by the caller.
+         */
+        public MessagePipeHandle unbind();
+
+        /**
+         * Registers an error handler on the binding. It will be called if an error happens on the
+         * underlying message pipe.
+         */
+        public void registerErrorHandler(ConnectionErrorHandler errorHandler);
+    }
+
+    /**
      * The |Manager| object enables building of proxies and stubs for a given interface.
      *
      * @param <I> the type of the interface the manager can handle.
@@ -329,20 +346,21 @@ public interface Interface extends ConnectionErrorHandler, Closeable {
         /**
          * Binds the given implementation to the handle.
          */
-        public void bind(I impl, MessagePipeHandle handle) {
+        public Binding bind(I impl, MessagePipeHandle handle) {
             // The router (and by consequence the handle) is intentionally leaked. It will close
             // itself when the connected handle is closed and the proxy receives the connection
             // error.
             Router router = new RouterImpl(handle);
-            bind(handle.getCore(), impl, router);
+            Binding result = bind(handle.getCore(), impl, router);
             router.start();
+            return result;
         }
 
         /**
          * Binds the given implementation to the InterfaceRequest.
          */
-        public final void bind(I impl, InterfaceRequest<I> request) {
-            bind(impl, request.passHandle());
+        public final Binding bind(I impl, InterfaceRequest<I> request) {
+            return bind(impl, request.passHandle());
         }
 
         /**
@@ -352,9 +370,10 @@ public interface Interface extends ConnectionErrorHandler, Closeable {
         public final P attachProxy(MessagePipeHandle handle, int version) {
             RouterImpl router = new RouterImpl(handle);
             P proxy = attachProxy(handle.getCore(), router);
-            DelegatingConnectionErrorHandler handlers = new DelegatingConnectionErrorHandler();
-            handlers.addConnectionErrorHandler(proxy);
-            router.setErrorHandler(handlers);
+            DelegatingConnectionErrorHandler delegatingHandler =
+                    new DelegatingConnectionErrorHandler();
+            delegatingHandler.addConnectionErrorHandler(proxy);
+            router.setErrorHandler(delegatingHandler);
             router.start();
             ((HandlerImpl) proxy.getProxyHandler()).setVersion(version);
             return proxy;
@@ -378,9 +397,24 @@ public interface Interface extends ConnectionErrorHandler, Closeable {
         /**
          * Binds the implementation to the given |router|.
          */
-        final void bind(Core core, I impl, Router router) {
-            router.setErrorHandler(impl);
+        final Binding bind(Core core, I impl, final Router router) {
+            final DelegatingConnectionErrorHandler delegatingHandler =
+                    new DelegatingConnectionErrorHandler();
+            delegatingHandler.addConnectionErrorHandler(impl);
+            router.setErrorHandler(delegatingHandler);
             router.setIncomingMessageReceiver(buildStub(core, impl));
+            return new Binding() {
+
+                @Override
+                public MessagePipeHandle unbind() {
+                    return router.passHandle();
+                }
+
+                @Override
+                public void registerErrorHandler(ConnectionErrorHandler errorHandler) {
+                    delegatingHandler.addConnectionErrorHandler(errorHandler);
+                }
+            };
         }
 
         /**
