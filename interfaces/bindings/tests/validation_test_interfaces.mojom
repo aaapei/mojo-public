@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 
-[JavaPackage="org.chromium.mojo.bindings.test.mojom.mojo"]
+[DartPackage="_mojo_for_test_only", JavaPackage="org.chromium.mojo.bindings.test.mojom.mojo"]
 module mojo.test;
 
 struct StructA {
