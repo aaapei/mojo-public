@@ -67,12 +67,12 @@ class HumanResourceDatabaseImpl : public HumanResourceDatabase {
                      bool retrieve_finger_print,
                      const QueryEmployeeCallback& callback) override {
     if (employees_.find(id) == employees_.end()) {
-      callback.Run(nullptr, Array<uint8_t>());
+      callback.Run(nullptr, nullptr);
       return;
     }
-    callback.Run(employees_[id]->employee.Clone(),
-                 retrieve_finger_print ? employees_[id]->finger_print.Clone()
-                                       : Array<uint8_t>());
+    callback.Run(
+        employees_[id]->employee.Clone(),
+        retrieve_finger_print ? employees_[id]->finger_print.Clone() : nullptr);
   }
 
   void AttachFingerPrint(uint64_t id,
