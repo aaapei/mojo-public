@@ -30,7 +30,10 @@ class Environment {
   ~Environment();
 
   static const MojoAsyncWaiter* GetDefaultAsyncWaiter();
+
   static const MojoLogger* GetDefaultLogger();
+  // Setting the logger to null will use the standard implementation.
+  static void SetDefaultLogger(const MojoLogger* logger);
 
   // These instantiate and destroy an environment-specific run loop for the
   // current thread, allowing |GetDefaultAsyncWaiter()| to be used. (The run

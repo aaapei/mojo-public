@@ -62,6 +62,12 @@ const MojoLogger* Environment::GetDefaultLogger() {
 }
 
 // static
+void Environment::SetDefaultLogger(const MojoLogger* logger) {
+  assert(g_default_logger);  // Fails if not "inside" |Environment|.
+  g_default_logger = logger ? logger : &internal::kDefaultLogger;
+}
+
+// static
 void Environment::InstantiateDefaultRunLoop() {
   assert(!RunLoop::current());
   // Not leaked: accessible from |RunLoop::current()|.
