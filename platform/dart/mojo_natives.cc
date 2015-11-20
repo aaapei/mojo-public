@@ -13,6 +13,7 @@
 #include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/system/core.h"
 #include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/platform/dart/dart_handle_watcher.h"
 
 namespace mojo {
 namespace dart {
@@ -43,12 +44,7 @@ namespace dart {
   V(MojoHandle_Wait, 3)                    \
   V(MojoHandle_RegisterFinalizer, 2)       \
   V(MojoHandle_WaitMany, 3)                \
-  V(MojoHandleWatcher_GrowStateArrays, 1)  \
-  V(MojoHandleWatcher_WaitMany, 2)         \
-  V(MojoHandleWatcher_SendControlData, 4)  \
-  V(MojoHandleWatcher_RecvControlData, 1)  \
-  V(MojoHandleWatcher_SetControlHandle, 1) \
-  V(MojoHandleWatcher_GetControlHandle, 0)
+  V(MojoHandleWatcher_SendControlData, 5)
 
 MOJO_NATIVE_LIST(DECLARE_FUNCTION);
 
@@ -834,129 +830,16 @@ void MojoMessagePipe_QueryAndRead(Dart_NativeArguments arguments) {
   Dart_ListSetAt(result, 4, Dart_NewInteger(hlen));
 }
 
-struct MojoWaitManyState {
-  MojoWaitManyState() {}
-
-  std::vector<uint32_t> handles;
-  std::vector<uint32_t> signals;
-  std::vector<uint32_t> out_index;
-  std::vector<MojoHandleSignalsState> out_signals;
-
-  static MojoWaitManyState* GetInstance();
-
- private:
-  MOJO_DISALLOW_COPY_AND_ASSIGN(MojoWaitManyState);
-};
-
-// This global is safe because it is only accessed by the single handle watcher
-// isolate. If multiple handle watcher isolates are ever needed, it will need
-// to be replicated.
-MojoWaitManyState* MojoWaitManyState::GetInstance() {
-  static MojoWaitManyState* state = new MojoWaitManyState;
-  return state;
-}
-
-void MojoHandleWatcher_GrowStateArrays(Dart_NativeArguments arguments) {
-  int64_t new_length;
-  CHECK_INTEGER_ARGUMENT(arguments, 0, &new_length, InvalidArgument);
-
-  MojoWaitManyState& handle_watcher_wait_state =
-      *MojoWaitManyState::GetInstance();
-
-  handle_watcher_wait_state.handles.resize(new_length);
-  handle_watcher_wait_state.signals.resize(new_length);
-  handle_watcher_wait_state.out_index.resize(1);
-  handle_watcher_wait_state.out_signals.resize(new_length);
-
-  Dart_Handle dart_handles = Dart_NewExternalTypedData(
-      Dart_TypedData_kUint32, handle_watcher_wait_state.handles.data(),
-      handle_watcher_wait_state.handles.size());
-  if (Dart_IsError(dart_handles)) {
-    Dart_PropagateError(dart_handles);
-  }
-  if (Dart_IsNull(dart_handles)) {
-    SetNullReturn(arguments);
-    return;
-  }
-
-  Dart_Handle dart_signals = Dart_NewExternalTypedData(
-      Dart_TypedData_kUint32, handle_watcher_wait_state.signals.data(),
-      handle_watcher_wait_state.signals.size());
-  if (Dart_IsError(dart_signals)) {
-    Dart_PropagateError(dart_signals);
-  }
-  if (Dart_IsNull(dart_signals)) {
-    SetNullReturn(arguments);
-    return;
-  }
-
-  Dart_Handle dart_out_index = Dart_NewExternalTypedData(
-      Dart_TypedData_kUint32, handle_watcher_wait_state.out_index.data(),
-      handle_watcher_wait_state.out_index.size());
-  if (Dart_IsError(dart_out_index)) {
-    Dart_PropagateError(dart_out_index);
-  }
-  if (Dart_IsNull(dart_out_index)) {
-    SetNullReturn(arguments);
-    return;
-  }
-
-  Dart_Handle dart_out_signals = Dart_NewExternalTypedData(
-      Dart_TypedData_kUint64, handle_watcher_wait_state.out_signals.data(),
-      handle_watcher_wait_state.out_signals.size());
-  if (Dart_IsError(dart_out_signals)) {
-    Dart_PropagateError(dart_out_signals);
-  }
-  if (Dart_IsNull(dart_out_signals)) {
-    SetNullReturn(arguments);
-    return;
-  }
-
-  Dart_Handle list = Dart_NewList(4);
-  Dart_ListSetAt(list, 0, dart_handles);
-  Dart_ListSetAt(list, 1, dart_signals);
-  Dart_ListSetAt(list, 2, dart_out_index);
-  Dart_ListSetAt(list, 3, dart_out_signals);
-  Dart_SetReturnValue(arguments, list);
-}
-
-void MojoHandleWatcher_WaitMany(Dart_NativeArguments arguments) {
-  int64_t handles_len = 0;
-  int64_t deadline = 0;
-  CHECK_INTEGER_ARGUMENT(arguments, 0, &handles_len, InvalidArgument);
-  CHECK_INTEGER_ARGUMENT(arguments, 1, &deadline, InvalidArgument);
-
-  MojoWaitManyState& handle_watcher_wait_state =
-      *MojoWaitManyState::GetInstance();
-
-  uint32_t* handles = handle_watcher_wait_state.handles.data();
-  uint32_t* signals = handle_watcher_wait_state.signals.data();
-  uint32_t* out_index = handle_watcher_wait_state.out_index.data();
-  MojoHandleSignalsState* out_signals =
-      handle_watcher_wait_state.out_signals.data();
-
-  Dart_ThreadDisableProfiling();
-
-  MojoResult mojo_result = MojoWaitMany(handles, signals, handles_len, deadline,
-                                        out_index, out_signals);
-  Dart_ThreadEnableProfiling();
-
-  Dart_SetIntegerReturnValue(arguments, static_cast<int64_t>(mojo_result));
-}
-
-struct ControlData {
-  int64_t handle;
-  Dart_Port port;
-  int64_t data;
-};
 
 void MojoHandleWatcher_SendControlData(Dart_NativeArguments arguments) {
   int64_t control_handle = 0;
-  int64_t client_handle = 0;
+  int64_t command_code;
+  int64_t handle_or_deadline = 0;
   CHECK_INTEGER_ARGUMENT(arguments, 0, &control_handle, InvalidArgument);
-  CHECK_INTEGER_ARGUMENT(arguments, 1, &client_handle, InvalidArgument);
+  CHECK_INTEGER_ARGUMENT(arguments, 1, &command_code, InvalidArgument);
+  CHECK_INTEGER_ARGUMENT(arguments, 2, &handle_or_deadline, InvalidArgument);
 
-  Dart_Handle send_port_handle = Dart_GetNativeArgument(arguments, 2);
+  Dart_Handle send_port_handle = Dart_GetNativeArgument(arguments, 3);
   Dart_Port send_port_id = ILLEGAL_PORT;
   if (!Dart_IsNull(send_port_handle)) {
     Dart_Handle result = Dart_SendPortGetId(send_port_handle, &send_port_id);
@@ -966,53 +849,22 @@ void MojoHandleWatcher_SendControlData(Dart_NativeArguments arguments) {
     }
   }
 
-  int64_t data = 0;
-  CHECK_INTEGER_ARGUMENT(arguments, 3, &data, InvalidArgument);
+  int64_t signals = 0;
+  CHECK_INTEGER_ARGUMENT(arguments, 4, &signals, InvalidArgument);
 
-  ControlData cd;
-  cd.handle = client_handle;
-  cd.port = send_port_id;
-  cd.data = data;
-  const void* bytes = reinterpret_cast<const void*>(&cd);
+  HandleWatcherCommand command =
+      HandleWatcherCommand::FromDart(command_code,
+                                     handle_or_deadline,
+                                     send_port_id,
+                                     signals);
   MojoResult res = MojoWriteMessage(
-      control_handle, bytes, sizeof(cd), nullptr, 0, 0);
+      control_handle,
+      reinterpret_cast<const void*>(&command),
+      sizeof(command),
+      nullptr,
+      0,
+      0);
   Dart_SetIntegerReturnValue(arguments, static_cast<int64_t>(res));
-}
-
-void MojoHandleWatcher_RecvControlData(Dart_NativeArguments arguments) {
-  int64_t control_handle = 0;
-  CHECK_INTEGER_ARGUMENT(arguments, 0, &control_handle, Null);
-
-  ControlData cd;
-  void* bytes = reinterpret_cast<void*>(&cd);
-  uint32_t num_bytes = sizeof(cd);
-  uint32_t num_handles = 0;
-  MojoResult res = MojoReadMessage(
-      control_handle, bytes, &num_bytes, nullptr, &num_handles, 0);
-  if (res != MOJO_RESULT_OK) {
-    SetNullReturn(arguments);
-    return;
-  }
-
-  Dart_Handle list = Dart_NewList(3);
-  Dart_ListSetAt(list, 0, Dart_NewInteger(cd.handle));
-  if (cd.port != ILLEGAL_PORT) {
-    Dart_ListSetAt(list, 1, Dart_NewSendPort(cd.port));
-  }
-  Dart_ListSetAt(list, 2, Dart_NewInteger(cd.data));
-  Dart_SetReturnValue(arguments, list);
-}
-
-static int64_t mojo_control_handle = MOJO_HANDLE_INVALID;
-void MojoHandleWatcher_SetControlHandle(Dart_NativeArguments arguments) {
-  int64_t control_handle;
-  CHECK_INTEGER_ARGUMENT(arguments, 0, &control_handle, InvalidArgument);
-  mojo_control_handle = control_handle;
-  Dart_SetIntegerReturnValue(arguments, static_cast<int64_t>(MOJO_RESULT_OK));
-}
-
-void MojoHandleWatcher_GetControlHandle(Dart_NativeArguments arguments) {
-  Dart_SetIntegerReturnValue(arguments, mojo_control_handle);
 }
 
 }  // namespace dart
