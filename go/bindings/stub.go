@@ -38,9 +38,7 @@ func NewStub(connector *Connector, receiver MessageReceiver) *Stub {
 // ServeRequest synchronously serves one request from the message pipe: the
 // |Stub| waits on its underlying message pipe for a message and handles it.
 // Can be called from multiple goroutines. Each calling goroutine will receive
-// a different message or an error. Can be called concurrently with
-// ServeRequestInGoroutine. Closes itself in case of a message pipe error or
-// a non-nil error returned by the MessageReceiver.
+// a different message or an error. Closes itself in case of error.
 func (s *Stub) ServeRequest() error {
 	message, err := s.connector.ReadMessage()
 	if err != nil {
@@ -52,33 +50,6 @@ func (s *Stub) ServeRequest() error {
 		s.Close()
 	}
 	return err
-}
-
-// ServeRequestInGoroutine is version of ServeRequest that spawns a goroutine to
-// handle the incoming message.
-// The |Stub| waits on its underlying message pipe for a message, starts a
-// goroutine to handle the message and returns a channel. There will be sent
-// exactly one object through the returned channel: an encountered error or nil.
-// ServeRequestInGoroutine can be called from multiple goroutines. Each calling
-// goroutine will receive a different message or an error. Can be called
-// concurrently with ServeRequest. Closes itself in case of a message pipe error
-// or a non-nil error returned by the MessageReceiver.
-func (s *Stub) ServeRequestInGoroutine() <-chan error {
-	message, err := s.connector.ReadMessage()
-	c := make(chan error, 1)
-	if err != nil {
-		s.Close()
-		c <- err
-		return c
-	}
-	go func() {
-		err := s.receiver.Accept(message)
-		if err != nil {
-			s.Close()
-		}
-		c <- err
-	}()
-	return c
 }
 
 // Close immediately closes the |Stub| and its underlying message pipe. If the
