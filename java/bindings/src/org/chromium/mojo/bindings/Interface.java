@@ -333,12 +333,6 @@ public interface Interface extends ConnectionErrorHandler, Closeable {
     abstract class Manager<I extends Interface, P extends Proxy> {
 
         /**
-         * Returns the name of the interface. This is an opaque (but human readable) identifier used
-         * by the service provider to identify services.
-         */
-        public abstract String getName();
-
-        /**
          * Returns the version of the managed interface.
          */
         public abstract int getVersion();
@@ -439,5 +433,16 @@ public interface Interface extends ConnectionErrorHandler, Closeable {
          */
         protected abstract P buildProxy(Core core, MessageReceiverWithResponder messageReceiver);
 
+    }
+
+    /**
+     * The |Manager| object for interfaces having an associated service name in the bindings.
+     */
+    abstract class NamedManager<I extends Interface, P extends Proxy> extends Manager<I, P> {
+        /**
+         * Returns the name of the service. This is an opaque (but human readable) identifier used
+         * by the service provider to identify services.
+         */
+        public abstract String getName();
     }
 }

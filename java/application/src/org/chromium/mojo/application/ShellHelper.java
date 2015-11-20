@@ -22,12 +22,12 @@ public class ShellHelper {
      * @param core Implementation of the {@link Core} api.
      * @param shell Instance of the shell.
      * @param application URL to the application to use.
-     * @param manager {@link org.chromium.mojo.bindings.Interface.Manager} for the service to
+     * @param manager {@link org.chromium.mojo.bindings.Interface.NamedManager} for the service to
      *            connect to.
      * @return a proxy to the service.
      */
     public static <I extends Interface, P extends Proxy> P connectToService(
-            Core core, Shell shell, String application, Interface.Manager<I, P> manager) {
+            Core core, Shell shell, String application, Interface.NamedManager<I, P> manager) {
         Pair<ServiceProvider.Proxy, InterfaceRequest<ServiceProvider>> providerRequest =
                 ServiceProvider.MANAGER.getInterfaceRequest(core);
         try (ServiceProvider.Proxy provider = providerRequest.first) {

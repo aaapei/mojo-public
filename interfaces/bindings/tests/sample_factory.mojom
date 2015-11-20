@@ -24,6 +24,7 @@ struct Response {
   handle<message_pipe>? pipe;
 };
 
+[ServiceName="sample::NamedObject"]
 interface NamedObject {
   SetName(string name);
   GetName() => (string name);
