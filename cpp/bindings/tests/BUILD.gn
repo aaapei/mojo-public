@@ -25,6 +25,7 @@ mojo_sdk_source_set("tests") {
     "iterator_test_util.h",
     "iterator_util_unittest.cc",
     "map_unittest.cc",
+    "message_builder_unittest.cc",
     "message_queue.cc",
     "message_queue.h",
     "request_response_unittest.cc",

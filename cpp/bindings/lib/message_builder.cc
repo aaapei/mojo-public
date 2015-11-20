@@ -8,32 +8,19 @@
 #include "mojo/public/cpp/bindings/message.h"
 
 namespace mojo {
-namespace internal {
+namespace {
+using internal::MessageHeader;
+using internal::MessageHeaderWithRequestID;
 
 template <typename Header>
-void Allocate(Buffer* buf, Header** header) {
+void Allocate(internal::Buffer* buf, Header** header) {
   *header = static_cast<Header*>(buf->Allocate(sizeof(Header)));
   (*header)->num_bytes = sizeof(Header);
 }
 
-MessageBuilder::MessageBuilder(uint32_t name, size_t payload_size) {
-  Initialize(sizeof(MessageHeader) + payload_size);
+}  // namespace
 
-  MessageHeader* header;
-  Allocate(&buf_, &header);
-  header->version = 0;
-  header->name = name;
-}
-
-MessageBuilder::~MessageBuilder() {
-}
-
-MessageBuilder::MessageBuilder() {}
-
-void MessageBuilder::Initialize(size_t size) {
-  message_.AllocData(static_cast<uint32_t>(Align(size)));
-  buf_.Initialize(message_.mutable_data(), message_.data_num_bytes());
-}
+namespace internal {
 
 MessageWithRequestIDBuilder::MessageWithRequestIDBuilder(uint32_t name,
                                                          size_t payload_size,
@@ -49,4 +36,25 @@ MessageWithRequestIDBuilder::MessageWithRequestIDBuilder(uint32_t name,
 }
 
 }  // namespace internal
+
+MessageBuilder::MessageBuilder(uint32_t name, size_t payload_size) {
+  Initialize(sizeof(MessageHeader) + payload_size);
+
+  MessageHeader* header;
+  Allocate(&buf_, &header);
+  header->version = 0;
+  header->name = name;
+  header->flags = 0;
+}
+
+MessageBuilder::~MessageBuilder() {
+}
+
+MessageBuilder::MessageBuilder() {}
+
+void MessageBuilder::Initialize(size_t size) {
+  message_.AllocData(static_cast<uint32_t>(internal::Align(size)));
+  buf_.Initialize(message_.mutable_data(), message_.data_num_bytes());
+}
+
 }  // namespace mojo

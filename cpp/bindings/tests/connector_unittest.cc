@@ -36,7 +36,7 @@ class MessageAccumulator : public MessageReceiver {
 
 class ConnectorDeletingMessageAccumulator : public MessageAccumulator {
  public:
-  ConnectorDeletingMessageAccumulator(internal::Connector** connector)
+  explicit ConnectorDeletingMessageAccumulator(internal::Connector** connector)
       : connector_(connector) {}
 
   bool Accept(Message* message) override {
@@ -51,7 +51,7 @@ class ConnectorDeletingMessageAccumulator : public MessageAccumulator {
 
 class ReentrantMessageAccumulator : public MessageAccumulator {
  public:
-  ReentrantMessageAccumulator(internal::Connector* connector)
+  explicit ReentrantMessageAccumulator(internal::Connector* connector)
       : connector_(connector), number_of_calls_(0) {}
 
   bool Accept(Message* message) override {
@@ -83,7 +83,7 @@ class ConnectorTest : public testing::Test {
 
   void AllocMessage(const char* text, Message* message) {
     size_t payload_size = strlen(text) + 1;  // Plus null terminator.
-    internal::MessageBuilder builder(1, payload_size);
+    MessageBuilder builder(1, payload_size);
     memcpy(builder.buffer()->Allocate(payload_size), text, payload_size);
 
     builder.message()->MoveTo(message);

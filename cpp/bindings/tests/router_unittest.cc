@@ -19,7 +19,7 @@ namespace {
 
 void AllocRequestMessage(uint32_t name, const char* text, Message* message) {
   size_t payload_size = strlen(text) + 1;  // Plus null terminator.
-  internal::RequestMessageBuilder builder(name, payload_size);
+  RequestMessageBuilder builder(name, payload_size);
   memcpy(builder.buffer()->Allocate(payload_size), text, payload_size);
 
   builder.message()->MoveTo(message);
@@ -30,7 +30,7 @@ void AllocResponseMessage(uint32_t name,
                           uint64_t request_id,
                           Message* message) {
   size_t payload_size = strlen(text) + 1;  // Plus null terminator.
-  internal::ResponseMessageBuilder builder(name, payload_size, request_id);
+  ResponseMessageBuilder builder(name, payload_size, request_id);
   memcpy(builder.buffer()->Allocate(payload_size), text, payload_size);
 
   builder.message()->MoveTo(message);
