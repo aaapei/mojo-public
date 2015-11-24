@@ -374,6 +374,13 @@ struct DeclaredConstant {
 // Declaration Data
 ////////////////////////////////////////////////////////////////////////////
 
+
+struct Attribute {
+  string key;
+
+  LiteralValue value;
+};
+
 // This structure contains additional data that may be present in
 // a Mojom declaration. Some owning contexts may
 // provide some of this data.
@@ -431,10 +438,3 @@ struct ContainedDeclarations {
   // The the constant keys of constants declared in this namespace.
   array<string>? constants;
 };
-
-struct Attribute {
-  string key;
-  string value;
-};
-
-
