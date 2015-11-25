@@ -141,6 +141,9 @@ func (c *CGoSystem) ReadData(consumerHandle uint32, flags uint32) (result uint32
 	if r := C.MojoReadData(C.MojoHandle(consumerHandle), nil, &numBytes, C.MOJO_READ_DATA_FLAG_QUERY); r != C.MOJO_RESULT_OK {
 		return uint32(r), nil
 	}
+	if numBytes == 0 {
+		return uint32(C.MOJO_RESULT_OK), nil
+	}
 	buf = make([]byte, int(numBytes))
 	r := C.MojoReadData(C.MojoHandle(consumerHandle), unsafe.Pointer(&buf[0]), &numBytes, C.MojoReadDataFlags(flags))
 	buf = buf[0:int(numBytes)]
