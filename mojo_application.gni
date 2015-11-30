@@ -222,7 +222,7 @@ template("mojo_native_application") {
       } else {
         input_file_extension = ".nexe"
         output_file_extension = "_${target_cpu}.nexe.mojo"
-        content_handler = "content_handler_sfi"
+        content_handler = "content_handler_sfi_nexe"
       }
       input_file = "${base_target_name}${input_file_extension}"
       output_file = "${base_target_name}${output_file_extension}"
