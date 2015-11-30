@@ -27,6 +27,24 @@ union PodUnion {
   AnEnum f_enum;
 };
 
+// Tests that you can reference yet-to-be-declared unions in a union.
+union UnionOfUnions {
+  ObjectUnion u;
+  array<ObjectUnion> a_ou;
+  array<HandleUnion> a_hu;
+  map<int64, ObjectUnion> m_ou;
+  map<int64, HandleUnion> m_hu;
+};
+
+// Tests that you can reference yet-to-be-declared unions in a struct.
+struct StructOfUnions {
+  ObjectUnion u;
+  array<ObjectUnion> a_ou;
+  array<HandleUnion> a_hu;
+  map<int64, ObjectUnion> m_ou;
+  map<int64, HandleUnion> m_hu;
+};
+
 union ObjectUnion {
   int8   f_int8;
   string f_string;

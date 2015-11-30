@@ -172,6 +172,26 @@ struct IsUnionDataType {
       sizeof(Test<T>(0)) == sizeof(YesType) && !std::is_const<T>::value;
 };
 
+// To introduce a new mojom type, you must define (partial or full) template
+// specializations for the following traits templates, which operate on the C++
+// wrapper types representing a mojom type:
+//   - WrapperTraits: provides a |DataType| typedef which points to the
+//                    serialized data type.
+//   - ValueTraits: provides an |Equals()| method for comparing the two wrapper
+//                  values of the same type.
+//
+// Currently, full specializations of WrapperTraits are generated for mojo
+// structs in their generated `.mojom.h`. In contrast, WrapperTraits for Unions
+// don't need to be auto-generated because their underlying DataType can be
+// accessed without dependency issues -- a catch-all WrapperTraits for unions is
+// instead defined here.
+// TODO(vardhan): Merge ValueTraits and WrapperTraits into one?
+// TODO(vardhan): Write a doc about all the Traits templates you need to touch
+// when introducing a new mojom type.
+// TODO(vardhan): Instead of providing |move_only| & |is_union| template
+// parameters, provide a default "typename Enable = void" template parameter,
+// and have specializations define their own Enable expressions (similar to how
+// ValueTraits is).
 template <typename T,
           bool move_only = IsMoveOnlyType<T>::value,
           bool is_union =
@@ -180,39 +200,31 @@ struct WrapperTraits;
 
 template <typename T>
 struct WrapperTraits<T, false, false> {
-  typedef T DataType;
+  using DataType = T;
 };
 template <typename H>
 struct WrapperTraits<ScopedHandleBase<H>, true, false> {
-  typedef H DataType;
+  using DataType = H;
 };
 template <typename I>
 struct WrapperTraits<InterfaceRequest<I>, true, false> {
-  typedef MessagePipeHandle DataType;
+  using DataType = MessagePipeHandle;
 };
 template <typename Interface>
 struct WrapperTraits<InterfacePtr<Interface>, true, false> {
-  typedef Interface_Data DataType;
-};
-template <typename S>
-struct WrapperTraits<StructPtr<S>, true, false> {
-  typedef typename S::Data_* DataType;
-};
-template <typename S>
-struct WrapperTraits<InlinedStructPtr<S>, true, false> {
-  typedef typename S::Data_* DataType;
+  using DataType = Interface_Data;
 };
 template <typename U>
 struct WrapperTraits<StructPtr<U>, true, true> {
-  typedef typename U::Data_ DataType;
+  using DataType = typename U::Data_;
 };
 template <typename U>
 struct WrapperTraits<InlinedStructPtr<U>, true, true> {
-  typedef typename U::Data_ DataType;
+  using DataType = typename U::Data_;
 };
 template <typename S>
 struct WrapperTraits<S, true, false> {
-  typedef typename S::Data_* DataType;
+  using DataType = typename S::Data_*;
 };
 
 template <typename T, typename Enable = void>
