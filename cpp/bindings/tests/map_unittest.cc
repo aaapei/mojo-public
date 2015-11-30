@@ -253,7 +253,7 @@ TEST_F(MapTest, ArrayOfMap) {
 
     size_t size = GetSerializedSize_(array);
     FixedBufferForTesting buf(size);
-    Array_Data<Map_Data<int32_t, int8_t>*>* data;
+    Array_Data<Map_Data<int32_t, int8_t>*>* data = nullptr;
     ArrayValidateParams validate_params(
         0, false, new ArrayValidateParams(0, false, nullptr));
     EXPECT_EQ(internal::ValidationError::NONE,
@@ -276,7 +276,7 @@ TEST_F(MapTest, ArrayOfMap) {
 
     size_t size = GetSerializedSize_(array);
     FixedBufferForTesting buf(size);
-    Array_Data<Map_Data<String_Data*, Array_Data<bool>*>*>* data;
+    Array_Data<Map_Data<String_Data*, Array_Data<bool>*>*>* data = nullptr;
     ArrayValidateParams validate_params(
         0, false, new ArrayValidateParams(
                       0, false, new ArrayValidateParams(0, false, nullptr)));
@@ -314,7 +314,7 @@ TEST_F(MapTest, Serialization_MapWithScopedEnumKeys) {
 
   size_t size = GetSerializedSize_(test_map);
   FixedBufferForTesting buf(size);
-  Map_Data<int32_t, uint32_t>* data;
+  Map_Data<int32_t, uint32_t>* data = nullptr;
   ArrayValidateParams validate_params(0, false, nullptr);
 
   SerializeMap_(&test_map, &buf, &data, &validate_params);
@@ -356,7 +356,7 @@ TEST_F(MapTest, Serialization_MapWithScopedEnumVals) {
 
   size_t size = GetSerializedSize_(test_map);
   FixedBufferForTesting buf(size);
-  Map_Data<uint32_t, int32_t>* data;
+  Map_Data<uint32_t, int32_t>* data = nullptr;
   ArrayValidateParams validate_params(0, false, nullptr);
 
   SerializeMap_(&test_map, &buf, &data, &validate_params);

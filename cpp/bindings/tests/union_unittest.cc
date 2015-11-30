@@ -415,7 +415,7 @@ TEST(UnionTest, PodUnionInArraySerialization) {
   EXPECT_EQ(40U, size);
 
   mojo::internal::FixedBufferForTesting buf(size);
-  mojo::internal::Array_Data<internal::PodUnion_Data>* data;
+  mojo::internal::Array_Data<internal::PodUnion_Data>* data = nullptr;
   mojo::internal::ArrayValidateParams validate_params(0, false, nullptr);
   SerializeArray_(&array, &buf, &data, &validate_params);
 
@@ -440,7 +440,7 @@ TEST(UnionTest, PodUnionInArrayValidation) {
   size_t size = GetSerializedSize_(array);
 
   mojo::internal::FixedBufferForTesting buf(size);
-  mojo::internal::Array_Data<internal::PodUnion_Data>* data;
+  mojo::internal::Array_Data<internal::PodUnion_Data>* data = nullptr;
   mojo::internal::ArrayValidateParams validate_params(0, false, nullptr);
   SerializeArray_(&array, &buf, &data, &validate_params);
 
@@ -468,7 +468,7 @@ TEST(UnionTest, PodUnionInArraySerializationWithNull) {
   EXPECT_EQ(40U, size);
 
   mojo::internal::FixedBufferForTesting buf(size);
-  mojo::internal::Array_Data<internal::PodUnion_Data>* data;
+  mojo::internal::Array_Data<internal::PodUnion_Data>* data = nullptr;
   mojo::internal::ArrayValidateParams validate_params(0, true, nullptr);
   SerializeArray_(&array, &buf, &data, &validate_params);
 
@@ -685,7 +685,7 @@ TEST(UnionTest, PodUnionInMapSerialization) {
 
   mojo::internal::FixedBufferForTesting buf(size);
   mojo::internal::Map_Data<mojo::internal::String_Data*,
-                           internal::PodUnion_Data>* data;
+                           internal::PodUnion_Data>* data = nullptr;
   mojo::internal::ArrayValidateParams validate_params(0, false, nullptr);
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
             SerializeMap_(&map, &buf, &data, &validate_params));
@@ -710,7 +710,7 @@ TEST(UnionTest, PodUnionInMapSerializationWithNull) {
 
   mojo::internal::FixedBufferForTesting buf(size);
   mojo::internal::Map_Data<mojo::internal::String_Data*,
-                           internal::PodUnion_Data>* data;
+                           internal::PodUnion_Data>* data = nullptr;
   mojo::internal::ArrayValidateParams validate_params(0, true, nullptr);
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
             SerializeMap_(&map, &buf, &data, &validate_params));

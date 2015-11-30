@@ -196,7 +196,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfPOD) {
   EXPECT_EQ(8U + 4 * 4U, size);
 
   FixedBufferForTesting buf(size);
-  Array_Data<int32_t>* data;
+  Array_Data<int32_t>* data = nullptr;
   ArrayValidateParams validate_params(0, false, nullptr);
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
             SerializeArray_(&array, &buf, &data, &validate_params));
@@ -215,7 +215,7 @@ TEST_F(ArrayTest, Serialization_EmptyArrayOfPOD) {
   EXPECT_EQ(8U, size);
 
   FixedBufferForTesting buf(size);
-  Array_Data<int32_t>* data;
+  Array_Data<int32_t>* data = nullptr;
   ArrayValidateParams validate_params(0, false, nullptr);
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
             SerializeArray_(&array, &buf, &data, &validate_params));
@@ -238,7 +238,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfArrayOfPOD) {
   EXPECT_EQ(8U + 2 * 8U + 2 * (8U + 4 * 4U), size);
 
   FixedBufferForTesting buf(size);
-  Array_Data<Array_Data<int32_t>*>* data;
+  Array_Data<Array_Data<int32_t>*>* data = nullptr;
   ArrayValidateParams validate_params(
       0, false, new ArrayValidateParams(0, false, nullptr));
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
@@ -276,7 +276,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfScopedEnum) {
   EXPECT_EQ(8U + (MOJO_ARRAYSIZE(TEST_VALS) * sizeof(int32_t)), size);
 
   FixedBufferForTesting buf(size);
-  Array_Data<int32_t>* data;
+  Array_Data<int32_t>* data = nullptr;
   ArrayValidateParams validate_params(0, false, nullptr);
   SerializeArray_(&array, &buf, &data, &validate_params);
 
@@ -297,7 +297,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfBool) {
   EXPECT_EQ(8U + 8U, size);
 
   FixedBufferForTesting buf(size);
-  Array_Data<bool>* data;
+  Array_Data<bool>* data = nullptr;
   ArrayValidateParams validate_params(0, false, nullptr);
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
             SerializeArray_(&array, &buf, &data, &validate_params));
@@ -325,7 +325,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfString) {
             size);
 
   FixedBufferForTesting buf(size);
-  Array_Data<String_Data*>* data;
+  Array_Data<String_Data*>* data = nullptr;
   ArrayValidateParams validate_params(
       0, false, new ArrayValidateParams(0, false, nullptr));
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
@@ -358,7 +358,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfHandle) {
 
   // We're going to reuse this buffer.. twice.
   FixedBufferForTesting buf(size * 3);
-  Array_Data<MessagePipeHandle>* data;
+  Array_Data<MessagePipeHandle>* data = nullptr;
 
   // 1.  Serialization should fail on non-nullable invalid Handle.
   ArrayValidateParams validate_params(4, false, nullptr);
@@ -402,7 +402,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfInterfacePtr) {
             size);
 
   FixedBufferForTesting buf(size * 3);
-  Array_Data<mojo::internal::Interface_Data>* output;
+  Array_Data<mojo::internal::Interface_Data>* output = nullptr;
 
   // 1.  Invalid InterfacePtr should fail serialization.
   ArrayValidateParams validate_non_nullable(1, false, nullptr);
