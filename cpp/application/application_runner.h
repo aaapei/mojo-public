@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_APPLICATION_APPLICATION_RUNNER_H_
-#define MOJO_PUBLIC_APPLICATION_APPLICATION_RUNNER_H_
+#ifndef MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_RUNNER_H_
+#define MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_RUNNER_H_
 
+#include "mojo/public/c/environment/logger.h"
 #include "mojo/public/cpp/system/core.h"
 
 namespace mojo {
@@ -28,6 +29,14 @@ class ApplicationRunner {
   explicit ApplicationRunner(ApplicationDelegate* delegate);
   ~ApplicationRunner();
 
+  // This replaces the underlying logger implementation with the one provided.
+  // This static method may only be called while |Run()| is running. |logger|
+  // must outlive the duration of this |Run()|, or until the subsequent
+  // |ApplicationRunner::SetDefaultLogger()|, which ever comes first.
+  static void SetDefaultLogger(const MojoLogger* logger);
+  // This static method may only be called while |Run()| is running.
+  static const MojoLogger* GetDefaultLogger();
+
   // Once the various parameters have been set above, use Run to initialize an
   // ApplicationImpl wired to the provided delegate, and run a RunLoop until
   // the application exits.
@@ -41,4 +50,4 @@ class ApplicationRunner {
 
 }  // namespace mojo
 
-#endif  // MOJO_PUBLIC_APPLICATION_APPLICATION_RUNNER_H_
+#endif  // MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_RUNNER_H_

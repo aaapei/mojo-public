@@ -7,9 +7,13 @@
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/application/application_impl.h"
 #include "mojo/public/cpp/environment/environment.h"
+#include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 
 namespace mojo {
+namespace {
+bool g_running = false;
+}  // namespace
 
 // static
 void ApplicationImpl::Terminate() {
@@ -17,13 +21,29 @@ void ApplicationImpl::Terminate() {
 }
 
 ApplicationRunner::ApplicationRunner(ApplicationDelegate* delegate)
-    : delegate_(delegate) {
-}
+    : delegate_(delegate) {}
+
 ApplicationRunner::~ApplicationRunner() {
   assert(!delegate_);
 }
 
+// static
+void ApplicationRunner::SetDefaultLogger(const MojoLogger* logger) {
+  MOJO_DCHECK(g_running);
+  Environment::SetDefaultLogger(logger);
+}
+
+// static
+const MojoLogger* ApplicationRunner::GetDefaultLogger() {
+  MOJO_DCHECK(g_running);
+  return Environment::GetDefaultLogger();
+}
+
 MojoResult ApplicationRunner::Run(MojoHandle app_request_handle) {
+  MOJO_DCHECK(!g_running)
+      << "Another ApplicationRunner::Run() is already running!";
+
+  g_running = true;
   Environment env;
   {
     RunLoop loop;
@@ -34,6 +54,9 @@ MojoResult ApplicationRunner::Run(MojoHandle app_request_handle) {
 
   delete delegate_;
   delegate_ = nullptr;
+
+  g_running = false;
+
   return MOJO_RESULT_OK;
 }
 
