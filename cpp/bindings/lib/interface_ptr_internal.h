@@ -92,11 +92,12 @@ class InterfacePtrState {
     version_ = info.version();
   }
 
-  bool WaitForIncomingResponse() {
+  bool WaitForIncomingResponse(
+      MojoDeadline deadline = MOJO_DEADLINE_INDEFINITE) {
     ConfigureProxyIfNecessary();
 
     MOJO_DCHECK(router_);
-    return router_->WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE);
+    return router_->WaitForIncomingMessage(deadline);
   }
 
   // After this method is called, the object is in an invalid state and

@@ -226,6 +226,58 @@ TEST_F(RouterTest, BasicRequestResponse_Synchronous) {
             std::string(reinterpret_cast<const char*>(response.payload())));
 }
 
+TEST_F(RouterTest, BasicRequestResponse_SynchronousTimeout) {
+  internal::Router router0(handle0_.Pass(), internal::FilterChain());
+  internal::Router router1(handle1_.Pass(), internal::FilterChain());
+
+  ResponseGenerator generator;
+  router1.set_incoming_receiver(&generator);
+
+  Message request;
+  AllocRequestMessage(1, "hello", &request);
+
+  EXPECT_FALSE(router1.WaitForIncomingMessage(0));
+  EXPECT_FALSE(router0.WaitForIncomingMessage(0));
+  EXPECT_FALSE(router0.encountered_error());
+  EXPECT_FALSE(router1.encountered_error());
+
+  MessageQueue message_queue;
+  router0.AcceptWithResponder(&request, new MessageAccumulator(&message_queue));
+
+  router1.WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE);
+  router0.WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE);
+
+  EXPECT_FALSE(message_queue.IsEmpty());
+
+  EXPECT_FALSE(router1.WaitForIncomingMessage(0));
+  EXPECT_FALSE(router0.WaitForIncomingMessage(0));
+  EXPECT_FALSE(router0.encountered_error());
+  EXPECT_FALSE(router1.encountered_error());
+
+  Message response;
+  message_queue.Pop(&response);
+
+  EXPECT_EQ(std::string("hello world!"),
+            std::string(reinterpret_cast<const char*>(response.payload())));
+
+  // Send a second message on the pipe.
+  Message request2;
+  AllocRequestMessage(1, "hello again", &request2);
+
+  router0.AcceptWithResponder(&request2,
+                              new MessageAccumulator(&message_queue));
+
+  router1.WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE);
+  router0.WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE);
+
+  EXPECT_FALSE(message_queue.IsEmpty());
+
+  message_queue.Pop(&response);
+
+  EXPECT_EQ(std::string("hello again world!"),
+            std::string(reinterpret_cast<const char*>(response.payload())));
+}
+
 TEST_F(RouterTest, RequestWithNoReceiver) {
   internal::Router router0(handle0_.Pass(), internal::FilterChain());
   internal::Router router1(handle1_.Pass(), internal::FilterChain());
@@ -335,6 +387,44 @@ TEST_F(RouterTest, MissingResponses) {
   AllocRequestMessage(1, "hello again", &request2);
   router0.AcceptWithResponder(&request2,
                               new MessageAccumulator(&message_queue));
+  PumpMessages();
+
+  // Make sure there was an error.
+  EXPECT_TRUE(router0.encountered_error());
+}
+
+// Tests that if the receiving application destroys the responder_ without
+// sending a response, then we close the Pipe as a way of signaling an error
+// condition to the caller.
+// Tests that timeout-0 calls still work and signal an error.
+TEST_F(RouterTest, MissingResponses_Timeout) {
+  internal::Router router0(handle0_.Pass(), internal::FilterChain());
+  internal::Router router1(handle1_.Pass(), internal::FilterChain());
+
+  LazyResponseGenerator generator;
+  router1.set_incoming_receiver(&generator);
+
+  Message request;
+  AllocRequestMessage(1, "hello", &request);
+
+  MessageQueue message_queue;
+  router0.AcceptWithResponder(&request, new MessageAccumulator(&message_queue));
+  PumpMessages();
+
+  // The request has been received but no response has been sent.
+  EXPECT_TRUE(message_queue.IsEmpty());
+
+  // Destroy the responder MessagerReceiver but don't send any response.
+  // This should close the pipe.
+  generator.CompleteWithoutResponse();
+  PumpMessages();
+
+  // Check that no response was received.
+  EXPECT_TRUE(message_queue.IsEmpty());
+
+  EXPECT_FALSE(router0.WaitForIncomingMessage(0));
+  EXPECT_TRUE(router0.encountered_error());
+
   PumpMessages();
 
   // Make sure there was an error.

@@ -79,6 +79,10 @@ class MathCalculatorUI {
     return calculator_.WaitForIncomingResponse();
   }
 
+  bool WaitForIncomingResponseWithTimeout(MojoDeadline deadline) {
+    return calculator_.WaitForIncomingResponseWithTimeout(deadline);
+  }
+
   bool encountered_error() const { return calculator_.encountered_error(); }
 
   void Add(double value) { calculator_->Add(value, callback_); }
@@ -237,6 +241,13 @@ TEST_F(InterfacePtrTest, EndToEnd_Synchronous) {
   calc_impl.WaitForIncomingMethodCall();
   calculator_ui.WaitForIncomingResponse();
   EXPECT_EQ(10.0, calculator_ui.GetOutput());
+
+  EXPECT_FALSE(calculator_ui.WaitForIncomingResponseWithTimeout(0));
+  EXPECT_FALSE(calculator_ui.encountered_error());
+  calculator_ui.Multiply(3.0);
+  calc_impl.WaitForIncomingMethodCall();
+  EXPECT_TRUE(calculator_ui.WaitForIncomingResponseWithTimeout(0));
+  EXPECT_EQ(30.0, calculator_ui.GetOutput());
 }
 
 TEST_F(InterfacePtrTest, Movable) {

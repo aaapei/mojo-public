@@ -69,6 +69,10 @@ class Connector : public MessageReceiver {
   // Waits for the next message on the pipe, blocking until one arrives,
   // |deadline| elapses, or an error happens. Returns |true| if a message has
   // been delivered, |false| otherwise.
+  // When returning |false| closes the message pipe, unless the reason for
+  // for returning |false| was |MOJO_RESULT_SHOULD_WAIT| or
+  // |MOJO_RESULT_DEADLINE_EXCEEDED|.
+  // Use |encountered_error| to see if an error occurred.
   bool WaitForIncomingMessage(MojoDeadline deadline);
 
   // MessageReceiver implementation:

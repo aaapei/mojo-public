@@ -121,7 +121,18 @@ class InterfacePtr {
   // This method may only be called after the InterfacePtr has been bound to a
   // message pipe.
   bool WaitForIncomingResponse() {
-    return internal_state_.WaitForIncomingResponse();
+    return internal_state_.WaitForIncomingResponse(MOJO_DEADLINE_INDEFINITE);
+  }
+
+  // Blocks the current thread until the next incoming response callback
+  // arrives, an error occurs, or the deadline exceeded. Returns |true| if a
+  // response arrived, or |false| otherwise. Use |encountered_error| to know
+  // if an error occurred, of if the deadline exceeded.
+  //
+  // This method may only be called after the InterfacePtr has been bound to a
+  // message pipe.
+  bool WaitForIncomingResponseWithTimeout(MojoDeadline deadline) {
+    return internal_state_.WaitForIncomingResponse(deadline);
   }
 
   // Indicates whether the message pipe has encountered an error. If true,

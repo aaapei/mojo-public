@@ -49,7 +49,7 @@ bool Connector::WaitForIncomingMessage(MojoDeadline deadline) {
 
   MojoResult rv =
       Wait(message_pipe_.get(), MOJO_HANDLE_SIGNAL_READABLE, deadline, nullptr);
-  if (rv == MOJO_RESULT_SHOULD_WAIT)
+  if (rv == MOJO_RESULT_SHOULD_WAIT || rv == MOJO_RESULT_DEADLINE_EXCEEDED)
     return false;
   if (rv != MOJO_RESULT_OK) {
     NotifyError();
