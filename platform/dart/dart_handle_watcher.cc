@@ -35,23 +35,13 @@ static void PostNull(Dart_Port port) {
   Dart_PostCObject(port, &message);
 }
 
-static void PostSignal(Dart_Port port,
-                       int32_t signals,
-                       int32_t signalled) {
+static void PostSignal(Dart_Port port, int32_t signalled) {
   if (port == ILLEGAL_PORT) {
     return;
   }
   Dart_CObject message;
-  Dart_CObject value_0;
-  Dart_CObject value_1;
-  Dart_CObject* values[] = { &value_0, &value_1 };
-  value_0.type = Dart_CObject_kInt32;
-  value_0.value.as_int32 = signals;
-  value_1.type = Dart_CObject_kInt32;
-  value_1.value.as_int32 = signalled;
-  message.type = Dart_CObject_kArray;
-  message.value.as_array.length = 2;
-  message.value.as_array.values = &values[0];
+  message.type = Dart_CObject_kInt32;
+  message.value.as_int32 = signalled;
   Dart_PostCObject(port, &message);
 }
 
@@ -208,9 +198,7 @@ void HandleWatcherThreadState::CloseHandle(MojoHandle handle,
   if (pruning) {
     // If this handle is being pruned, notify the application isolate
     // by sending PEER_CLOSED;
-    PostSignal(handle_ports_[index],
-               wait_many_signals_[index],
-               MOJO_HANDLE_SIGNAL_PEER_CLOSED);
+    PostSignal(handle_ports_[index], MOJO_HANDLE_SIGNAL_PEER_CLOSED);
   }
   // Remove the handle.
   RemoveHandle(handle);
@@ -439,7 +427,7 @@ void HandleWatcherThreadState::ProcessWaitManyResults(MojoResult result,
       // Something happened to this handle.
 
       // Notify the port.
-      PostSignal(handle_ports_[i], signals, satisfied_signals);
+      PostSignal(handle_ports_[i], satisfied_signals);
 
       // Now that we have notified the waiting Dart program, remove this handle
       // from the wait many set until we are requested to add it again.
