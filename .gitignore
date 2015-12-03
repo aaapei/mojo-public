@@ -1,5 +1,2 @@
 *.pyc
 /tools/prebuilt/
-
-# Download the Mojom parser binary.
-/tools/bindings/mojom_parser/bin/linux64/mojom_parser
