@@ -632,6 +632,20 @@ TEST(UnionTest, Validation_NullableUnion) {
   free(raw_buf);
 }
 
+// Serialize a null union and deserialize it back to check that we have a null
+// union.
+TEST(UnionTest, Deserialize_NullableUnion) {
+  char buf[1024];
+  SmallStructPtr small_struct = SmallStruct::New();
+  small_struct->Serialize(buf, sizeof(buf));
+  EXPECT_TRUE(small_struct->pod_union.is_null());
+
+  SmallStructPtr deserialized_struct = SmallStruct::New();
+  deserialized_struct->Deserialize(buf);
+
+  EXPECT_TRUE(deserialized_struct->pod_union.is_null());
+}
+
 // Validation passes with nullable null union containing non-nullable objects.
 TEST(UnionTest, Validation_NullableObjectUnion) {
   Environment environment;
