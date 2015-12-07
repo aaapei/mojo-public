@@ -12,6 +12,7 @@
 #include "mojo/public/cpp/bindings/string.h"
 #include "mojo/public/cpp/bindings/tests/container_test_util.h"
 #include "mojo/public/cpp/environment/environment.h"
+#include "mojo/public/interfaces/bindings/tests/rect.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {
@@ -24,6 +25,7 @@ using mojo::internal::ArrayValidateParams;
 using mojo::internal::FixedBufferForTesting;
 using mojo::internal::Map_Data;
 using mojo::internal::String_Data;
+using mojo::internal::ValidationError;
 
 struct StringIntData {
   const char* string_data;
@@ -256,7 +258,7 @@ TEST_F(MapTest, ArrayOfMap) {
     Array_Data<Map_Data<int32_t, int8_t>*>* data = nullptr;
     ArrayValidateParams validate_params(
         0, false, new ArrayValidateParams(0, false, nullptr));
-    EXPECT_EQ(internal::ValidationError::NONE,
+    EXPECT_EQ(ValidationError::NONE,
               SerializeArray_(&array, &buf, &data, &validate_params));
 
     Array<Map<int32_t, int8_t>> deserialized_array;
@@ -280,7 +282,7 @@ TEST_F(MapTest, ArrayOfMap) {
     ArrayValidateParams validate_params(
         0, false, new ArrayValidateParams(
                       0, false, new ArrayValidateParams(0, false, nullptr)));
-    EXPECT_EQ(internal::ValidationError::NONE,
+    EXPECT_EQ(ValidationError::NONE,
               SerializeArray_(&array, &buf, &data, &validate_params));
 
     Array<Map<String, Array<bool>>> deserialized_array;
@@ -375,6 +377,60 @@ TEST_F(MapTest, Serialization_MapWithScopedEnumVals) {
     ASSERT_NE(test_map.find(iter.GetKey()), test_map.end());
     EXPECT_EQ(test_map2.at(iter.GetKey()), test_map2.at(iter.GetKey()));
   }
+}
+
+// Test serialization/deserialization of a map with null elements.
+TEST_F(MapTest, Serialization_MapOfNullableStructs) {
+  ArrayValidateParams validate_nullable(2, true, nullptr);
+  ArrayValidateParams validate_non_nullable(2, false, nullptr);
+
+  Map<uint32_t, RectPtr> map;
+  map[0] = RectPtr();
+  map[1] = Rect::New();
+  map[1]->x = 1;
+  map[1]->y = 2;
+  map[1]->width = 3;
+  map[1]->height = 4;
+  EXPECT_TRUE(map[0].is_null());
+  EXPECT_TRUE(!map[1].is_null());
+
+  size_t size = GetSerializedSize_(map);
+  EXPECT_EQ(8u +                       // map header
+                (8u + 8u) +            // pointers to keys and values array
+                (8u + 2 * 4u) +        // keys array data
+                (8u +                  // values array data
+                 (8u) +                // 1 null value
+                 (8u + 8U + 4 * 4U)),  // 1 Rect value
+            size);
+
+  // 1. Should not be able to serialize null elements.
+  {
+    FixedBufferForTesting buf(size);
+    Map_Data<int32_t, Rect::Data_*>* data = nullptr;
+    EXPECT_EQ(ValidationError::UNEXPECTED_NULL_POINTER,
+              SerializeMap_(&map, &buf, &data, &validate_non_nullable));
+  }
+
+  // 2. Successfully serialize null elements.
+  FixedBufferForTesting buf(size);
+  Map_Data<int32_t, Rect::Data_*>* data = nullptr;
+  EXPECT_EQ(ValidationError::NONE,
+            SerializeMap_(&map, &buf, &data, &validate_nullable));
+  EXPECT_NE(nullptr, data);
+
+  // 3. Deserialize deserialize null elements.
+  Map<uint32_t, RectPtr> map2;
+  EXPECT_EQ(0u, map2.size());
+  EXPECT_TRUE(map2.is_null());
+  Deserialize_(data, &map2);
+  EXPECT_EQ(2u, map2.size());
+  EXPECT_FALSE(map2.is_null());
+  EXPECT_TRUE(map2[0].is_null());
+  EXPECT_FALSE(map2[1].is_null());
+  EXPECT_EQ(1, map2[1]->x);
+  EXPECT_EQ(2, map2[1]->y);
+  EXPECT_EQ(3, map2[1]->width);
+  EXPECT_EQ(4, map2[1]->height);
 }
 
 }  // namespace

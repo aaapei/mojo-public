@@ -25,11 +25,10 @@ class StructHelper {
 
 }  // namespace internal
 
-// Smart pointer wrapping a mojom structure with move-only semantics.
+// Smart pointer wrapping a mojom structure or union, with move-only semantics.
 template <typename Struct>
 class StructPtr {
  public:
-
   StructPtr() : ptr_(nullptr) {}
   StructPtr(decltype(nullptr)) : ptr_(nullptr) {}
 
@@ -103,11 +102,11 @@ class StructPtr {
   MOJO_MOVE_ONLY_TYPE(StructPtr);
 };
 
-// Designed to be used when Struct is small and copyable.
+// Designed to be used when Struct is small and copyable. Unions are always
+// InlinedStructPtr in practice.
 template <typename Struct>
 class InlinedStructPtr {
  public:
-
   InlinedStructPtr() : is_null_(true) {}
   InlinedStructPtr(decltype(nullptr)) : is_null_(true) {}
 

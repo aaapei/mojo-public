@@ -82,6 +82,8 @@ class ValidationErrorObserverForTesting {
 }  // namespace mojo
 
 // In a debug build, logs a serialization warning.
+// TODO(vardhan): Make this macro work like an ostream instead of having to
+// supply a description.
 #define MOJO_INTERNAL_DLOG_SERIALIZATION_WARNING(error, description) \
   MOJO_DLOG(WARNING) << "The outgoing message will trigger "         \
                      << ValidationErrorToString(error)               \

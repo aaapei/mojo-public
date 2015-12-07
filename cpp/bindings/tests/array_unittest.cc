@@ -435,26 +435,22 @@ TEST_F(ArrayTest, Serialization_ArrayOfInterfacePtr) {
 
 // Test serializing and deserializing a struct with an Array<> of another struct
 // which has an InterfacePtr.
-TEST_F(ArrayTest, Serialization_StructWithArrayOfIntefacePtr) {
+TEST_F(ArrayTest, Serialization_StructWithArrayOfInterfacePtr) {
   StructWithInterfaceArray struct_arr_iface;
   struct_arr_iface.structs_array = Array<StructWithInterfacePtr>::New(1);
   struct_arr_iface.nullable_structs_array =
       Array<StructWithInterfacePtr>::New(1);
 
   size_t size = GetSerializedSize_(struct_arr_iface);
-  EXPECT_EQ(8U                // struct header
-                + 8U          // offset to |structs_array|
-                + (8U         // array header
-                   + 8U       // offset to StructWithInterface
-                   + (8U      // StructWithInterface header
-                      + 8U))  // Interface_Data
-                + 8U          // offset to |structs_nullable_array|
-                + 8U          // offset to |nullable_structs_array|
-                + (8U         // array header
-                   + 8U       // offset to StructWithinInterface
-                   + (8U      // StructWithInterface header
-                      + 8U))  // Interface_Data
-                + 8U,         // offset to |nullable_structs_nullable_array|
+  EXPECT_EQ(8U            // struct header
+                + 8U      // offset to |structs_array|
+                + (8U     // array header
+                   + 8U)  // offset to StructWithInterface (nullptr)
+                + 8U      // offset to |structs_nullable_array|
+                + 8U      // offset to |nullable_structs_array|
+                + (8U     // array header
+                   + 8U)  // offset to StructWithinInterface (nullptr)
+                + 8U,     // offset to |nullable_structs_nullable_array|
             size);
 
   FixedBufferForTesting buf(size * 2);
@@ -748,6 +744,87 @@ TEST_F(ArrayTest, Iterator) {
     SCOPED_TRACE("Array iterator bidirectionality test.");
     ExpectBidiIteratorConcept(arr.begin(), arr.end(), values);
     ExpectBidiMutableIteratorConcept(arr.begin(), arr.end(), values);
+  }
+}
+
+// Test serializing and deserializing of an array with null elements.
+TEST_F(ArrayTest, Serialization_ArrayOfStructPtr) {
+  ArrayValidateParams validate_nullable(2, true, nullptr);
+  ArrayValidateParams validate_non_nullable(2, false, nullptr);
+
+  Array<RectPtr> array = Array<RectPtr>::New(2);
+  array[1] = Rect::New();
+  array[1]->x = 1;
+  array[1]->y = 2;
+  array[1]->width = 3;
+  array[1]->height = 4;
+
+  size_t size_with_null = GetSerializedSize_(array);
+  EXPECT_EQ(8U +              // array header
+                2 * 8U +      // array payload (2 pointers)
+                8U + 4 * 4U,  // struct header + contents (4 int32)
+            size_with_null);
+  Array_Data<Rect::Data_*>* output_with_null;
+
+  // 1. Array with non-nullable structs should fail serialization due to
+  // the null first element.
+  {
+    FixedBufferForTesting buf_with_null(size_with_null);
+    EXPECT_EQ(mojo::internal::ValidationError::UNEXPECTED_NULL_POINTER,
+              SerializeArray_(&array, &buf_with_null, &output_with_null,
+                              &validate_non_nullable));
+  }
+
+  // 2. Array with nullable structs should succeed.
+  {
+    FixedBufferForTesting buf_with_null(size_with_null);
+    EXPECT_EQ(mojo::internal::ValidationError::NONE,
+              SerializeArray_(&array, &buf_with_null, &output_with_null,
+                              &validate_nullable));
+
+    Array<RectPtr> array2;
+    Deserialize_(output_with_null, &array2);
+    EXPECT_TRUE(array2[0].is_null());
+    EXPECT_FALSE(array2[1].is_null());
+    EXPECT_EQ(1, array2[1]->x);
+    EXPECT_EQ(2, array2[1]->y);
+    EXPECT_EQ(3, array2[1]->width);
+    EXPECT_EQ(4, array2[1]->height);
+  }
+
+  // 3. Array with non-nullable structs should succeed after we fill in
+  // the missing first element.
+  {
+    array[0] = Rect::New();
+    array[0]->x = -1;
+    array[0]->y = -2;
+    array[0]->width = -3;
+    array[0]->height = -4;
+
+    size_t size_without_null = GetSerializedSize_(array);
+    EXPECT_EQ(8U +                    // array header
+                  2 * 8U +            // array payload (2 pointers)
+                  2 * (8U + 4 * 4U),  // struct header + contents (4 int32)
+              size_without_null);
+
+    FixedBufferForTesting buf_without_null(size_without_null);
+    Array_Data<Rect::Data_*>* output_without_null;
+    EXPECT_EQ(mojo::internal::ValidationError::NONE,
+              SerializeArray_(&array, &buf_without_null, &output_without_null,
+                              &validate_non_nullable));
+
+    Array<RectPtr> array3;
+    Deserialize_(output_without_null, &array3);
+    EXPECT_FALSE(array3[0].is_null());
+    EXPECT_EQ(-1, array3[0]->x);
+    EXPECT_EQ(-2, array3[0]->y);
+    EXPECT_EQ(-3, array3[0]->width);
+    EXPECT_EQ(-4, array3[0]->height);
+    EXPECT_FALSE(array3[1].is_null());
+    EXPECT_EQ(1, array3[1]->x);
+    EXPECT_EQ(2, array3[1]->y);
+    EXPECT_EQ(3, array3[1]->width);
+    EXPECT_EQ(4, array3[1]->height);
   }
 }
 

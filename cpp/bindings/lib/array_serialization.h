@@ -300,8 +300,10 @@ struct ArraySerializer<
   static size_t GetSerializedSize(const Array<S>& input) {
     size_t size = sizeof(Array_Data<S_Data*>) +
                   input.size() * sizeof(StructPointer<S_Data>);
-    for (size_t i = 0; i < input.size(); ++i)
-      size += GetSerializedSize_(*(UnwrapConstStructPtr<S>::value(input[i])));
+    for (size_t i = 0; i < input.size(); ++i) {
+      if (!input[i].is_null())
+        size += GetSerializedSize_(*(UnwrapConstStructPtr<S>::value(input[i])));
+    }
     return size;
   }
 
@@ -406,15 +408,19 @@ struct ArraySerializer<
     template <typename T>
     static void Run(typename WrapperTraits<StructPtr<T>>::DataType input,
                     StructPtr<T>* output) {
-      *output = T::New();
-      Deserialize_(input, output->get());
+      if (input) {
+        *output = T::New();
+        Deserialize_(input, output->get());
+      }
     }
 
     template <typename T>
     static void Run(typename WrapperTraits<InlinedStructPtr<T>>::DataType input,
                     InlinedStructPtr<T>* output) {
-      *output = T::New();
-      Deserialize_(input, output->get());
+      if (input) {
+        *output = T::New();
+        Deserialize_(input, output->get());
+      }
     }
   };
 };
@@ -477,7 +483,7 @@ template <typename E>
 inline size_t GetSerializedSize_(const Array<E>& input) {
   if (!input)
     return 0;
-  typedef typename internal::WrapperTraits<E>::DataType F;
+  using F = typename internal::WrapperTraits<E>::DataType;
   return internal::ArraySerializer<E, F>::GetSerializedSize(input);
 }
 

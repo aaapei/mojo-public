@@ -198,6 +198,7 @@ template <typename T,
               IsUnionWrapperType<typename RemoveStructPtr<T>::type>::value>
 struct WrapperTraits;
 
+// Catch-all for all mojom types not specialized below.
 template <typename T>
 struct WrapperTraits<T, false, false> {
   using DataType = T;
@@ -214,6 +215,7 @@ template <typename Interface>
 struct WrapperTraits<InterfacePtr<Interface>, true, false> {
   using DataType = Interface_Data;
 };
+// Unions.
 template <typename U>
 struct WrapperTraits<StructPtr<U>, true, true> {
   using DataType = typename U::Data_;
@@ -222,6 +224,7 @@ template <typename U>
 struct WrapperTraits<InlinedStructPtr<U>, true, true> {
   using DataType = typename U::Data_;
 };
+// Catch-all for other pointer types: arrays, maps.
 template <typename S>
 struct WrapperTraits<S, true, false> {
   using DataType = typename S::Data_*;

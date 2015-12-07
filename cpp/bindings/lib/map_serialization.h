@@ -68,7 +68,7 @@ struct MapSerializer<
     return count * sizeof(StructPointer<S_Data>);
   }
   static size_t GetItemSize(const S& item) {
-    return GetSerializedSize_(*UnwrapConstStructPtr<S>::value(item));
+    return item ? GetSerializedSize_(*UnwrapConstStructPtr<S>::value(item)) : 0;
   }
 };
 
