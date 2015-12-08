@@ -144,13 +144,13 @@ class StrongBinding {
 
   // Closes the message pipe that was previously bound.  Does not cause the
   // implementation to be deleted.
-  void Close() { binding_->Close(); }
+  void Close() { binding_.Close(); }
 
   // Unbinds the underlying pipe from this binding and returns it so it can be
   // used in another context, such as on another thread or with a different
   // implementation. Put this object into a state where it can be rebound to a
   // new pipe.  Does not cause the implementation to be deleted.
-  InterfaceRequest<Interface> Unbind() { return binding_->Unbind(); }
+  InterfaceRequest<Interface> Unbind() { return binding_.Unbind(); }
 
   // Sets an error handler that will be called if a connection error occurs on
   // the bound message pipe.  Note: The error handler must not delete the

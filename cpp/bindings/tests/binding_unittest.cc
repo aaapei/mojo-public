@@ -319,5 +319,21 @@ TEST_F(StrongBindingTest, ExplicitDeleteImpl) {
   EXPECT_FALSE(binding_error_handler_called);
 }
 
+// Tests that StrongBinding::Close() compiles.
+TEST_F(BindingTest, StrongBindingCloseCompile) {
+  ServiceImpl impl;
+  sample::ServicePtr ptr;
+  StrongBinding<sample::Service> binding(&impl, GetProxy(&ptr));
+  binding.Close();
+}
+
+// Tests that StrongBinding::Unbind() compiles.
+TEST_F(BindingTest, StrongBindingUnbindCompile) {
+  ServiceImpl impl;
+  sample::ServicePtr ptr;
+  StrongBinding<sample::Service> binding(&impl, GetProxy(&ptr));
+  binding.Unbind();
+}
+
 }  // namespace
 }  // mojo
