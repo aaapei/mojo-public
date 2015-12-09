@@ -7,17 +7,20 @@ library test.runner.vm.isolate_test;
 import 'dart:async';
 import 'dart:isolate';
 
+import '../../backend/group.dart';
 import '../../backend/live_test.dart';
 import '../../backend/live_test_controller.dart';
 import '../../backend/metadata.dart';
+import '../../backend/operating_system.dart';
 import '../../backend/state.dart';
 import '../../backend/suite.dart';
 import '../../backend/test.dart';
+import '../../backend/test_platform.dart';
 import '../../util/remote_exception.dart';
 import '../../utils.dart';
 
 /// A test in another isolate.
-class IsolateTest implements Test {
+class IsolateTest extends Test {
   final String name;
   final Metadata metadata;
 
@@ -26,8 +29,7 @@ class IsolateTest implements Test {
 
   IsolateTest(this.name, this.metadata, this._sendPort);
 
-  /// Loads a single runnable instance of this test.
-  LiveTest load(Suite suite) {
+  LiveTest load(Suite suite, {Iterable<Group> groups}) {
     var controller;
 
     // We get a new send port for communicating with the live test, since
@@ -81,14 +83,13 @@ class IsolateTest implements Test {
         await controller.completer.future;
         receivePort.close();
       });
-    });
+    }, groups: groups);
     return controller.liveTest;
   }
 
-  Test change({String name, Metadata metadata}) {
-    if (name == name && metadata == this.metadata) return this;
-    if (name == null) name = this.name;
-    if (metadata == null) metadata = this.metadata;
-    return new IsolateTest(name, metadata, _sendPort);
+  Test forPlatform(TestPlatform platform, {OperatingSystem os}) {
+    if (!metadata.testOn.evaluate(platform, os: os)) return null;
+    return new IsolateTest(
+        name, metadata.forPlatform(platform, os: os), _sendPort);
   }
 }

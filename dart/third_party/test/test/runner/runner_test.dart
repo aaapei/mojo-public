@@ -7,7 +7,6 @@
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:path/path.dart' as p;
 import 'package:scheduled_test/descriptor.dart' as d;
 import 'package:scheduled_test/scheduled_stream.dart';
 import 'package:scheduled_test/scheduled_test.dart';
@@ -66,6 +65,7 @@ Usage: pub run test:test [files or directories...]
 
           [compact]            A single line, updated continuously.
           [expanded]           A separate line for each update.
+          [json]               A machine-readable format (see https://goo.gl/0HRhdZ).
 
     --verbose-trace            Whether to emit stack traces with core library frames.
     --js-trace                 Whether to emit raw JavaScript stack traces for browser tests.
@@ -281,10 +281,7 @@ $_usage""");
 
     test("directly", () {
       d.file("test.dart", _success).create();
-      var test = runDart([
-        "--package-root=${p.join(packageDir, 'packages')}",
-        "test.dart"
-      ]);
+      var test = runDart(["test.dart"]);
 
       test.stdout.expect(consumeThrough(contains("All tests passed!")));
       test.shouldExit(0);
@@ -331,10 +328,7 @@ $_usage""");
 
     test("directly", () {
       d.file("test.dart", _failure).create();
-      var test = runDart([
-        "--package-root=${p.join(packageDir, 'packages')}",
-        "test.dart"
-      ]);
+      var test = runDart(["test.dart"]);
       test.stdout.expect(consumeThrough(contains("Some tests failed.")));
       test.shouldExit(255);
     });

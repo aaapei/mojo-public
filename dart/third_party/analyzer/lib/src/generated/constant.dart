@@ -214,6 +214,11 @@ class ConstantEvaluationEngine {
       "^(?:${ConstantValueComputer._OPERATOR_RE}\$|$_PUBLIC_IDENTIFIER_RE(?:=?\$|[.](?!\$)))+?\$");
 
   /**
+   * The type provider used to access the known types.
+   */
+  final TypeProvider typeProvider;
+
+  /**
    * The type system.  This is used to gues the types of constants when their
    * exact value is unknown.
    */
@@ -237,17 +242,12 @@ class ConstantEvaluationEngine {
    * given, is used to verify correct dependency analysis when running unit
    * tests.
    */
-  ConstantEvaluationEngine(TypeProvider typeProvider, this._declaredVariables,
-      {ConstantEvaluationValidator validator})
+  ConstantEvaluationEngine(this.typeProvider, this._declaredVariables,
+      {ConstantEvaluationValidator validator, TypeSystem typeSystem})
       : validator = validator != null
-          ? validator
-          : new ConstantEvaluationValidator_ForProduction(),
-        typeSystem = new TypeSystemImpl(typeProvider);
-
-  /**
-   * The type provider used to access the known types.
-   */
-  TypeProvider get typeProvider => typeSystem.typeProvider;
+            ? validator
+            : new ConstantEvaluationValidator_ForProduction(),
+        typeSystem = typeSystem != null ? typeSystem : new TypeSystemImpl();
 
   /**
    * Check that the arguments to a call to fromEnvironment() are correct. The
@@ -258,7 +258,8 @@ class ConstantEvaluationEngine {
    * "defaultValue" is always allowed to be null. Return `true` if the arguments
    * are correct, `false` if there is an error.
    */
-  bool checkFromEnvironmentArguments(NodeList<Expression> arguments,
+  bool checkFromEnvironmentArguments(
+      NodeList<Expression> arguments,
       List<DartObjectImpl> argumentValues,
       HashMap<String, DartObjectImpl> namedArgumentValues,
       InterfaceType expectedDefaultValueType) {
@@ -297,7 +298,8 @@ class ConstantEvaluationEngine {
    * named arguments. Return `true` if the arguments are correct, `false` if
    * there is an error.
    */
-  bool checkSymbolArguments(NodeList<Expression> arguments,
+  bool checkSymbolArguments(
+      NodeList<Expression> arguments,
       List<DartObjectImpl> argumentValues,
       HashMap<String, DartObjectImpl> namedArgumentValues) {
     if (arguments.length != 1) {
@@ -349,7 +351,8 @@ class ConstantEvaluationEngine {
           if (!runtimeTypeMatch(dartObject, constant.type)) {
             errorReporter.reportErrorForElement(
                 CheckedModeCompileTimeErrorCode.VARIABLE_TYPE_MISMATCH,
-                constant, [dartObject.type, constant.type]);
+                constant,
+                [dartObject.type, constant.type]);
           }
         }
         (constant as VariableElementImpl).evaluationResult =
@@ -397,8 +400,11 @@ class ConstantEvaluationEngine {
               errorListener, sourceCompilationUnit.element.source);
           ConstantVisitor constantVisitor =
               new ConstantVisitor(this, errorReporter);
-          DartObjectImpl result = evaluateConstructorCall(constNode,
-              constNode.arguments.arguments, element, constantVisitor,
+          DartObjectImpl result = evaluateConstructorCall(
+              constNode,
+              constNode.arguments.arguments,
+              element,
+              constantVisitor,
               errorReporter);
           elementAnnotation.evaluationResult =
               new EvaluationResultImpl(result, errorListener.errors);
@@ -543,7 +549,8 @@ class ConstantEvaluationEngine {
    * fromEnvironment(). Return a [DartObjectImpl] object corresponding to the
    * evaluated result.
    */
-  DartObjectImpl computeValueFromEnvironment(DartObject environmentValue,
+  DartObjectImpl computeValueFromEnvironment(
+      DartObject environmentValue,
       DartObjectImpl builtInDefaultValue,
       HashMap<String, DartObjectImpl> namedArgumentValues) {
     DartObjectImpl value = environmentValue as DartObjectImpl;
@@ -570,9 +577,12 @@ class ConstantEvaluationEngine {
     return value;
   }
 
-  DartObjectImpl evaluateConstructorCall(AstNode node,
-      NodeList<Expression> arguments, ConstructorElement constructor,
-      ConstantVisitor constantVisitor, ErrorReporter errorReporter) {
+  DartObjectImpl evaluateConstructorCall(
+      AstNode node,
+      NodeList<Expression> arguments,
+      ConstructorElement constructor,
+      ConstantVisitor constantVisitor,
+      ErrorReporter errorReporter) {
     if (!_getConstructorBase(constructor).isCycleFree) {
       // It's not safe to evaluate this constructor, so bail out.
       // TODO(paulberry): ensure that a reasonable error message is produced
@@ -621,21 +631,24 @@ class ConstantEvaluationEngine {
           DartObject valueFromEnvironment;
           valueFromEnvironment =
               _declaredVariables.getBool(typeProvider, variableName);
-          return computeValueFromEnvironment(valueFromEnvironment,
+          return computeValueFromEnvironment(
+              valueFromEnvironment,
               new DartObjectImpl(typeProvider.boolType, BoolState.FALSE_STATE),
               namedArgumentValues);
         } else if (identical(definingClass, typeProvider.intType)) {
           DartObject valueFromEnvironment;
           valueFromEnvironment =
               _declaredVariables.getInt(typeProvider, variableName);
-          return computeValueFromEnvironment(valueFromEnvironment,
+          return computeValueFromEnvironment(
+              valueFromEnvironment,
               new DartObjectImpl(typeProvider.nullType, NullState.NULL_STATE),
               namedArgumentValues);
         } else if (identical(definingClass, typeProvider.stringType)) {
           DartObject valueFromEnvironment;
           valueFromEnvironment =
               _declaredVariables.getString(typeProvider, variableName);
-          return computeValueFromEnvironment(valueFromEnvironment,
+          return computeValueFromEnvironment(
+              valueFromEnvironment,
               new DartObjectImpl(typeProvider.nullType, NullState.NULL_STATE),
               namedArgumentValues);
         }
@@ -687,7 +700,8 @@ class ConstantEvaluationEngine {
         if (fieldValue != null && !runtimeTypeMatch(fieldValue, fieldType)) {
           errorReporter.reportErrorForNode(
               CheckedModeCompileTimeErrorCode.CONST_CONSTRUCTOR_FIELD_TYPE_MISMATCH,
-              node, [fieldValue.type, field.name, fieldType]);
+              node,
+              [fieldValue.type, field.name, fieldType]);
         }
         fieldMap[field.name] = evaluationResult.value;
       }
@@ -734,7 +748,8 @@ class ConstantEvaluationEngine {
         if (!runtimeTypeMatch(argumentValue, parameter.type)) {
           errorReporter.reportErrorForNode(
               CheckedModeCompileTimeErrorCode.CONST_CONSTRUCTOR_PARAM_TYPE_MISMATCH,
-              errorTarget, [argumentValue.type, parameter.type]);
+              errorTarget,
+              [argumentValue.type, parameter.type]);
         }
         if (baseParameter.isInitializingFormal) {
           FieldElement field = (parameter as FieldFormalParameterElement).field;
@@ -747,7 +762,8 @@ class ConstantEvaluationEngine {
               if (!runtimeTypeMatch(argumentValue, fieldType)) {
                 errorReporter.reportErrorForNode(
                     CheckedModeCompileTimeErrorCode.CONST_CONSTRUCTOR_PARAM_TYPE_MISMATCH,
-                    errorTarget, [argumentValue.type, fieldType]);
+                    errorTarget,
+                    [argumentValue.type, fieldType]);
               }
             }
             String fieldName = field.name;
@@ -764,7 +780,8 @@ class ConstantEvaluationEngine {
       }
     }
     ConstantVisitor initializerVisitor = new ConstantVisitor(
-        this, errorReporter, lexicalEnvironment: parameterMap);
+        this, errorReporter,
+        lexicalEnvironment: parameterMap);
     String superName = null;
     NodeList<Expression> superArguments = null;
     for (ConstructorInitializer initializer in initializers) {
@@ -787,7 +804,8 @@ class ConstantEvaluationEngine {
             if (!runtimeTypeMatch(evaluationResult, field.type)) {
               errorReporter.reportErrorForNode(
                   CheckedModeCompileTimeErrorCode.CONST_CONSTRUCTOR_FIELD_TYPE_MISMATCH,
-                  node, [evaluationResult.type, fieldName, field.type]);
+                  node,
+                  [evaluationResult.type, fieldName, field.type]);
             }
           }
         }
@@ -803,9 +821,12 @@ class ConstantEvaluationEngine {
         // it redirects to.
         ConstructorElement constructor = initializer.staticElement;
         if (constructor != null && constructor.isConst) {
-          return evaluateConstructorCall(node,
-              initializer.argumentList.arguments, constructor,
-              initializerVisitor, errorReporter);
+          return evaluateConstructorCall(
+              node,
+              initializer.argumentList.arguments,
+              constructor,
+              initializerVisitor,
+              errorReporter);
         }
       }
     }
@@ -825,10 +846,13 @@ class ConstantEvaluationEngine {
     return new DartObjectImpl(definingClass, new GenericState(fieldMap));
   }
 
-  void evaluateSuperConstructorCall(AstNode node,
+  void evaluateSuperConstructorCall(
+      AstNode node,
       HashMap<String, DartObjectImpl> fieldMap,
-      ConstructorElement superConstructor, NodeList<Expression> superArguments,
-      ConstantVisitor initializerVisitor, ErrorReporter errorReporter) {
+      ConstructorElement superConstructor,
+      NodeList<Expression> superArguments,
+      ConstantVisitor initializerVisitor,
+      ErrorReporter errorReporter) {
     if (superConstructor != null && superConstructor.isConst) {
       DartObjectImpl evaluationResult = evaluateConstructorCall(node,
           superArguments, superConstructor, initializerVisitor, errorReporter);
@@ -994,6 +1018,9 @@ class ConstantEvaluationTarget_Annotation implements ConstantEvaluationTarget {
       return false;
     }
   }
+
+  @override
+  String toString() => 'Constant: $annotation';
 }
 
 /**
@@ -1126,17 +1153,24 @@ class ConstantEvaluator {
   final TypeProvider _typeProvider;
 
   /**
+   * The type system primitives.
+   */
+  final TypeSystem _typeSystem;
+
+  /**
    * Initialize a newly created evaluator to evaluate expressions in the given
    * [source]. The [typeProvider] is the type provider used to access known
    * types.
    */
-  ConstantEvaluator(this._source, this._typeProvider);
+  ConstantEvaluator(this._source, this._typeProvider, {TypeSystem typeSystem})
+      : _typeSystem = typeSystem != null ? typeSystem : new TypeSystemImpl();
 
   EvaluationResult evaluate(Expression expression) {
     RecordingErrorListener errorListener = new RecordingErrorListener();
     ErrorReporter errorReporter = new ErrorReporter(errorListener, _source);
     DartObjectImpl result = expression.accept(new ConstantVisitor(
-        new ConstantEvaluationEngine(_typeProvider, new DeclaredVariables()),
+        new ConstantEvaluationEngine(_typeProvider, new DeclaredVariables(),
+            typeSystem: _typeSystem),
         errorReporter));
     if (result != null) {
       return EvaluationResult.forValue(result);
@@ -1280,9 +1314,10 @@ class ConstantValueComputer {
    */
   ConstantValueComputer(this._context, TypeProvider typeProvider,
       DeclaredVariables declaredVariables,
-      [ConstantEvaluationValidator validator])
+      [ConstantEvaluationValidator validator, TypeSystem typeSystem])
       : evaluationEngine = new ConstantEvaluationEngine(
-          typeProvider, declaredVariables, validator: validator);
+            typeProvider, declaredVariables,
+            validator: validator, typeSystem: typeSystem);
 
   /**
    * Add the constants in the given compilation [unit] to the list of constants
@@ -1552,7 +1587,8 @@ class ConstantVisitor extends UnifyingAstVisitor<DartObjectImpl> {
     ParameterizedType thenType = thenResult.type;
     ParameterizedType elseType = elseResult.type;
     return new DartObjectImpl.validWithUnknownValue(
-        _typeSystem.getLeastUpperBound(thenType, elseType) as InterfaceType);
+        _typeSystem.getLeastUpperBound(_typeProvider, thenType, elseType)
+        as InterfaceType);
   }
 
   @override
@@ -2590,9 +2626,10 @@ class DartObjectImpl implements DartObject {
    * Throws an [EvaluationException] if the operator is not appropriate for an
    * object of this kind.
    */
-  DartObjectImpl greaterThanOrEqual(TypeProvider typeProvider,
-      DartObjectImpl rightOperand) => new DartObjectImpl(
-      typeProvider.boolType, _state.greaterThanOrEqual(rightOperand._state));
+  DartObjectImpl greaterThanOrEqual(
+          TypeProvider typeProvider, DartObjectImpl rightOperand) =>
+      new DartObjectImpl(typeProvider.boolType,
+          _state.greaterThanOrEqual(rightOperand._state));
 
   /**
    * Return the result of invoking the '~/' operator on this object with the

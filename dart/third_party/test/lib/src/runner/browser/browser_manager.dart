@@ -11,9 +11,10 @@ import 'package:async/async.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:pool/pool.dart';
 
+import '../../backend/group.dart';
 import '../../backend/metadata.dart';
+import '../../backend/test.dart';
 import '../../backend/test_platform.dart';
-import '../../util/cancelable_future.dart';
 import '../../util/multi_channel.dart';
 import '../../util/remote_exception.dart';
 import '../../util/stack_trace_mapper.dart';
@@ -241,28 +242,60 @@ class BrowserManager {
           asyncError.stackTrace);
     }
 
-    return new RunnerSuite(await _environment, response["tests"].map((test) {
-      var testMetadata = new Metadata.deserialize(test['metadata']);
-      var testChannel = suiteChannel.virtualChannel(test['channel']);
-      return new IframeTest(test['name'], testMetadata, testChannel,
-          mapper: mapper);
-    }), platform: _platform, metadata: metadata, path: path,
+    return new RunnerSuite(
+        await _environment,
+        _deserializeGroup(suiteChannel, mapper, response["root"]),
+        platform: _platform,
+        path: path,
         onClose: () => closeIframe());
   }
 
-  /// An implementation of [Environment.displayPause].
-  CancelableFuture _displayPause() {
-    if (_pauseCompleter != null) return _pauseCompleter.future;
+  /// Deserializes [group] into a concrete [Group] class.
+  Group _deserializeGroup(MultiChannel suiteChannel,
+      StackTraceMapper mapper, Map group) {
+    var metadata = new Metadata.deserialize(group['metadata']);
+    return new Group(group['name'], group['entries'].map((entry) {
+      if (entry['type'] == 'group') {
+        return _deserializeGroup(suiteChannel, mapper, entry);
+      }
 
-    _pauseCompleter = new CancelableCompleter(() {
+      return _deserializeTest(suiteChannel, mapper, entry);
+    }),
+        metadata: metadata,
+        setUpAll: _deserializeTest(suiteChannel, mapper, group['setUpAll']),
+        tearDownAll:
+            _deserializeTest(suiteChannel, mapper, group['tearDownAll']));
+  }
+
+  /// Deserializes [test] into a concrete [Test] class.
+  ///
+  /// Returns `null` if [test] is `null`.
+  Test _deserializeTest(MultiChannel suiteChannel, StackTraceMapper mapper,
+      Map test) {
+    if (test == null) return null;
+
+    var metadata = new Metadata.deserialize(test['metadata']);
+    var testChannel = suiteChannel.virtualChannel(test['channel']);
+    return new IframeTest(test['name'], metadata, testChannel,
+        mapper: mapper);
+  }
+
+  /// An implementation of [Environment.displayPause].
+  CancelableOperation _displayPause() {
+    if (_pauseCompleter != null) return _pauseCompleter.operation;
+
+    _pauseCompleter = new CancelableCompleter(onCancel: () {
       _channel.sink.add({"command": "resume"});
       _pauseCompleter = null;
     });
 
-    _channel.sink.add({"command": "displayPause"});
-    return _pauseCompleter.future.whenComplete(() {
+    _pauseCompleter.operation.value.whenComplete(() {
       _pauseCompleter = null;
     });
+
+    _channel.sink.add({"command": "displayPause"});
+
+    return _pauseCompleter.operation;
   }
 
   /// The callback for handling messages received from the host page.
@@ -296,5 +329,5 @@ class _BrowserEnvironment implements Environment {
   _BrowserEnvironment(this._manager, this.observatoryUrl,
       this.remoteDebuggerUrl);
 
-  CancelableFuture displayPause() => _manager._displayPause();
+  CancelableOperation displayPause() => _manager._displayPause();
 }

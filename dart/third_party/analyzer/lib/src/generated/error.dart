@@ -28,14 +28,15 @@ class AnalysisError {
    * was found.
    */
   static Comparator<AnalysisError> FILE_COMPARATOR = (AnalysisError o1,
-      AnalysisError o2) => o1.source.shortName.compareTo(o2.source.shortName);
+          AnalysisError o2) =>
+      o1.source.shortName.compareTo(o2.source.shortName);
 
   /**
    * A [Comparator] that sorts error codes first by their severity (errors
    * first, warnings second), and then by the the error code type.
    */
-  static Comparator<AnalysisError> ERROR_CODE_COMPARATOR = (AnalysisError o1,
-      AnalysisError o2) {
+  static Comparator<AnalysisError> ERROR_CODE_COMPARATOR =
+      (AnalysisError o1, AnalysisError o2) {
     ErrorCode errorCode1 = o1.errorCode;
     ErrorCode errorCode2 = o2.errorCode;
     ErrorSeverity errorSeverity1 = errorCode1.errorSeverity;
@@ -601,7 +602,7 @@ class CompileTimeErrorCode extends ErrorCode {
    */
   static const CompileTimeErrorCode CONFLICTING_TYPE_VARIABLE_AND_CLASS =
       const CompileTimeErrorCode('CONFLICTING_TYPE_VARIABLE_AND_CLASS',
-          "'{0}' cannot be used to name a type varaible in a class with the same name");
+          "'{0}' cannot be used to name a type variable in a class with the same name");
 
   /**
    * 7. Classes: It is a compile time error if a generic class declares a type
@@ -610,7 +611,7 @@ class CompileTimeErrorCode extends ErrorCode {
    */
   static const CompileTimeErrorCode CONFLICTING_TYPE_VARIABLE_AND_MEMBER =
       const CompileTimeErrorCode('CONFLICTING_TYPE_VARIABLE_AND_MEMBER',
-          "'{0}' cannot be used to name a type varaible and member in this class");
+          "'{0}' cannot be used to name a type variable and member in this class");
 
   /**
    * 12.11.2 Const: It is a compile-time error if evaluation of a constant
@@ -1560,7 +1561,8 @@ class CompileTimeErrorCode extends ErrorCode {
    * 0: the name of the constant that is missing
    */
   static const CompileTimeErrorCode MISSING_ENUM_CONSTANT_IN_SWITCH =
-      const CompileTimeErrorCode('MISSING_ENUM_CONSTANT_IN_SWITCH',
+      const CompileTimeErrorCode(
+          'MISSING_ENUM_CONSTANT_IN_SWITCH',
           "Missing case clause for '{0}'",
           "Add a case clause for the missing constant or add a default clause.");
 
@@ -1596,7 +1598,8 @@ class CompileTimeErrorCode extends ErrorCode {
    * https://code.google.com/p/dart/issues/detail?id=15101#c4
    */
   static const CompileTimeErrorCode MIXIN_HAS_NO_CONSTRUCTORS =
-      const CompileTimeErrorCode('MIXIN_HAS_NO_CONSTRUCTORS',
+      const CompileTimeErrorCode(
+          'MIXIN_HAS_NO_CONSTRUCTORS',
           "This mixin application is invalid because all of the constructors "
           "in the base class '{0}' have optional parameters.");
 
@@ -2353,6 +2356,62 @@ class CompileTimeErrorCode extends ErrorCode {
 }
 
 /**
+ * An error listener that can be enabled or disabled while executing a function.
+ */
+class DisablableErrorListener implements AnalysisErrorListener {
+  /**
+   * The listener to which errors will be reported if this listener is enabled.
+   */
+  final AnalysisErrorListener baseListener;
+
+  /**
+   * A flag indicating whether this listener is currently enabled.
+   */
+  bool enabled = true;
+
+  /**
+   * Initialize a newly created listener to report errors to the given
+   * [baseListener].
+   */
+  DisablableErrorListener(this.baseListener);
+
+  /**
+   * Disable the processing of errors while evaluating the given [function].
+   * Return the value returned by the function.
+   */
+  dynamic disableWhile(dynamic function()) {
+    bool wasEnabled = enabled;
+    try {
+      enabled = false;
+      return function();
+    } finally {
+      enabled = wasEnabled;
+    }
+  }
+
+  /**
+   * Disable the processing of errors while evaluating the given [function].
+   * Return the value returned by the function.
+   */
+  dynamic enableWhile(dynamic function()) {
+    bool wasEnabled = enabled;
+    try {
+      enabled = true;
+      return function();
+    } finally {
+      enabled = wasEnabled;
+    }
+  }
+
+  @override
+  void onError(AnalysisError error) {
+    if (enabled) {
+      baseListener.onError(error);
+    }
+  }
+}
+
+/**
  * An error code associated with an [AnalysisError].
  *
  * Generally, we want to provide messages that consist of three sentences. From
@@ -2885,7 +2944,8 @@ class HintCode extends ErrorCode {
    * Parameters:
    * 0: the name of the declared return type
    */
-  static const HintCode MISSING_RETURN = const HintCode('MISSING_RETURN',
+  static const HintCode MISSING_RETURN = const HintCode(
+      'MISSING_RETURN',
       "This function declares a return type of '{0}', but does not end with a return statement",
       "Either add a return statement or change the return type to 'void'");
 
@@ -3037,7 +3097,7 @@ class HintCode extends ErrorCode {
       "The stack trace variable '{0}' is not used and can be removed");
 
   /**
-   * Unused local variables are local varaibles which are never read.
+   * Unused local variables are local variables which are never read.
    */
   static const HintCode UNUSED_LOCAL_VARIABLE = const HintCode(
       'UNUSED_LOCAL_VARIABLE',
@@ -3728,7 +3788,8 @@ class StaticWarningCode extends ErrorCode {
    * 2: the name of the second library that the type is found
    */
   static const StaticWarningCode AMBIGUOUS_IMPORT = const StaticWarningCode(
-      'AMBIGUOUS_IMPORT', "The name '{0}' is defined in the libraries {1}",
+      'AMBIGUOUS_IMPORT',
+      "The name '{0}' is defined in the libraries {1}",
       "Consider using 'as prefix' for one of the import directives "
       "or hiding the name from all but one of the imports.");
 

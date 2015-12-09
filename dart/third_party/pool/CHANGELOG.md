@@ -1,3 +1,12 @@
+## 1.2.1
+
+* Internal changes only.
+
+## 1.2.0
+
+* Add `Pool.close()`, which forbids new resource requests and releases all
+  releasable resources.
+
 ## 1.1.0
 
 * Add `PoolResource.allowRelease()`, which allows a resource to indicate that it

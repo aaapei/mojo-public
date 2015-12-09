@@ -4,10 +4,9 @@
 
 library test.backend.suite;
 
-import 'dart:collection';
-
 import 'metadata.dart';
 import 'operating_system.dart';
+import 'group.dart';
 import 'test.dart';
 import 'test_platform.dart';
 
@@ -30,63 +29,47 @@ class Suite {
   final String path;
 
   /// The metadata associated with this test suite.
-  final Metadata metadata;
-
-  /// The tests in the test suite.
-  final List<Test> tests;
-
-  /// Creates a new suite containing [tests].
   ///
-  /// If [platform] and/or [os] are passed, [tests] and [metadata] are filtered
-  /// to match that platform information.
+  /// This is a shortcut for [group.metadata].
+  Metadata get metadata => group.metadata;
+
+  /// The top-level group for this test suite.
+  final Group group;
+
+  /// Creates a new suite containing [entires].
+  ///
+  /// If [platform] and/or [os] are passed, [group] is filtered to match that
+  /// platform information.
   ///
   /// If [os] is passed without [platform], throws an [ArgumentError].
-  Suite(Iterable<Test> tests, {this.path, TestPlatform platform,
-          OperatingSystem os, Metadata metadata})
+  Suite(Group group, {this.path, TestPlatform platform, OperatingSystem os})
       : platform = platform,
         os = os,
-        metadata = _filterMetadata(metadata, platform, os),
-        tests = new UnmodifiableListView<Test>(
-            _filterTests(tests, platform, os));
+        group = _filterGroup(group, platform, os);
 
-  /// Returns [metadata] filtered according to [platform] and [os].
+  /// Returns [entries] filtered according to [platform] and [os].
   ///
-  /// Gracefully handles either [metadata] or [platform] being null.
-  static Metadata _filterMetadata(Metadata metadata, TestPlatform platform,
+  /// Gracefully handles [platform] being null.
+  static Group _filterGroup(Group group, TestPlatform platform,
       OperatingSystem os) {
     if (platform == null && os != null) {
       throw new ArgumentError.value(null, "os",
           "If os is passed, platform must be passed as well");
     }
 
-    if (metadata == null) return new Metadata();
-    if (platform == null) return metadata;
-    return metadata.forPlatform(platform, os: os);
+    if (platform == null) return group;
+    var filtered = group.forPlatform(platform, os: os);
+    if (filtered != null) return filtered;
+    return new Group.root([], metadata: group.metadata);
   }
 
-  /// Returns [tests] filtered according to [platform] and [os].
+  /// Returns a new suite with all tests matching [test] removed.
   ///
-  /// Gracefully handles [platform] being null.
-  static List<Test> _filterTests(Iterable<Test> tests,
-      TestPlatform platform, OperatingSystem os) {
-    if (platform == null) return tests.toList();
-
-    return tests.where((test) {
-      return test.metadata.testOn.evaluate(platform, os: os);
-    }).map((test) {
-      return test.change(metadata: test.metadata.forPlatform(platform, os: os));
-    }).toList();
-  }
-
-  /// Returns a new suite with the given fields updated.
-  ///
-  /// In the new suite, [metadata] and [tests] will be filtered according to
-  /// [platform] and [os].
-  Suite change({String path, Metadata metadata, Iterable<Test> tests}) {
-    if (path == null) path = this.path;
-    if (metadata == null) metadata = this.metadata;
-    if (tests == null) tests = this.tests;
-    return new Suite(tests, platform: platform, os: os, path: path,
-        metadata: metadata);
+  /// Unlike [GroupEntry.filter], this never returns `null`. If all entries are
+  /// filtered out, it returns an empty suite.
+  Suite filter(bool callback(Test test)) {
+    var filtered = group.filter(callback);
+    if (filtered == null) filtered = new Group.root([], metadata: metadata);
+    return new Suite(filtered, platform: platform, os: os, path: path);
   }
 }

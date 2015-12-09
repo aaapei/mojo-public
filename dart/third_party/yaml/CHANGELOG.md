@@ -1,3 +1,12 @@
+## 2.1.5
+
+* Fix a bug with 2.1.4 where source span information was being discarded for
+  scalar values.
+
+## 2.1.4
+
+* Substantially improve performance.
+
 ## 2.1.3
 
 * Add a hint that a colon might be missing when a mapping value is found in the

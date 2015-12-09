@@ -4,18 +4,21 @@
 
 library test.runner.browser.iframe_test;
 
+import '../../backend/group.dart';
 import '../../backend/live_test.dart';
 import '../../backend/live_test_controller.dart';
 import '../../backend/metadata.dart';
+import '../../backend/operating_system.dart';
 import '../../backend/state.dart';
 import '../../backend/suite.dart';
 import '../../backend/test.dart';
+import '../../backend/test_platform.dart';
 import '../../util/multi_channel.dart';
 import '../../util/remote_exception.dart';
 import '../../util/stack_trace_mapper.dart';
 
 /// A test in a running iframe.
-class IframeTest implements Test {
+class IframeTest extends Test {
   final String name;
   final Metadata metadata;
 
@@ -29,7 +32,7 @@ class IframeTest implements Test {
   IframeTest(this.name, this.metadata, this._channel, {StackTraceMapper mapper})
       : _mapper = mapper;
 
-  LiveTest load(Suite suite) {
+  LiveTest load(Suite suite, {Iterable<Group> groups}) {
     var controller;
     var testChannel;
     controller = new LiveTestController(suite, this, () {
@@ -67,14 +70,14 @@ class IframeTest implements Test {
       // browser test needs to clean up on the file system anyway.
       testChannel.sink.close();
       if (!controller.completer.isCompleted) controller.completer.complete();
-    });
+    }, groups: groups);
     return controller.liveTest;
   }
 
-  Test change({String name, Metadata metadata}) {
-    if (name == name && metadata == this.metadata) return this;
-    if (name == null) name = this.name;
-    if (metadata == null) metadata = this.metadata;
-    return new IframeTest(name, metadata, _channel);
+  Test forPlatform(TestPlatform platform, {OperatingSystem os}) {
+    if (!metadata.testOn.evaluate(platform, os: os)) return null;
+    return new IframeTest(
+        name, metadata.forPlatform(platform, os: os), _channel,
+        mapper: _mapper);
   }
 }

@@ -6,6 +6,7 @@ library dart.pkg.async;
 
 export "result.dart";
 export "src/async_memoizer.dart";
+export "src/cancelable_operation.dart";
 export "src/delegate/event_sink.dart";
 export "src/delegate/future.dart";
 export "src/delegate/sink.dart";
@@ -13,6 +14,7 @@ export "src/delegate/stream_consumer.dart";
 export "src/delegate/stream_sink.dart";
 export "src/delegate/stream_subscription.dart";
 export "src/future_group.dart";
+export "src/restartable_timer.dart";
 export "src/result_future.dart";
 export "src/stream_completer.dart";
 export "src/stream_group.dart";

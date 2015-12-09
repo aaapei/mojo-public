@@ -1,3 +1,27 @@
+## 0.6.4+2
+
+* Fix a bug where the `Content-Type` header didn't interact properly with the
+  `encoding` parameter for `new Request()` and `new Response()` if it wasn't
+  lowercase.
+
+## 0.6.4+1
+
+* When the `shelf_io` adapter detects an error, print the request context as
+  well as the error itself.
+
+## 0.6.4
+
+* Add a `Server` interface representing an adapter that knows its own URL.
+
+* Add a `ServerHandler` class that exposes a `Server` backed by a `Handler`.
+
+* Add an `IOServer` class that implements `Server` in terms of `dart:io`'s
+  `HttpServer`.
+
+## 0.6.3+1
+
+* Cleaned up handling of certain `Map` instances and related dependencies.
+
 ## 0.6.3
 
 * Messages returned by `Request.change()` and `Response.change()` are marked

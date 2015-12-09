@@ -11,9 +11,12 @@ import 'package:async/async.dart' hide Result;
 import 'package:collection/collection.dart';
 import 'package:pool/pool.dart';
 
+import '../backend/group.dart';
+import '../backend/invoker.dart';
 import '../backend/live_test.dart';
 import '../backend/live_test_controller.dart';
 import '../backend/state.dart';
+import '../backend/group_entry.dart';
 import '../backend/test.dart';
 import 'load_suite.dart';
 import 'runner_suite.dart';
@@ -24,7 +27,7 @@ import 'runner_suite.dart';
 /// have been provided, the user should close [suiteSink] to indicate this.
 /// [run] won't terminate until [suiteSink] is closed. Suites will be run in the
 /// order they're provided to [suiteSink]. Tests within those suites will
-/// likewise be run in the order of [Suite.tests].
+/// likewise be run in the order they're declared.
 ///
 /// The current status of every test is visible via [liveTests]. [onTestStarted]
 /// can also be used to be notified when a test is about to be run.
@@ -129,6 +132,12 @@ class Engine {
   List<LiveTest> get active => new UnmodifiableListView(_active);
   final _active = new QueueList<LiveTest>();
 
+  /// The set of tests that have completed successfully but shouldn't be
+  /// displayed by the reporter.
+  ///
+  /// This includes load tests, `setUpAll`, and `tearDownAll`.
+  final _hidden = new Set<LiveTest>();
+
   /// The tests from [LoadSuite]s that are still running, in the order they
   /// began running.
   ///
@@ -195,55 +204,8 @@ class Engine {
         }
 
         await _runPool.withResource(() async {
-          if (_closed) return null;
-
-          // TODO(nweiz): Use a real for loop when issue 23394 is fixed.
-          await Future.forEach(suite.tests, (test) async {
-            if (_closed) return;
-
-            var liveTest = test.metadata.skip
-                ? _skippedTest(suite, test)
-                : test.load(suite);
-            _liveTests.add(liveTest);
-            _active.add(liveTest);
-
-            // If there were no active non-load tests, the current active test
-            // would have been a load test. In that case, remove it, since now we
-            // have a non-load test to add.
-            if (_active.isNotEmpty && _active.first.suite is LoadSuite) {
-              _liveTests.remove(_active.removeFirst());
-            }
-
-            liveTest.onStateChange.listen((state) {
-              if (state.status != Status.complete) return;
-              _active.remove(liveTest);
-
-              // If we're out of non-load tests, surface a load test.
-              if (_active.isEmpty && _activeLoadTests.isNotEmpty) {
-                _active.add(_activeLoadTests.first);
-                _liveTests.add(_activeLoadTests.first);
-              }
-
-              if (state.result != Result.success) {
-                _passed.remove(liveTest);
-                _failed.add(liveTest);
-              } else if (liveTest.test.metadata.skip) {
-                _skipped.add(liveTest);
-              } else {
-                _passed.add(liveTest);
-              }
-            });
-
-            _onTestStartedController.add(liveTest);
-
-            // First, schedule a microtask to ensure that [onTestStarted] fires
-            // before the first [LiveTest.onStateChange] event. Once the test
-            // finishes, use [new Future] to do a coarse-grained event loop pump
-            // to avoid starving non-microtask events.
-            await new Future.microtask(liveTest.run);
-            await new Future(() {});
-          });
-
+          if (_closed) return;
+          await _runGroup(suite, suite.group, []);
           loadResource.allowRelease(() => suite.close());
         });
       }));
@@ -252,22 +214,123 @@ class Engine {
     return success;
   }
 
-  /// Returns a dummy [LiveTest] for a test marked as "skip".
-  LiveTest _skippedTest(RunnerSuite suite, Test test) {
+  /// Runs all the entries in [entries] in sequence.
+  ///
+  /// [parents] is a list of groups that contain [group]. It may be modified,
+  /// but it's guaranteed to be in its original state once this function has
+  /// finished.
+  Future _runGroup(RunnerSuite suite, Group group, List<Group> parents) async {
+    parents.add(group);
+    try {
+      if (group.metadata.skip) {
+        await _runLiveTest(_skippedTest(suite, group, parents));
+        return;
+      }
+
+      var setUpAllSucceeded = true;
+      if (group.setUpAll != null) {
+        var liveTest = group.setUpAll.load(suite, groups: parents);
+        await _runLiveTest(liveTest, countSuccess: false);
+        setUpAllSucceeded = liveTest.state.result == Result.success;
+      }
+
+      if (!_closed && setUpAllSucceeded) {
+        for (var entry in group.entries) {
+          if (_closed) return;
+
+          if (entry is Group) {
+            await _runGroup(suite, entry, parents);
+          } else if (entry.metadata.skip) {
+            await _runLiveTest(_skippedTest(suite, entry, parents));
+          } else {
+            var test = entry as Test;
+            await _runLiveTest(test.load(suite, groups: parents));
+          }
+        }
+      }
+
+      // Even if we're closed or setUpAll failed, we want to run all the
+      // teardowns to ensure that any state is properly cleaned up.
+      if (group.tearDownAll != null) {
+        var liveTest = group.tearDownAll.load(suite, groups: parents);
+        await _runLiveTest(liveTest, countSuccess: false);
+        if (_closed) await liveTest.close();
+      }
+    } finally {
+      parents.remove(group);
+    }
+  }
+
+  /// Returns a dummy [LiveTest] for a test or group marked as "skip".
+  ///
+  /// [parents] is a list of groups that contain [entry].
+  LiveTest _skippedTest(RunnerSuite suite, GroupEntry entry,
+      List<Group> parents) {
+    // The netry name will be `null` for the root group.
+    var test = new LocalTest(entry.name ?? "(suite)", entry.metadata, () {});
+
     var controller;
     controller = new LiveTestController(suite, test, () {
       controller.setState(const State(Status.running, Result.success));
       controller.setState(const State(Status.complete, Result.success));
       controller.completer.complete();
-    }, () {});
+    }, () {}, groups: parents);
     return controller.liveTest;
+  }
+
+  /// Runs [liveTest].
+  ///
+  /// If [countSuccess] is `true` (the default), the test is put into [passed]
+  /// if it succeeds. Otherwise, it's removed from [liveTests] entirely.
+  Future _runLiveTest(LiveTest liveTest, {bool countSuccess: true}) async {
+    _liveTests.add(liveTest);
+    _active.add(liveTest);
+
+    // If there were no active non-load tests, the current active test would
+    // have been a load test. In that case, remove it, since now we have a
+    // non-load test to add.
+    if (_active.isNotEmpty && _active.first.suite is LoadSuite) {
+      _liveTests.remove(_active.removeFirst());
+    }
+
+    liveTest.onStateChange.listen((state) {
+      if (state.status != Status.complete) return;
+      _active.remove(liveTest);
+
+      // If we're out of non-load tests, surface a load test.
+      if (_active.isEmpty && _activeLoadTests.isNotEmpty) {
+        _active.add(_activeLoadTests.first);
+        _liveTests.add(_activeLoadTests.first);
+      }
+
+      if (state.result != Result.success) {
+        _passed.remove(liveTest);
+        _failed.add(liveTest);
+      } else if (liveTest.test.metadata.skip) {
+        _skipped.add(liveTest);
+      } else if (countSuccess) {
+        _passed.add(liveTest);
+      } else {
+        _liveTests.remove(liveTest);
+        _hidden.add(liveTest);
+      }
+    });
+
+    _onTestStartedController.add(liveTest);
+
+    // First, schedule a microtask to ensure that [onTestStarted] fires before
+    // the first [LiveTest.onStateChange] event. Once the test finishes, use
+    // [new Future] to do a coarse-grained event loop pump to avoid starving
+    // non-microtask events.
+    await new Future.microtask(liveTest.run);
+    await new Future(() {});
   }
 
   /// Adds listeners for [suite].
   ///
   /// Load suites have specific logic apart from normal test suites.
   Future<RunnerSuite> _addLoadSuite(LoadSuite suite) async {
-    var liveTest = await suite.tests.single.load(suite);
+    var liveTest = await suite.test.load(suite);
 
     _activeLoadTests.add(liveTest);
 
@@ -295,9 +358,12 @@ class Engine {
       }
 
       // Surface the load test if it fails so that the user can see the failure.
-      if (state.result == Result.success) return;
-      _failed.add(liveTest);
-      _liveTests.add(liveTest);
+      if (state.result == Result.success) {
+        _hidden.add(liveTest);
+      } else {
+        _failed.add(liveTest);
+        _liveTests.add(liveTest);
+      }
     });
 
     // Run the test immediately. We don't want loading to be blocked on suites
@@ -320,15 +386,21 @@ class Engine {
   /// the engine indicates that no more output should be emitted.
   Future close() async {
     _closed = true;
-    if (_closedBeforeDone == null) _closedBeforeDone = true;
+    if (_closedBeforeDone != null) _closedBeforeDone = true;
     _suiteController.close();
 
     // Close the running tests first so that we're sure to wait for them to
     // finish before we close their suites and cause them to become unloaded.
-    var allLiveTests = liveTests.toSet()..addAll(_activeLoadTests);
-    await Future.wait(allLiveTests.map((liveTest) => liveTest.close()));
+    var allLiveTests = liveTests.toSet()
+      ..addAll(_activeLoadTests)
+      ..addAll(_hidden);
+    var futures = allLiveTests.map((liveTest) => liveTest.close()).toList();
 
-    var allSuites = allLiveTests.map((liveTest) => liveTest.suite).toSet();
-    await Future.wait(allSuites.map((suite) => suite.close()));
+    // Closing the load pool will close the test suites as soon as their tests
+    // are done. For browser suites this is effectively immediate since their
+    // tests shut down as soon as they're closed, but for VM suites we may need
+    // to wait for tearDowns or tearDownAlls to run.
+    futures.add(_loadPool.close());
+    await Future.wait(futures, eagerError: true);
   }
 }

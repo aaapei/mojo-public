@@ -1772,14 +1772,14 @@ void g() { f(null); }''');
     TestSource source = _addSourceWithException2("/test.dart", "library test;");
     source.generateExceptionOnRead = false;
     _analyzeAll_assertFinished();
-    expect(source.readCount, 1);
+    expect(source.readCount, 2);
     _changeSource(source, "");
     source.generateExceptionOnRead = true;
     _analyzeAll_assertFinished();
     if (AnalysisEngine.instance.limitInvalidationInTaskModel) {
-      expect(source.readCount, 5);
+      expect(source.readCount, 7);
     } else {
-      expect(source.readCount, 3);
+      expect(source.readCount, 5);
     }
   }
 
@@ -1795,7 +1795,7 @@ void g() { f(null); }''');
     // TODO(scheglov) no threads in Dart
 //    Source source = _addSource("/test.dart", "library lib;");
 //    int initialTime = _context.getModificationStamp(source);
-//    List<Source> sources = new List<Source>();
+//    List<Source> sources = <Source>[];
 //    sources.add(source);
 //    _context.analysisPriorityOrder = sources;
 //    _context.parseCompilationUnit(source);
@@ -1869,6 +1869,15 @@ void g() { f(null); }''');
         ["dart.core", "dart.async", "dart.math", "libA", "libB"]);
   }
 
+  void test_resolveCompilationUnit_library() {
+    Source source = addSource("/lib.dart", "library lib;");
+    LibraryElement library = context.computeLibraryElement(source);
+    CompilationUnit compilationUnit =
+        context.resolveCompilationUnit(source, library);
+    expect(compilationUnit, isNotNull);
+    expect(compilationUnit.element, isNotNull);
+  }
+
 //  void test_resolveCompilationUnit_sourceChangeDuringResolution() {
 //    _context = new _AnalysisContext_sourceChangeDuringResolution();
 //    AnalysisContextFactory.initContextWithCore(_context);
@@ -1879,15 +1888,6 @@ void g() { f(null); }''');
 //    expect(compilationUnit, isNotNull);
 //    expect(_context.getLineInfo(source), isNotNull);
 //  }
-
-  void test_resolveCompilationUnit_library() {
-    Source source = addSource("/lib.dart", "library lib;");
-    LibraryElement library = context.computeLibraryElement(source);
-    CompilationUnit compilationUnit =
-        context.resolveCompilationUnit(source, library);
-    expect(compilationUnit, isNotNull);
-    expect(compilationUnit.element, isNotNull);
-  }
 
   void test_resolveCompilationUnit_source() {
     Source source = addSource("/lib.dart", "library lib;");
@@ -1910,7 +1910,7 @@ void g() { f(null); }''');
 
   void test_setAnalysisPriorityOrder() {
     int priorityCount = 4;
-    List<Source> sources = new List<Source>();
+    List<Source> sources = <Source>[];
     for (int index = 0; index < priorityCount; index++) {
       sources.add(addSource("/lib.dart$index", ""));
     }
@@ -1919,13 +1919,26 @@ void g() { f(null); }''');
   }
 
   void test_setAnalysisPriorityOrder_empty() {
-    context.analysisPriorityOrder = new List<Source>();
+    context.analysisPriorityOrder = <Source>[];
   }
 
   void test_setAnalysisPriorityOrder_nonEmpty() {
-    List<Source> sources = new List<Source>();
+    List<Source> sources = <Source>[];
     sources.add(addSource("/lib.dart", "library lib;"));
     context.analysisPriorityOrder = sources;
+  }
+
+  void test_setAnalysisPriorityOrder_resetAnalysisDriver() {
+    Source source = addSource('/lib.dart', 'library lib;');
+    // start analysis
+    context.performAnalysisTask();
+    expect(context.driver.currentWorkOrder, isNotNull);
+    // set priority sources, AnalysisDriver is reset
+    context.analysisPriorityOrder = <Source>[source];
+    expect(context.driver.currentWorkOrder, isNull);
+    // analysis continues
+    context.performAnalysisTask();
+    expect(context.driver.currentWorkOrder, isNotNull);
   }
 
   Future test_setChangedContents_libraryWithPart() {
@@ -2060,6 +2073,22 @@ int a = 0;''');
     expect(context.sourcesNeedingProcessing.contains(source), isFalse);
   }
 
+  void test_validateCacheConsistency_deletedSource() {
+    MemoryResourceProvider resourceProvider = new MemoryResourceProvider();
+    var fileA = resourceProvider.newFile('/a.dart', "");
+    var fileB = resourceProvider.newFile('/b.dart', "import 'a.dart';");
+    Source sourceA = fileA.createSource();
+    Source sourceB = fileB.createSource();
+    context.applyChanges(
+        new ChangeSet()..addedSource(sourceA)..addedSource(sourceB));
+    // analyze everything
+    _analyzeAll_assertFinished();
+    // delete a.dart
+    resourceProvider.deleteFile('/a.dart');
+    // analysis should eventually stop
+    _analyzeAll_assertFinished();
+  }
+
   void xtest_performAnalysisTask_stress() {
     int maxCacheSize = 4;
     AnalysisOptionsImpl options =
@@ -2067,7 +2096,7 @@ int a = 0;''');
     options.cacheSize = maxCacheSize;
     context.analysisOptions = options;
     int sourceCount = maxCacheSize + 2;
-    List<Source> sources = new List<Source>();
+    List<Source> sources = <Source>[];
     ChangeSet changeSet = new ChangeSet();
     for (int i = 0; i < sourceCount; i++) {
       Source source = addSource("/lib$i.dart", "library lib$i;");
@@ -2110,7 +2139,10 @@ int a = 0;''');
     for (int i = 0; i < maxIterations; i++) {
       List<ChangeNotice> notice = context.performAnalysisTask().changeNotices;
       if (notice == null) {
-        return;
+        bool inconsistent = context.validateCacheConsistency();
+        if (!inconsistent) {
+          return;
+        }
       }
     }
     fail("performAnalysisTask failed to terminate after analyzing all sources");
@@ -2146,8 +2178,8 @@ int a = 0;''');
     entry.setState(RESOLVED_UNIT, CacheState.FLUSHED);
   }
 
-  List<Source> _getPriorityOrder(AnalysisContextImpl context2) {
-    return context2.test_priorityOrder;
+  List<Source> _getPriorityOrder(AnalysisContextImpl context) {
+    return context.test_priorityOrder;
   }
 
   void _performPendingAnalysisTasks([int maxTasks = 512]) {
@@ -2239,7 +2271,7 @@ class B {
 }
 ''');
     _assertInvalid(sourceA, LIBRARY_ERRORS_READY);
-    _assertValid(sourceB, LIBRARY_ERRORS_READY);
+    _assertValid(sourceB, LIBRARY_ELEMENT);
     // The a.dart's unit and element are updated incrementally.
     // They are the same instances as initially.
     // So, all the references from other units are still valid.
@@ -2275,7 +2307,7 @@ class B {
 }
 ''');
     _assertInvalid(sourceA, LIBRARY_ERRORS_READY);
-    _assertInvalid(sourceB, LIBRARY_ERRORS_READY);
+    _assertInvalid(sourceB, LIBRARY_ELEMENT);
     // The a.dart's unit and element are the same.
     {
       LibrarySpecificUnit target = new LibrarySpecificUnit(sourceA, sourceA);

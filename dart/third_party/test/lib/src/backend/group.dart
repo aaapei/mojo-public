@@ -4,85 +4,65 @@
 
 library test.backend.group;
 
-import 'dart:async';
-
-import '../utils.dart';
 import 'metadata.dart';
+import 'operating_system.dart';
+import 'group_entry.dart';
+import 'test.dart';
+import 'test_platform.dart';
 
-/// A group contains multiple tests and subgroups.
+/// A group contains one or more tests and subgroups.
 ///
-/// A group has a description that is prepended to that of all nested tests and
-/// subgroups. It also has [setUp] and [tearDown] functions which are scoped to
-/// the tests and groups it contains.
-class Group {
-  /// The parent group, or `null` if this is the root group.
-  final Group parent;
+/// It includes metadata that applies to all contained tests.
+class Group implements GroupEntry {
+  final String name;
 
-  /// The description of the current test group, or `null` if this is the root
-  /// group.
-  final String _description;
+  final Metadata metadata;
 
-  /// The metadata for this group, including the metadata of any parent groups.
-  Metadata get metadata {
-    if (parent == null) return _metadata;
-    return parent.metadata.merge(_metadata);
-  }
-  final Metadata _metadata;
+  /// The children of this group.
+  final List<GroupEntry> entries;
 
-  /// The set-up function for this group, or `null`.
-  AsyncFunction setUp;
+  /// Returns a new root-level group.
+  Group.root(Iterable<GroupEntry> entries, {Metadata metadata})
+      : this(null, entries, metadata: metadata);
 
-  /// The tear-down function for this group, or `null`.
-  AsyncFunction tearDown;
-
-  /// Returns the description for this group, including the description of any
-  /// parent groups.
+  /// A test to run before all tests in the group.
   ///
-  /// If this is the root group, returns `null`.
-  String get description {
-    if (parent == null || parent.description == null) return _description;
-    return "${parent.description} $_description";
-  }
+  /// This is `null` if no `setUpAll` callbacks were declared.
+  final Test setUpAll;
 
-  /// Creates a new root group.
+  /// A test to run after all tests in the group.
   ///
-  /// This is the implicit group that exists outside of any calls to `group()`.
-  Group.root()
-      : this(null, null, new Metadata());
+  /// This is `null` if no `tearDown` callbacks were declared.
+  final Test tearDownAll;
 
-  Group(this.parent, this._description, this._metadata);
+  Group(this.name, Iterable<GroupEntry> entries, {Metadata metadata,
+          Test this.setUpAll, Test this.tearDownAll})
+      : entries = new List<GroupEntry>.unmodifiable(entries),
+        metadata = metadata == null ? new Metadata() : metadata;
 
-  /// Run the set-up functions for this and any parent groups.
-  ///
-  /// If no set-up functions are declared, this returns a [Future] that
-  /// completes immediately.
-  Future runSetUp() {
-    // TODO(nweiz): Use async/await here once issue 23497 has been fixed in two
-    // stable versions.
-    if (parent != null) {
-      return parent.runSetUp().then((_) {
-        if (setUp != null) return setUp();
-      });
-    }
-
-    if (setUp != null) return new Future.sync(setUp);
-    return new Future.value();
+  Group forPlatform(TestPlatform platform, {OperatingSystem os}) {
+    if (!metadata.testOn.evaluate(platform, os: os)) return null;
+    var newMetadata = metadata.forPlatform(platform, os: os);
+    var filtered = _map((entry) => entry.forPlatform(platform, os: os));
+    if (filtered.isEmpty && !entries.isEmpty) return null;
+    return new Group(name, filtered,
+        metadata: newMetadata, setUpAll: setUpAll, tearDownAll: tearDownAll);
   }
 
-  /// Run the tear-up functions for this and any parent groups.
-  ///
-  /// If no set-up functions are declared, this returns a [Future] that
-  /// completes immediately.
-  Future runTearDown() {
-    // TODO(nweiz): Use async/await here once issue 23497 has been fixed in two
-    // stable versions.
-    if (parent != null) {
-      return new Future.sync(() {
-        if (tearDown != null) return tearDown();
-      }).then((_) => parent.runTearDown());
-    }
+  Group filter(bool callback(Test test)) {
+    var filtered = _map((entry) => entry.filter(callback));
+    if (filtered.isEmpty && !entries.isEmpty) return null;
+    return new Group(name, filtered,
+        metadata: metadata, setUpAll: setUpAll, tearDownAll: tearDownAll);
+  }
 
-    if (tearDown != null) return new Future.sync(tearDown);
-    return new Future.value();
+  /// Returns the entries of this group mapped using [callback].
+  ///
+  /// Any `null` values returned by [callback] will be removed.
+  List<GroupEntry> _map(GroupEntry callback(GroupEntry entry)) {
+    return entries
+        .map((entry) => callback(entry))
+        .where((entry) => entry != null)
+        .toList();
   }
 }

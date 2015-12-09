@@ -161,6 +161,11 @@ class AnalysisContextImpl implements InternalAnalysisContext {
   TypeProvider _typeProvider;
 
   /**
+   * The [TypeSystem] for this context, `null` if not yet created.
+   */
+  TypeSystem _typeSystem;
+
+  /**
    * The controller for sending [SourcesChangedEvent]s.
    */
   StreamController<SourcesChangedEvent> _onSourcesChangedController;
@@ -252,6 +257,7 @@ class AnalysisContextImpl implements InternalAnalysisContext {
         (this._options.hint && !options.hint) ||
         (this._options.lint && !options.lint) ||
         this._options.preserveComments != options.preserveComments ||
+        this._options.strongMode != options.strongMode ||
         this._options.enableStrictCallChecks !=
             options.enableStrictCallChecks ||
         this._options.enableSuperMixins != options.enableSuperMixins;
@@ -272,6 +278,7 @@ class AnalysisContextImpl implements InternalAnalysisContext {
     this._options.incrementalValidation = options.incrementalValidation;
     this._options.lint = options.lint;
     this._options.preserveComments = options.preserveComments;
+    this._options.strongMode = options.strongMode;
     if (needsRecompute) {
       for (WorkManager workManager in workManagers) {
         workManager.onAnalysisOptionsChanged();
@@ -296,6 +303,7 @@ class AnalysisContextImpl implements InternalAnalysisContext {
     for (WorkManager workManager in workManagers) {
       workManager.applyPriorityTargets(_priorityOrder);
     }
+    driver.reset();
   }
 
   @override
@@ -476,6 +484,14 @@ class AnalysisContextImpl implements InternalAnalysisContext {
    */
   void set typeProvider(TypeProvider typeProvider) {
     _typeProvider = typeProvider;
+  }
+
+  @override
+  TypeSystem get typeSystem {
+    if (_typeSystem == null) {
+      _typeSystem = TypeSystem.create(this);
+    }
+    return _typeSystem;
   }
 
   @override
@@ -1142,7 +1158,11 @@ class AnalysisContextImpl implements InternalAnalysisContext {
       entry = getCacheEntry(unit);
       setValue(HINTS, AnalysisError.NO_ERRORS);
       // dartEntry.setValue(LINTS, AnalysisError.NO_ERRORS);
-      entry.setState(RESOLVE_REFERENCES_ERRORS, CacheState.FLUSHED);
+      setValue(INFER_STATIC_VARIABLE_TYPES_ERRORS, AnalysisError.NO_ERRORS);
+      setValue(LIBRARY_UNIT_ERRORS, AnalysisError.NO_ERRORS);
+      setValue(PARTIALLY_RESOLVE_REFERENCES_ERRORS, AnalysisError.NO_ERRORS);
+      setValue(RESOLVE_FUNCTION_BODIES_ERRORS, AnalysisError.NO_ERRORS);
+      setValue(RESOLVE_TYPE_NAMES_ERRORS, AnalysisError.NO_ERRORS);
       entry.setState(RESOLVED_UNIT, CacheState.FLUSHED);
       entry.setState(RESOLVED_UNIT1, CacheState.FLUSHED);
       entry.setState(RESOLVED_UNIT2, CacheState.FLUSHED);
@@ -1154,6 +1174,7 @@ class AnalysisContextImpl implements InternalAnalysisContext {
       entry.setState(RESOLVED_UNIT8, CacheState.FLUSHED);
       // USED_IMPORTED_ELEMENTS
       // USED_LOCAL_ELEMENTS
+      setValue(VARIABLE_REFERENCE_ERRORS, AnalysisError.NO_ERRORS);
       setValue(VERIFY_ERRORS, AnalysisError.NO_ERRORS);
     });
 
@@ -1751,7 +1772,9 @@ class AnalysisContextImpl implements InternalAnalysisContext {
           }
           return;
         }
-      } catch (e) {}
+      } catch (e) {
+        entry.modificationTime = -1;
+      }
     }
     // We need to invalidate the cache.
     {

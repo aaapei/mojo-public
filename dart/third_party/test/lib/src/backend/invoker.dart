@@ -8,47 +8,40 @@ import 'dart:async';
 
 import 'package:stack_trace/stack_trace.dart';
 
+import '../backend/group.dart';
 import '../frontend/expect.dart';
 import '../utils.dart';
 import 'closed_exception.dart';
 import 'live_test.dart';
 import 'live_test_controller.dart';
 import 'metadata.dart';
+import 'operating_system.dart';
 import 'outstanding_callback_counter.dart';
 import 'state.dart';
 import 'suite.dart';
 import 'test.dart';
+import 'test_platform.dart';
 
 /// A test in this isolate.
-class LocalTest implements Test {
+class LocalTest extends Test {
   final String name;
   final Metadata metadata;
 
   /// The test body.
   final AsyncFunction _body;
 
-  /// The callback used to clean up after the test.
-  ///
-  /// This is separated out from [_body] because it needs to run once the test's
-  /// asynchronous computation has finished, even if that's different from the
-  /// completion of the main body of the test.
-  final AsyncFunction _tearDown;
-
-  LocalTest(this.name, this.metadata, body(), {tearDown()})
-      : _body = body,
-        _tearDown = tearDown;
+  LocalTest(this.name, this.metadata, body())
+      : _body = body;
 
   /// Loads a single runnable instance of this test.
-  LiveTest load(Suite suite) {
-    var invoker = new Invoker._(suite, this);
+  LiveTest load(Suite suite, {Iterable<Group> groups}) {
+    var invoker = new Invoker._(suite, this, groups: groups);
     return invoker.liveTest;
   }
 
-  Test change({String name, Metadata metadata}) {
-    if (name == name && metadata == this.metadata) return this;
-    if (name == null) name = this.name;
-    if (metadata == null) metadata = this.metadata;
-    return new LocalTest(name, metadata, _body, tearDown: _tearDown);
+  Test forPlatform(TestPlatform platform, {OperatingSystem os}) {
+    if (!metadata.testOn.evaluate(platform, os: os)) return null;
+    return new LocalTest(name, metadata.forPlatform(platform, os: os), _body);
   }
 }
 
@@ -64,30 +57,47 @@ class Invoker {
   LiveTest get liveTest => _controller.liveTest;
   LiveTestController _controller;
 
+  bool get _closable => Zone.current[_closableKey];
+
+  /// An opaque object used as a key in the zone value map to identify
+  /// [_closable].
+  ///
+  /// This is an instance variable to ensure that multiple invokers don't step
+  /// on one anothers' toes.
+  final _closableKey = new Object();
+
   /// Whether the test has been closed.
   ///
   /// Once the test is closed, [expect] and [expectAsync] will throw
   /// [ClosedException]s whenever accessed to help the test stop executing as
   /// soon as possible.
-  bool get closed => _onCloseCompleter.isCompleted;
+  bool get closed => _closable && _onCloseCompleter.isCompleted;
 
   /// A future that completes once the test has been closed.
-  Future get onClose => _onCloseCompleter.future;
+  Future get onClose => _closable
+      ? _onCloseCompleter.future
+      // If we're in an unclosable block, return a future that will never
+      // complete.
+      : new Completer().future;
   final _onCloseCompleter = new Completer();
 
   /// The test being run.
   LocalTest get _test => liveTest.test as LocalTest;
 
-  /// The test metadata merged with the suite metadata.
-  final Metadata metadata;
-
   /// The outstanding callback counter for the current zone.
   OutstandingCallbackCounter get _outstandingCallbacks {
-    var counter = Zone.current[this];
+    var counter = Zone.current[_counterKey];
     if (counter != null) return counter;
     throw new StateError("Can't add or remove outstanding callbacks outside "
         "of a test body.");
   }
+
+  /// An opaque object used as a key in the zone value map to identify
+  /// [_outstandingCallbacks].
+  ///
+  /// This is an instance variable to ensure that multiple invokers don't step
+  /// on one anothers' toes.
+  final _counterKey = new Object();
 
   /// The current invoker, or `null` if none is defined.
   ///
@@ -108,10 +118,9 @@ class Invoker {
   /// This will be `null` until the test starts running.
   Timer _timeoutTimer;
 
-  Invoker._(Suite suite, LocalTest test)
-      : metadata = suite.metadata.merge(test.metadata) {
+  Invoker._(Suite suite, LocalTest test, {Iterable<Group> groups}) {
     _controller = new LiveTestController(
-        suite, test, _onRun, _onCloseCompleter.complete);
+        suite, test, _onRun, _onCloseCompleter.complete, groups: groups);
   }
 
   /// Tells the invoker that there's a callback running that it should wait for
@@ -147,10 +156,14 @@ class Invoker {
   /// transitively invokes have completed.
   ///
   /// If [fn] itself returns a future, this will automatically wait until that
-  /// future completes as well.
+  /// future completes as well. Note that outstanding callbacks registered
+  /// within [fn] will *not* be registered as outstanding callback outside of
+  /// [fn].
   ///
-  /// Note that outstanding callbacks registered within [fn] will *not* be
-  /// registered as outstanding callback outside of [fn].
+  /// If [fn] produces an unhandled error, this marks the current test as
+  /// failed, removes all outstanding callbacks registered within [fn], and
+  /// completes the returned future. It does not remove any outstanding
+  /// callbacks registered outside of [fn].
   Future waitForOutstandingCallbacks(fn()) {
     heartbeat();
 
@@ -158,14 +171,27 @@ class Invoker {
     runZoned(() {
       // TODO(nweiz): Use async/await here once issue 23497 has been fixed in
       // two stable versions.
-      new Future.sync(fn).then((_) => counter.removeOutstandingCallback());
+      runZoned(() {
+        new Future.sync(fn).then((_) => counter.removeOutstandingCallback());
+      }, onError: _handleError);
     }, zoneValues: {
-      // Use the invoker as a key so that multiple invokers can have different
-      // outstanding callback counters at once.
-      this: counter
+      _counterKey: counter
     });
 
     return counter.noOutstandingCallbacks;
+  }
+
+  /// Runs [fn] in a zone where [closed] is always `false`.
+  ///
+  /// This is useful for running code that should be able to register callbacks
+  /// and interact with the test framework normally even when the invoker is
+  /// closed, for example cleanup code.
+  unclosable(fn()) {
+    heartbeat();
+
+    return runZoned(fn, zoneValues: {
+      _closableKey: false
+    });
   }
 
   /// Notifies the invoker that progress is being made.
@@ -176,7 +202,8 @@ class Invoker {
     if (liveTest.isComplete) return;
     if (_timeoutTimer != null) _timeoutTimer.cancel();
 
-    var timeout = metadata.timeout.apply(new Duration(seconds: 30));
+    var timeout = liveTest.test.metadata.timeout
+        .apply(new Duration(seconds: 30));
     if (timeout == null) return;
     _timeoutTimer = _invokerZone.createTimer(timeout,
         Zone.current.bindCallback(() {
@@ -237,13 +264,6 @@ class Invoker {
             .then((_) => removeOutstandingCallback());
 
         _outstandingCallbacks.noOutstandingCallbacks.then((_) {
-          if (_test._tearDown == null) return null;
-
-          // Reset the outstanding callback counter to wait for callbacks from
-          // the test's `tearDown` to complete.
-          return waitForOutstandingCallbacks(() =>
-              runZoned(_test._tearDown, onError: _handleError));
-        }).then((_) {
           if (_timeoutTimer != null) _timeoutTimer.cancel();
           _controller.setState(
               new State(Status.complete, liveTest.state.result));
@@ -256,7 +276,8 @@ class Invoker {
         #test.invoker: this,
         // Use the invoker as a key so that multiple invokers can have different
         // outstanding callback counters at once.
-        this: outstandingCallbacksForBody
+        _counterKey: outstandingCallbacksForBody,
+        _closableKey: true
       },
           zoneSpecification: new ZoneSpecification(
               print: (self, parent, zone, line) => _controller.print(line)),

@@ -7,13 +7,19 @@ library test.test.utils;
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:test/src/backend/declarer.dart';
+import 'package:test/src/backend/group.dart';
+import 'package:test/src/backend/group_entry.dart';
 import 'package:test/src/backend/invoker.dart';
 import 'package:test/src/backend/live_test.dart';
 import 'package:test/src/backend/metadata.dart';
 import 'package:test/src/backend/state.dart';
 import 'package:test/src/backend/suite.dart';
 import 'package:test/src/runner/application_exception.dart';
+import 'package:test/src/runner/engine.dart';
 import 'package:test/src/runner/load_exception.dart';
+import 'package:test/src/runner/runner_suite.dart';
+import 'package:test/src/runner/vm/environment.dart';
 import 'package:test/src/util/remote_exception.dart';
 import 'package:test/test.dart';
 
@@ -220,7 +226,7 @@ Future pumpEventQueue([int times=20]) {
 /// Returns a local [LiveTest] that runs [body].
 LiveTest createTest(body()) {
   var test = new LocalTest("test", new Metadata(), body);
-  var suite = new Suite([test]);
+  var suite = new Suite(new Group.root([test]));
   return test.load(suite);
 }
 
@@ -279,4 +285,31 @@ Future expectTestBlocks(test(), stopBlocking(value)) async {
   // Ensure that the outer test doesn't complete until the inner future
   // completes.
   return future;
+}
+
+/// Runs [body] with a declarer, runs all the declared tests, and asserts that
+/// they pass.
+Future expectTestsPass(void body()) async {
+  var engine = declareEngine(body);
+  var success = await engine.run();
+
+  for (var test in engine.liveTests) {
+    expectTestPassed(test);
+  }
+
+  expect(success, isTrue);
+}
+
+/// Runs [body] with a declarer and returns the declared entries.
+List<GroupEntry> declare(void body()) {
+  var declarer = new Declarer()..declare(body);
+  return declarer.build().entries;
+}
+
+/// Runs [body] with a declarer and returns an engine that runs those tests.
+Engine declareEngine(void body()) {
+  var declarer = new Declarer()..declare(body);
+  return new Engine.withSuites([
+    new RunnerSuite(const VMEnvironment(), declarer.build())
+  ]);
 }

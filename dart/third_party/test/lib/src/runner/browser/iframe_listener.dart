@@ -9,6 +9,8 @@ import 'dart:convert';
 import 'dart:html' hide Metadata;
 
 import '../../backend/declarer.dart';
+import '../../backend/group.dart';
+import '../../backend/live_test.dart';
 import '../../backend/metadata.dart';
 import '../../backend/suite.dart';
 import '../../backend/test.dart';
@@ -54,14 +56,18 @@ class IframeListener {
       return;
     }
 
-    var declarer;
+    var url = Uri.parse(window.location.href);
+    var message = JSON.decode(Uri.decodeFull(url.fragment));
+    var metadata = new Metadata.deserialize(message['metadata']);
+
+    var declarer = new Declarer(metadata);
     try {
-      declarer = new Declarer();
-      await runZoned(() => new Future.sync(main), zoneValues: {
-        #test.declarer: declarer
-      }, zoneSpecification: new ZoneSpecification(print: (_, __, ___, line) {
-        channel.sink.add({"type": "print", "line": line});
-      }));
+      await declarer.declare(() {
+        return runZoned(() => new Future.sync(main),
+            zoneSpecification: new ZoneSpecification(print: (_, __, ___, line) {
+          channel.sink.add({"type": "print", "line": line});
+        }));
+      });
     } catch (error, stackTrace) {
       channel.sink.add({
         "type": "error",
@@ -70,13 +76,8 @@ class IframeListener {
       return;
     }
 
-    var url = Uri.parse(window.location.href);
-    var message = JSON.decode(Uri.decodeFull(url.fragment));
-    var metadata = new Metadata.deserialize(message['metadata']);
     var browser = TestPlatform.find(message['browser']);
-
-    var suite = new Suite(
-        declarer.tests, platform: browser, metadata: metadata);
+    var suite = new Suite(declarer.build(), platform: browser);
     new IframeListener._(suite)._listen(channel);
 
     return;
@@ -125,32 +126,57 @@ class IframeListener {
   /// Send information about [_suite] across [channel] and start listening for
   /// commands to run the tests.
   void _listen(MultiChannel channel) {
-    var tests = [];
-    for (var i = 0; i < _suite.tests.length; i++) {
-      var test = _suite.tests[i];
-      var testChannel = channel.virtualChannel();
-      tests.add({
-        "name": test.name,
-        "metadata": test.metadata.serialize(),
-        "channel": testChannel.id
-      });
-
-      testChannel.stream.listen((message) {
-        assert(message['command'] == 'run');
-        _runTest(test, channel.virtualChannel(message['channel']));
-      });
-    }
-
     channel.sink.add({
       "type": "success",
-      "tests": tests
+      "root": _serializeGroup(channel, _suite.group, [])
     });
   }
 
-  /// Runs [test] and sends the results across [sendPort].
-  void _runTest(Test test, MultiChannel channel) {
-    var liveTest = test.load(_suite);
+  /// Serializes [group] into a JSON-safe map.
+  ///
+  /// [parents] lists the groups that contain [group].
+  Map _serializeGroup(MultiChannel channel, Group group,
+      Iterable<Group> parents) {
+    parents = parents.toList()..add(group);
+    return {
+      "type": "group",
+      "name": group.name,
+      "metadata": group.metadata.serialize(),
+      "setUpAll": _serializeTest(channel, group.setUpAll, parents),
+      "tearDownAll": _serializeTest(channel, group.tearDownAll, parents),
+      "entries": group.entries.map((entry) {
+        return entry is Group
+            ? _serializeGroup(channel, entry, parents)
+            : _serializeTest(channel, entry, parents);
+      }).toList()
+    };
+  }
 
+  /// Serializes [test] into a JSON-safe map.
+  ///
+  /// [groups] lists the groups that contain [test]. Returns `null` if [test]
+  /// is `null`.
+  Map _serializeTest(MultiChannel channel, Test test, Iterable<Group> groups) {
+    if (test == null) return null;
+
+    var testChannel = channel.virtualChannel();
+    testChannel.stream.listen((message) {
+      assert(message['command'] == 'run');
+      _runLiveTest(
+          test.load(_suite, groups: groups),
+          channel.virtualChannel(message['channel']));
+    });
+
+    return {
+      "type": "test",
+      "name": test.name,
+      "metadata": test.metadata.serialize(),
+      "channel": testChannel.id
+    };
+  }
+
+  /// Runs [liveTest] and sends the results across [channel].
+  void _runLiveTest(LiveTest liveTest, MultiChannel channel) {
     channel.stream.listen((message) {
       assert(message['command'] == 'close');
       liveTest.close();

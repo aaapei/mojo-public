@@ -198,8 +198,8 @@ abstract class AnalysisTask {
       _safelyPerform();
     } on AnalysisException catch (exception, stackTrace) {
       caughtException = new CaughtException(exception, stackTrace);
-      AnalysisEngine.instance.logger.logInformation(
-          "Task failed: ${description}", caughtException);
+      AnalysisEngine.instance.logger
+          .logInformation("Task failed: ${description}", caughtException);
     }
   }
 
@@ -221,8 +221,8 @@ abstract class AnalysisTask {
       if (contextName == null) {
         contextName = 'unnamed';
       }
-      AnalysisEngine.instance.instrumentationService.logAnalysisTask(
-          contextName, this);
+      AnalysisEngine.instance.instrumentationService
+          .logAnalysisTask(contextName, this);
       //
       // Gather statistics on the performance of the task.
       //
@@ -268,7 +268,8 @@ abstract class ListResultDescriptor<E> implements ResultDescriptor<List<E>> {
    * values associated with this result will remain in the cache.
    */
   factory ListResultDescriptor(String name, List<E> defaultValue,
-      {ResultCachingPolicy<List<E>> cachingPolicy}) = ListResultDescriptorImpl<E>;
+      {ResultCachingPolicy<List<E>> cachingPolicy}) = ListResultDescriptorImpl<
+      E>;
 
   @override
   ListTaskInput<E> of(AnalysisTarget target);
@@ -443,7 +444,9 @@ abstract class TaskDescriptor {
    * and produces the given [results]. The [buildTask] will be used to create
    * the instance of [AnalysisTask] thusly described.
    */
-  factory TaskDescriptor(String name, BuildTask buildTask,
+  factory TaskDescriptor(
+      String name,
+      BuildTask buildTask,
       CreateTaskInputs inputBuilder,
       List<ResultDescriptor> results) = TaskDescriptorImpl;
 
@@ -588,6 +591,11 @@ abstract class WorkManager {
   /**
    * Return the next [TargetedResult] that this work manager wants to be
    * computed, or `null` if this manager doesn't need any new results.
+   *
+   * Note, that it is not guaranteed that this result will be computed, it is
+   * up to the work manager to check whether the result is already computed
+   * (for example during the next [getNextResult] invocation) or computation
+   * of the same result should be requested again.
    */
   TargetedResult getNextResult();
 

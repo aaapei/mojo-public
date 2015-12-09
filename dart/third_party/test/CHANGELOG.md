@@ -1,3 +1,52 @@
+## 0.12.6+1
+
+* Declare compatibility with `http_multi_server` 2.0.0.
+
+## 0.12.6
+
+* Add a machine-readable JSON reporter. For details, see
+  [the protocol documentation][json-protocol].
+
+* Skipped groups now properly print skip messages.
+
+[json-protocol]: https://github.com/dart-lang/test/blob/master/json_reporter.md
+
+## 0.12.5+2
+
+* Declare compatibility with Dart 1.14 and 1.15.
+
+## 0.12.5+1
+
+* Fixed a deadlock bug when using `setUpAll()` and `tearDownAll()`.
+
+## 0.12.5
+
+* Add `setUpAll()` and `tearDownAll()` methods that run callbacks before and
+  after all tests in a group or suite. **Note that these methods are for special
+  cases and should be avoided**—they make it very easy to accidentally introduce
+  dependencies between tests. Use `setUp()` and `tearDown()` instead if
+  possible.
+
+* Allow `setUp()` and `tearDown()` to be called multiple times within the same
+  group.
+
+* When a `tearDown()` callback runs after a signal has been caught, it can now
+  schedule out-of-band asynchronous callbacks normally rather than having them
+  throw exceptions.
+
+* Don't show package warnings when compiling tests with dart2js. This was
+  accidentally enabled in 0.12.2, but was never intended.
+
+## 0.12.4+9
+
+* If a `tearDown()` callback throws an error, outer `tearDown()` callbacks are
+  still executed.
+
+## 0.12.4+8
+
+* Don't compile tests to JavaScript when running via `pub serve` on Dartium or
+  content shell.
+
 ## 0.12.4+7
 
 * Support `http_parser` 1.0.0.

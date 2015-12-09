@@ -6,6 +6,7 @@ library test.src.task.html_test;
 
 import 'package:analyzer/src/generated/source.dart';
 import 'package:analyzer/src/task/html.dart';
+import 'package:analyzer/task/general.dart';
 import 'package:analyzer/task/html.dart';
 import 'package:analyzer/task/model.dart';
 import 'package:unittest/unittest.dart';
@@ -20,6 +21,10 @@ main() {
   runReflectiveTests(HtmlErrorsTaskTest);
   runReflectiveTests(ParseHtmlTaskTest);
 }
+
+isInstanceOf isDartScriptsTask = new isInstanceOf<DartScriptsTask>();
+isInstanceOf isHtmlErrorsTask = new isInstanceOf<HtmlErrorsTask>();
+isInstanceOf isParseHtmlTask = new isInstanceOf<ParseHtmlTask>();
 
 @reflectiveTest
 class DartScriptsTaskTest extends AbstractContextTest {
@@ -72,8 +77,7 @@ class DartScriptsTaskTest extends AbstractContextTest {
 <body>
 </body>
 </html>''');
-    computeResult(target, REFERENCED_LIBRARIES);
-    expect(task, new isInstanceOf<DartScriptsTask>());
+    computeResult(target, REFERENCED_LIBRARIES, matcher: isDartScriptsTask);
     expect(outputs[REFERENCED_LIBRARIES], hasLength(0));
     expect(outputs[DART_SCRIPTS], hasLength(1));
     DartScript script = outputs[DART_SCRIPTS][0];
@@ -94,8 +98,7 @@ class DartScriptsTaskTest extends AbstractContextTest {
 <body>
 </body>
 </html>''');
-    computeResult(target, REFERENCED_LIBRARIES);
-    expect(task, new isInstanceOf<DartScriptsTask>());
+    computeResult(target, REFERENCED_LIBRARIES, matcher: isDartScriptsTask);
     expect(outputs[REFERENCED_LIBRARIES], hasLength(0));
     expect(outputs[DART_SCRIPTS], hasLength(0));
   }
@@ -112,8 +115,7 @@ class DartScriptsTaskTest extends AbstractContextTest {
 <body>
 </body>
 </html>''');
-    computeResult(target, REFERENCED_LIBRARIES);
-    expect(task, new isInstanceOf<DartScriptsTask>());
+    computeResult(target, REFERENCED_LIBRARIES, matcher: isDartScriptsTask);
     expect(outputs[REFERENCED_LIBRARIES], hasLength(0));
     expect(outputs[DART_SCRIPTS], hasLength(0));
   }
@@ -130,8 +132,7 @@ class DartScriptsTaskTest extends AbstractContextTest {
 <body>
 </body>
 </html>''');
-    computeResult(target, REFERENCED_LIBRARIES);
-    expect(task, new isInstanceOf<DartScriptsTask>());
+    computeResult(target, REFERENCED_LIBRARIES, matcher: isDartScriptsTask);
     expect(outputs[REFERENCED_LIBRARIES], hasLength(1));
     expect(outputs[DART_SCRIPTS], hasLength(0));
   }
@@ -150,8 +151,7 @@ class DartScriptsTaskTest extends AbstractContextTest {
   </body>
 </html>
 ''');
-    computeResult(target, REFERENCED_LIBRARIES);
-    expect(task, new isInstanceOf<DartScriptsTask>());
+    computeResult(target, REFERENCED_LIBRARIES, matcher: isDartScriptsTask);
     expect(outputs[REFERENCED_LIBRARIES], hasLength(0));
     expect(outputs[DART_SCRIPTS], hasLength(0));
   }
@@ -168,8 +168,7 @@ class DartScriptsTaskTest extends AbstractContextTest {
 <body>
 </body>
 </html>''');
-    computeResult(target, REFERENCED_LIBRARIES);
-    expect(task, new isInstanceOf<DartScriptsTask>());
+    computeResult(target, REFERENCED_LIBRARIES, matcher: isDartScriptsTask);
     expect(outputs[REFERENCED_LIBRARIES], hasLength(1));
     expect(outputs[DART_SCRIPTS], hasLength(0));
   }
@@ -177,18 +176,6 @@ class DartScriptsTaskTest extends AbstractContextTest {
 
 @reflectiveTest
 class HtmlErrorsTaskTest extends AbstractContextTest {
-  test_buildInputs() {
-    Source source = newSource('/test.html');
-    Map<String, TaskInput> inputs = HtmlErrorsTask.buildInputs(source);
-    expect(inputs, isNotNull);
-    expect(
-        inputs.keys,
-        unorderedEquals([
-          HtmlErrorsTask.DART_ERRORS_INPUT,
-          HtmlErrorsTask.DOCUMENT_ERRORS_INPUT
-        ]));
-  }
-
   test_constructor() {
     Source source = newSource('/test.html');
     HtmlErrorsTask task = new HtmlErrorsTask(context, source);
@@ -231,8 +218,7 @@ class HtmlErrorsTaskTest extends AbstractContextTest {
   <body>Test</body>
 </html>
 ''');
-    computeResult(target, HTML_ERRORS);
-    expect(task, new isInstanceOf<HtmlErrorsTask>());
+    computeResult(target, HTML_ERRORS, matcher: isHtmlErrorsTask);
     expect(outputs[HTML_ERRORS], hasLength(1));
   }
 
@@ -249,8 +235,7 @@ class HtmlErrorsTaskTest extends AbstractContextTest {
   </body>
 </html>
 ''');
-    computeResult(target, HTML_ERRORS);
-    expect(task, new isInstanceOf<HtmlErrorsTask>());
+    computeResult(target, HTML_ERRORS, matcher: isHtmlErrorsTask);
     expect(outputs[HTML_ERRORS], hasLength(1));
   }
 
@@ -268,8 +253,7 @@ class HtmlErrorsTaskTest extends AbstractContextTest {
   </body>
 </html>
 ''');
-    computeResult(target, HTML_ERRORS);
-    expect(task, new isInstanceOf<HtmlErrorsTask>());
+    computeResult(target, HTML_ERRORS, matcher: isHtmlErrorsTask);
     expect(outputs[HTML_ERRORS], isEmpty);
   }
 }
@@ -311,9 +295,7 @@ class ParseHtmlTaskTest extends AbstractContextTest {
   }
 
   test_perform() {
-    AnalysisTarget target = newSource(
-        '/test.html',
-        r'''
+    String code = r'''
 <!DOCTYPE html>
 <html>
   <head>
@@ -323,10 +305,34 @@ class ParseHtmlTaskTest extends AbstractContextTest {
     <h1 Test>
   </body>
 </html>
-''');
+''';
+    AnalysisTarget target = newSource('/test.html', code);
     computeResult(target, HTML_DOCUMENT);
-    expect(task, new isInstanceOf<ParseHtmlTask>());
+    expect(task, isParseHtmlTask);
     expect(outputs[HTML_DOCUMENT], isNotNull);
     expect(outputs[HTML_DOCUMENT_ERRORS], isNotEmpty);
+    // LINE_INFO
+    {
+      LineInfo lineInfo = outputs[LINE_INFO];
+      expect(lineInfo, isNotNull);
+      {
+        int offset = code.indexOf('<!DOCTYPE');
+        LineInfo_Location location = lineInfo.getLocation(offset);
+        expect(location.lineNumber, 1);
+        expect(location.columnNumber, 1);
+      }
+      {
+        int offset = code.indexOf('<html>');
+        LineInfo_Location location = lineInfo.getLocation(offset);
+        expect(location.lineNumber, 2);
+        expect(location.columnNumber, 1);
+      }
+      {
+        int offset = code.indexOf('<title>');
+        LineInfo_Location location = lineInfo.getLocation(offset);
+        expect(location.lineNumber, 4);
+        expect(location.columnNumber, 5);
+      }
+    }
   }
 }

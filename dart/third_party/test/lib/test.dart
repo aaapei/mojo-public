@@ -41,7 +41,7 @@ Declarer _globalDeclarer;
 /// [IsolateListener] or [IframeListener]. If the test file is run directly,
 /// this returns [_globalDeclarer] (and sets it up on the first call).
 Declarer get _declarer {
-  var declarer = Zone.current[#test.declarer];
+  var declarer = Declarer.current;
   if (declarer != null) return declarer;
   if (_globalDeclarer != null) return _globalDeclarer;
 
@@ -55,7 +55,7 @@ Declarer get _declarer {
         // TODO(nweiz): Use a different environment if VM environment starts
         // import dart:io before cross-platform libraries exist.
         const VMEnvironment(),
-        _globalDeclarer.tests,
+        _globalDeclarer.build(),
         path: p.prettyUri(Uri.base),
         platform: TestPlatform.vm,
         os: currentOSGuess);
@@ -169,6 +169,9 @@ void group(String description, void body(), {String testOn, Timeout timeout,
 /// If this is called within a test group, it applies only to tests in that
 /// group. [callback] will be run after any set-up callbacks in parent groups or
 /// at the top level.
+///
+/// Each callback at the top level or in a given group will be run in the order
+/// they were declared.
 void setUp(callback()) => _declarer.setUp(callback);
 
 /// Registers a function to be run after tests.
@@ -179,7 +182,38 @@ void setUp(callback()) => _declarer.setUp(callback);
 /// If this is called within a test group, it applies only to tests in that
 /// group. [callback] will be run before any tear-down callbacks in parent
 /// groups or at the top level.
+///
+/// Each callback at the top level or in a given group will be run in the
+/// reverse of the order they were declared.
 void tearDown(callback()) => _declarer.tearDown(callback);
+
+/// Registers a function to be run once before all tests.
+///
+/// [callback] may be asynchronous; if so, it must return a [Future].
+///
+/// If this is called within a test group, [callback] will run before all tests
+/// in that group. It will be run after any [setUpAll] callbacks in parent
+/// groups or at the top level. It won't be run if none of the tests in the
+/// group are run.
+///
+/// **Note**: This function makes it very easy to accidentally introduce hidden
+/// dependencies between tests that should be isolated. In general, you should
+/// prefer [setUp], and only use [setUpAll] if the callback is prohibitively
+/// slow.
+void setUpAll(callback()) => _declarer.setUpAll(callback);
+
+/// Registers a function to be run once after all tests.
+///
+/// If this is called within a test group, [callback] will run after all tests
+/// in that group. It will be run before any [tearDownAll] callbacks in parent
+/// groups or at the top level. It won't be run if none of the tests in the
+/// group are run.
+///
+/// **Note**: This function makes it very easy to accidentally introduce hidden
+/// dependencies between tests that should be isolated. In general, you should
+/// prefer [tearDown], and only use [tearDOwnAll] if the callback is
+/// prohibitively slow.
+void tearDownAll(callback()) => _declarer.tearDownAll(callback);
 
 /// Registers an exception that was caught for the current test.
 void registerException(error, [StackTrace stackTrace]) {

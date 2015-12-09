@@ -41,13 +41,12 @@ class BrowserServer {
   /// the working directory.
   static Future<BrowserServer> start(Configuration config, {String root})
       async {
-    var server = new BrowserServer._(root, config);
-    await server._load();
-    return server;
+    var server = new shelf_io.IOServer(await HttpMultiServer.loopback(0));
+    return new BrowserServer(server, config, root: root);
   }
 
-  /// The underlying HTTP server.
-  HttpServer _server;
+  /// The underlying server.
+  final shelf.Server _server;
 
   /// A randomly-generated secret.
   ///
@@ -56,8 +55,7 @@ class BrowserServer {
   final _secret = randomBase64(24, urlSafe: true);
 
   /// The URL for this server.
-  Uri get url => baseUrlForAddress(_server.address, _server.port)
-      .resolve(_secret + "/");
+  Uri get url => _server.url.resolve(_secret + "/");
 
   /// The test runner configuration.
   Configuration _config;
@@ -115,15 +113,12 @@ class BrowserServer {
 
   final _mappers = new Map<String, StackTraceMapper>();
 
-  BrowserServer._(String root, Configuration config)
+  BrowserServer(this._server, Configuration config, {String root})
       : _root = root == null ? p.current : root,
         _config = config,
         _compiledDir = config.pubServeUrl == null ? createTempDir() : null,
         _http = config.pubServeUrl == null ? null : new HttpClient(),
-        _compilers = new CompilerPool(color: config.color);
-
-  /// Starts the underlying server.
-  Future _load() async {
+        _compilers = new CompilerPool(color: config.color) {
     var cascade = new shelf.Cascade()
         .add(_webSocketHandler.handler);
 
@@ -139,8 +134,7 @@ class BrowserServer {
       .addMiddleware(nestingMiddleware(_secret))
       .addHandler(cascade.handler);
 
-    _server = await HttpMultiServer.loopback(0);
-    shelf_io.serveRequests(_server, pipeline);
+    _server.mount(pipeline);
   }
 
   /// Returns a handler that serves the contents of the "packages/" directory
@@ -230,21 +224,21 @@ void main() {
       var suitePrefix = p.withoutExtension(
           p.relative(path, from: p.join(_root, 'test')));
 
-      var jsUrl;
+      var dartUrl;
       // Polymer generates a bootstrap entrypoint that wraps the entrypoint we
       // see on disk, and modifies the HTML file to point to the bootstrap
       // instead. To make sure we get the right source maps and wait for the
       // right file to compile, we have some Polymer-specific logic here to load
       // the boostrap instead of the unwrapped file.
       if (isPolymerEntrypoint(path)) {
-        jsUrl = _config.pubServeUrl.resolve(
-            "$suitePrefix.html.polymer.bootstrap.dart.browser_test.dart.js");
+        dartUrl = _config.pubServeUrl.resolve(
+            "$suitePrefix.html.polymer.bootstrap.dart.browser_test.dart");
       } else {
-        jsUrl = _config.pubServeUrl.resolve(
-          '$suitePrefix.dart.browser_test.dart.js');
+        dartUrl = _config.pubServeUrl.resolve(
+          '$suitePrefix.dart.browser_test.dart');
       }
 
-      await _pubServeSuite(path, jsUrl);
+      await _pubServeSuite(path, dartUrl, browser);
       suiteUrl = _config.pubServeUrl.resolveUri(p.toUri('$suitePrefix.html'));
     } else {
       if (browser.isJS) await _compileSuite(path);
@@ -265,23 +259,29 @@ void main() {
     return suite;
   }
 
-  /// Loads a test suite at [path] from the `pub serve` URL [jsUrl].
+  /// Loads a test suite at [path] from the `pub serve` URL [dartUrl].
   ///
   /// This ensures that only one suite is loaded at a time, and that any errors
   /// are exposed as [LoadException]s.
-  Future _pubServeSuite(String path, Uri jsUrl) {
+  Future _pubServeSuite(String path, Uri dartUrl, TestPlatform browser) {
     return _pubServePool.withResource(() async {
       var timer = new Timer(new Duration(seconds: 1), () {
         print('"pub serve" is compiling $path...');
       });
 
-      var mapUrl = jsUrl.replace(path: jsUrl.path + '.map');
+      // For browsers that run Dart compiled to JavaScript, get the source map
+      // instead of the Dart code for two reasons. We want to verify that the
+      // server's dart2js compiler is running on the Dart code, and also load
+      // the StackTraceMapper.
+      var getSourceMap = browser.isJS;
+
+      var url = getSourceMap
+          ? dartUrl.replace(path: dartUrl.path + '.js.map')
+          : dartUrl;
+
       var response;
       try {
-        // Get the source map here for two reasons. We want to verify that the
-        // server's dart2js compiler is running on the Dart code, and also load
-        // the StackTraceMapper.
-        var request = await _http.getUrl(mapUrl);
+        var request = await _http.getUrl(url);
         response = await request.close();
 
         if (response.statusCode != 200) {
@@ -290,22 +290,22 @@ void main() {
           response.listen((_) {});
 
           throw new LoadException(path,
-              "Error getting $mapUrl: ${response.statusCode} "
+              "Error getting $url: ${response.statusCode} "
                   "${response.reasonPhrase}\n"
               'Make sure "pub serve" is serving the test/ directory.');
         }
 
-        if (_config.jsTrace) {
-          // Drain the response stream.
-          response.listen((_) {});
+        if (getSourceMap && !_config.jsTrace) {
+          _mappers[path] = new StackTraceMapper(
+              await UTF8.decodeStream(response),
+              mapUrl: url,
+              packageRoot: _config.pubServeUrl.resolve('packages'),
+              sdkRoot: _config.pubServeUrl.resolve('packages/\$sdk'));
           return;
         }
 
-        _mappers[path] = new StackTraceMapper(
-            await UTF8.decodeStream(response),
-            mapUrl: mapUrl,
-            packageRoot: _config.pubServeUrl.resolve('packages'),
-            sdkRoot: _config.pubServeUrl.resolve('packages/\$sdk'));
+        // Drain the response stream.
+        response.listen((_) {});
       } on IOException catch (error) {
         var message = getErrorMessage(error);
         if (error is SocketException) {
@@ -314,7 +314,7 @@ void main() {
         }
 
         throw new LoadException(path,
-            "Error getting $mapUrl: $message\n"
+            "Error getting $url: $message\n"
             'Make sure "pub serve" is running.');
       } finally {
         timer.cancel();
