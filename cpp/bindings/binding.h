@@ -5,6 +5,8 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_BINDING_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_BINDING_H_
 
+#include <memory>
+
 #include "mojo/public/c/environment/async_waiter.h"
 #include "mojo/public/cpp/bindings/callback.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
@@ -100,10 +102,7 @@ class Binding {
 
   // Tears down the binding, closing the message pipe and leaving the interface
   // implementation unbound.
-  ~Binding() {
-    if (internal_router_)
-      Close();
-  }
+  ~Binding() {}
 
   // Completes a binding that was constructed with only an interface
   // implementation. Takes ownership of |handle| and binds it to the previously
@@ -116,8 +115,8 @@ class Binding {
     filters.Append<internal::MessageHeaderValidator>();
     filters.Append<typename Interface::RequestValidator_>();
 
-    internal_router_ =
-        new internal::Router(handle.Pass(), filters.Pass(), waiter);
+    internal_router_.reset(
+        new internal::Router(handle.Pass(), filters.Pass(), waiter));
     internal_router_->set_incoming_receiver(&stub_);
     internal_router_->set_connection_error_handler(
         [this]() { connection_error_handler_.Run(); });
@@ -162,8 +161,7 @@ class Binding {
   // state where it can be rebound to a new pipe.
   void Close() {
     MOJO_DCHECK(internal_router_);
-    internal_router_->CloseMessagePipe();
-    DestroyRouter();
+    internal_router_.reset();
   }
 
   // Unbinds the underlying pipe from this binding and returns it so it can be
@@ -171,11 +169,8 @@ class Binding {
   // implementation. Put this object into a state where it can be rebound to a
   // new pipe.
   InterfaceRequest<Interface> Unbind() {
-    InterfaceRequest<Interface> request =
-        MakeRequest<Interface>(internal_router_->PassMessagePipe());
-    DestroyRouter();
-    // TODO(vtl): The |.Pass()| below is only needed due to an MSVS bug; remove
-    // it once that's fixed.
+    auto request = MakeRequest<Interface>(internal_router_->PassMessagePipe());
+    internal_router_.reset();
     return request;
   }
 
@@ -203,16 +198,10 @@ class Binding {
   }
 
   // Exposed for testing, should not generally be used.
-  internal::Router* internal_router() { return internal_router_; }
+  internal::Router* internal_router() { return internal_router_.get(); }
 
  private:
-  void DestroyRouter() {
-    internal_router_->set_connection_error_handler(Closure());
-    delete internal_router_;
-    internal_router_ = nullptr;
-  }
-
-  internal::Router* internal_router_ = nullptr;
+  std::unique_ptr<internal::Router> internal_router_;
   typename Interface::Stub_ stub_;
   Interface* impl_;
   Closure connection_error_handler_;
