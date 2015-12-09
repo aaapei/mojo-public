@@ -18,6 +18,7 @@ const string SERVICE_DESCRIBER_INTERFACE_NAME = "_ServiceDescriber";
 // provides by making this interface available. A client obtains access
 // to a ServiceDescriber service by invoking
 // ServiceProvider.ConnectToService(SERVICE_DESCRIBER_INTERFACE_NAME, pipe).
+[ServiceName="mojo::bindings::types::ServiceDescriber"]
 interface ServiceDescriber {
   // Requests access to a ServiceDescription for the service with the
   // given name. The |interface_name| is the same string that would be passed
