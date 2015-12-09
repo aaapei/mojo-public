@@ -5,6 +5,8 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_STRUCT_PTR_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_STRUCT_PTR_H_
 
+#include <cstddef>
+#include <memory>
 #include <new>
 
 #include "mojo/public/cpp/bindings/type_converter.h"
@@ -29,17 +31,17 @@ class StructHelper {
 template <typename Struct>
 class StructPtr {
  public:
-  StructPtr() : ptr_(nullptr) {}
-  StructPtr(decltype(nullptr)) : ptr_(nullptr) {}
+  StructPtr() {}
+  StructPtr(std::nullptr_t) {}
 
-  ~StructPtr() { delete ptr_; }
+  ~StructPtr() {}
 
-  StructPtr& operator=(decltype(nullptr)) {
+  StructPtr& operator=(std::nullptr_t) {
     reset();
     return *this;
   }
 
-  StructPtr(StructPtr&& other) : ptr_(nullptr) { Take(&other); }
+  StructPtr(StructPtr&& other) { Take(&other); }
   StructPtr& operator=(StructPtr&& other) {
     Take(&other);
     return *this;
@@ -50,17 +52,12 @@ class StructPtr {
     return TypeConverter<U, StructPtr>::Convert(*this);
   }
 
-  void reset() {
-    if (ptr_) {
-      delete ptr_;
-      ptr_ = nullptr;
-    }
-  }
+  void reset() { ptr_.reset(); }
 
   // Tests as true if non-null, false if null.
   explicit operator bool() const { return !!ptr_; }
 
-  bool is_null() const { return ptr_ == nullptr; }
+  bool is_null() const { return !ptr_; }
 
   Struct& operator*() const {
     MOJO_DCHECK(ptr_);
@@ -68,9 +65,9 @@ class StructPtr {
   }
   Struct* operator->() const {
     MOJO_DCHECK(ptr_);
-    return ptr_;
+    return ptr_.get();
   }
-  Struct* get() const { return ptr_; }
+  Struct* get() const { return ptr_.get(); }
 
   void Swap(StructPtr* other) { std::swap(ptr_, other->ptr_); }
 
@@ -89,7 +86,7 @@ class StructPtr {
   friend class internal::StructHelper<Struct>;
   void Initialize() {
     MOJO_DCHECK(!ptr_);
-    ptr_ = new Struct();
+    ptr_.reset(new Struct());
   }
 
   void Take(StructPtr* other) {
@@ -97,7 +94,7 @@ class StructPtr {
     Swap(other);
   }
 
-  Struct* ptr_;
+  std::unique_ptr<Struct> ptr_;
 
   MOJO_MOVE_ONLY_TYPE(StructPtr);
 };
