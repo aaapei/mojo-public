@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <map>
+#include <memory>
 
 #include "mojo/public/c/system/main.h"
 #include "mojo/public/cpp/application/application_connection.h"
@@ -119,7 +120,8 @@ class HumanResourceSystemServer
 
 MojoResult MojoMain(MojoHandle application_request) {
   mojo::ApplicationRunner runner(
-      new mojo::test::versioning::HumanResourceSystemServer());
+      std::unique_ptr<mojo::test::versioning::HumanResourceSystemServer>(
+          new mojo::test::versioning::HumanResourceSystemServer()));
 
   return runner.Run(application_request);
 }

@@ -5,6 +5,8 @@
 #ifndef MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_RUNNER_H_
 #define MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_RUNNER_H_
 
+#include <memory>
+
 #include "mojo/public/c/environment/logger.h"
 #include "mojo/public/cpp/system/core.h"
 
@@ -25,8 +27,7 @@ class ApplicationDelegate;
 // ultimately Quit().
 class ApplicationRunner {
  public:
-  // Takes ownership of |delegate|.
-  explicit ApplicationRunner(ApplicationDelegate* delegate);
+  explicit ApplicationRunner(std::unique_ptr<ApplicationDelegate> delegate);
   ~ApplicationRunner();
 
   // This replaces the underlying logger implementation with the one provided.
@@ -43,7 +44,7 @@ class ApplicationRunner {
   MojoResult Run(MojoHandle application_request);
 
  private:
-  ApplicationDelegate* delegate_;
+  std::unique_ptr<ApplicationDelegate> delegate_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(ApplicationRunner);
 };

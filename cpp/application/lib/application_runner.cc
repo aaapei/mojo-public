@@ -20,8 +20,9 @@ void ApplicationImpl::Terminate() {
   RunLoop::current()->Quit();
 }
 
-ApplicationRunner::ApplicationRunner(ApplicationDelegate* delegate)
-    : delegate_(delegate) {}
+ApplicationRunner::ApplicationRunner(
+    std::unique_ptr<ApplicationDelegate> delegate)
+    : delegate_(std::move(delegate)) {}
 
 ApplicationRunner::~ApplicationRunner() {
   assert(!delegate_);
@@ -47,13 +48,13 @@ MojoResult ApplicationRunner::Run(MojoHandle app_request_handle) {
   Environment env;
   {
     RunLoop loop;
-    ApplicationImpl app(delegate_, MakeRequest<Application>(MakeScopedHandle(
-                                       MessagePipeHandle(app_request_handle))));
+    ApplicationImpl app(delegate_.get(),
+                        MakeRequest<Application>(MakeScopedHandle(
+                            MessagePipeHandle(app_request_handle))));
     loop.Run();
   }
 
-  delete delegate_;
-  delegate_ = nullptr;
+  delegate_.reset();
 
   g_running = false;
 
