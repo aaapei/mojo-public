@@ -6,6 +6,7 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_LIB_ARRAY_INTERNAL_H_
 
 #include <new>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -30,6 +31,7 @@ namespace internal {
 // C++11).
 const uint32_t kMaxUint32 = 0xFFFFFFFF;
 
+// TODO(vardhan): Get rid of the following 2 functions.
 std::string MakeMessageWithArrayIndex(const char* message,
                                       size_t size,
                                       size_t index);
@@ -179,15 +181,17 @@ struct ArraySerializationHelper<T, false, false> {
                                        ElementType* elements,
                                        std::vector<Handle>* handles) {}
 
-  static bool ValidateElements(const ArrayHeader* header,
-                               const ElementType* elements,
-                               BoundsChecker* bounds_checker,
-                               const ArrayValidateParams* validate_params) {
+  static ValidationError ValidateElements(
+      const ArrayHeader* header,
+      const ElementType* elements,
+      BoundsChecker* bounds_checker,
+      const ArrayValidateParams* validate_params,
+      std::string* err) {
     MOJO_DCHECK(!validate_params->element_is_nullable)
         << "Primitive type should be non-nullable";
     MOJO_DCHECK(!validate_params->element_validate_params)
         << "Primitive type should not have array validate params";
-    return true;
+    return ValidationError::NONE;
   }
 };
 
@@ -203,30 +207,29 @@ struct ArraySerializationHelper<Handle, true, false> {
                                        ElementType* elements,
                                        std::vector<Handle>* handles);
 
-  static bool ValidateElements(const ArrayHeader* header,
-                               const ElementType* elements,
-                               BoundsChecker* bounds_checker,
-                               const ArrayValidateParams* validate_params) {
+  static ValidationError ValidateElements(
+      const ArrayHeader* header,
+      const ElementType* elements,
+      BoundsChecker* bounds_checker,
+      const ArrayValidateParams* validate_params,
+      std::string* err) {
     MOJO_DCHECK(!validate_params->element_validate_params)
         << "Handle type should not have array validate params";
 
     for (uint32_t i = 0; i < header->num_elements; ++i) {
       if (!validate_params->element_is_nullable &&
           elements[i].value() == kEncodedInvalidHandleValue) {
-        ReportValidationError(
-            ValidationError::UNEXPECTED_INVALID_HANDLE,
-            MakeMessageWithArrayIndex(
-                "invalid handle in array expecting valid handles",
-                header->num_elements, i)
-                .c_str());
-        return false;
+        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+            << "invalid handle in array expecting valid handles (array size="
+            << header->num_elements << ", index = " << i << ")";
+        return ValidationError::UNEXPECTED_INVALID_HANDLE;
       }
       if (!bounds_checker->ClaimHandle(elements[i])) {
-        ReportValidationError(ValidationError::ILLEGAL_HANDLE);
-        return false;
+        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+        return ValidationError::ILLEGAL_HANDLE;
       }
     }
-    return true;
+    return ValidationError::NONE;
   }
 };
 
@@ -248,12 +251,14 @@ struct ArraySerializationHelper<H, true, false> {
         header, elements, handles);
   }
 
-  static bool ValidateElements(const ArrayHeader* header,
-                               const ElementType* elements,
-                               BoundsChecker* bounds_checker,
-                               const ArrayValidateParams* validate_params) {
+  static ValidationError ValidateElements(
+      const ArrayHeader* header,
+      const ElementType* elements,
+      BoundsChecker* bounds_checker,
+      const ArrayValidateParams* validate_params,
+      std::string* err) {
     return ArraySerializationHelper<Handle, true, false>::ValidateElements(
-        header, elements, bounds_checker, validate_params);
+        header, elements, bounds_checker, validate_params, err);
   }
 };
 
@@ -275,61 +280,67 @@ struct ArraySerializationHelper<P*, false, false> {
       Decode(&elements[i], handles);
   }
 
-  static bool ValidateElements(const ArrayHeader* header,
-                               const ElementType* elements,
-                               BoundsChecker* bounds_checker,
-                               const ArrayValidateParams* validate_params) {
+  static ValidationError ValidateElements(
+      const ArrayHeader* header,
+      const ElementType* elements,
+      BoundsChecker* bounds_checker,
+      const ArrayValidateParams* validate_params,
+      std::string* err) {
     for (uint32_t i = 0; i < header->num_elements; ++i) {
       if (!validate_params->element_is_nullable && !elements[i].offset) {
-        ReportValidationError(
-            ValidationError::UNEXPECTED_NULL_POINTER,
-            MakeMessageWithArrayIndex("null in array expecting valid pointers",
-                                      header->num_elements, i)
-                .c_str());
-        return false;
+        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+            << "null in array expecting valid pointers (size="
+            << header->num_elements << ", index = " << i << ")";
+        return ValidationError::UNEXPECTED_NULL_POINTER;
       }
+
       if (!ValidateEncodedPointer(&elements[i].offset)) {
-        ReportValidationError(ValidationError::ILLEGAL_POINTER);
-        return false;
+        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+        return ValidationError::ILLEGAL_POINTER;
       }
-      if (!ValidateCaller<P>::Run(DecodePointerRaw(&elements[i].offset),
-                                  bounds_checker,
-                                  validate_params->element_validate_params)) {
-        return false;
-      }
+
+      auto retval = ValidateCaller<P>::Run(
+          DecodePointerRaw(&elements[i].offset), bounds_checker,
+          validate_params->element_validate_params, err);
+      if (retval != ValidationError::NONE)
+        return retval;
     }
-    return true;
+    return ValidationError::NONE;
   }
 
  private:
   template <typename T>
   struct ValidateCaller {
-    static bool Run(const void* data,
-                    BoundsChecker* bounds_checker,
-                    const ArrayValidateParams* validate_params) {
+    static ValidationError Run(const void* data,
+                               BoundsChecker* bounds_checker,
+                               const ArrayValidateParams* validate_params,
+                               std::string* err) {
       MOJO_DCHECK(!validate_params)
           << "Struct type should not have array validate params";
 
-      return T::Validate(data, bounds_checker);
+      return T::Validate(data, bounds_checker, err);
     }
   };
 
   template <typename Key, typename Value>
   struct ValidateCaller<Map_Data<Key, Value>> {
-    static bool Run(const void* data,
-                    BoundsChecker* bounds_checker,
-                    const ArrayValidateParams* validate_params) {
+    static ValidationError Run(const void* data,
+                               BoundsChecker* bounds_checker,
+                               const ArrayValidateParams* validate_params,
+                               std::string* err) {
       return Map_Data<Key, Value>::Validate(data, bounds_checker,
-                                            validate_params);
+                                            validate_params, err);
     }
   };
 
   template <typename T>
   struct ValidateCaller<Array_Data<T>> {
-    static bool Run(const void* data,
-                    BoundsChecker* bounds_checker,
-                    const ArrayValidateParams* validate_params) {
-      return Array_Data<T>::Validate(data, bounds_checker, validate_params);
+    static ValidationError Run(const void* data,
+                               BoundsChecker* bounds_checker,
+                               const ArrayValidateParams* validate_params,
+                               std::string* err) {
+      return Array_Data<T>::Validate(data, bounds_checker, validate_params,
+                                     err);
     }
   };
 };
@@ -353,29 +364,28 @@ struct ArraySerializationHelper<P, false, true> {
       elements[i].DecodePointersAndHandles(handles);
   }
 
-  static bool ValidateElements(const ArrayHeader* header,
-                               const ElementType* elements,
-                               BoundsChecker* bounds_checker,
-                               const ArrayValidateParams* validate_params) {
+  static ValidationError ValidateElements(
+      const ArrayHeader* header,
+      const ElementType* elements,
+      BoundsChecker* bounds_checker,
+      const ArrayValidateParams* validate_params,
+      std::string* err) {
     MOJO_DCHECK(!validate_params->element_validate_params)
         << "Union type should not have array validate params";
     for (uint32_t i = 0; i < header->num_elements; ++i) {
       if (!validate_params->element_is_nullable && elements[i].is_null()) {
-        ReportValidationError(
-            ValidationError::UNEXPECTED_NULL_UNION,
-            MakeMessageWithArrayIndex(
-                "null union in array expecting non-null unions",
-                header->num_elements, i)
-                .c_str());
-        return false;
+        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+            << "null union in array expecting non-null unions (size="
+            << header->num_elements << ", index = " << i << ")";
+        return ValidationError::UNEXPECTED_NULL_UNION;
       }
 
-      if (!ElementType::Validate(static_cast<const void*>(&elements[i]),
-                                 bounds_checker, true)) {
-        return false;
-      }
+      auto retval = ElementType::Validate(
+          static_cast<const void*>(&elements[i]), bounds_checker, true, err);
+      if (retval != ValidationError::NONE)
+        return retval;
     }
-    return true;
+    return ValidationError::NONE;
   }
 };
 
@@ -403,43 +413,46 @@ class Array_Data {
         Array_Data<T>(num_bytes, static_cast<uint32_t>(num_elements));
   }
 
-  static bool Validate(const void* data,
-                       BoundsChecker* bounds_checker,
-                       const ArrayValidateParams* validate_params) {
+  static ValidationError Validate(const void* data,
+                                  BoundsChecker* bounds_checker,
+                                  const ArrayValidateParams* validate_params,
+                                  std::string* err) {
     if (!data)
-      return true;
+      return ValidationError::NONE;
     if (!IsAligned(data)) {
-      ReportValidationError(ValidationError::MISALIGNED_OBJECT);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::MISALIGNED_OBJECT;
     }
     if (!bounds_checker->IsValidRange(data, sizeof(ArrayHeader))) {
-      ReportValidationError(ValidationError::ILLEGAL_MEMORY_RANGE);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::ILLEGAL_MEMORY_RANGE;
     }
+
     const ArrayHeader* header = static_cast<const ArrayHeader*>(data);
     if (header->num_elements > Traits::kMaxNumElements ||
         header->num_bytes < Traits::GetStorageSize(header->num_elements)) {
-      ReportValidationError(ValidationError::UNEXPECTED_ARRAY_HEADER);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::UNEXPECTED_ARRAY_HEADER;
     }
+
     if (validate_params->expected_num_elements != 0 &&
         header->num_elements != validate_params->expected_num_elements) {
-      ReportValidationError(
-          ValidationError::UNEXPECTED_ARRAY_HEADER,
-          MakeMessageWithExpectedArraySize(
-              "fixed-size array has wrong number of elements",
-              header->num_elements, validate_params->expected_num_elements)
-              .c_str());
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+          << "fixed-size array has wrong number of elements (size="
+          << header->num_elements
+          << ", expected size=" << validate_params->expected_num_elements
+          << ")";
+      return ValidationError::UNEXPECTED_ARRAY_HEADER;
     }
+
     if (!bounds_checker->ClaimMemory(data, header->num_bytes)) {
-      ReportValidationError(ValidationError::ILLEGAL_MEMORY_RANGE);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::ILLEGAL_MEMORY_RANGE;
     }
 
     const Array_Data<T>* object = static_cast<const Array_Data<T>*>(data);
     return Helper::ValidateElements(&object->header_, object->storage(),
-                                    bounds_checker, validate_params);
+                                    bounds_checker, validate_params, err);
   }
 
   size_t size() const { return header_.num_elements; }

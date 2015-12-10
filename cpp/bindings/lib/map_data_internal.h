@@ -5,6 +5,9 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_LIB_MAP_DATA_INTERNAL_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_LIB_MAP_DATA_INTERNAL_H_
 
+#include <string>
+#include <vector>
+
 #include "mojo/public/cpp/bindings/lib/array_internal.h"
 #include "mojo/public/cpp/bindings/lib/validate_params.h"
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
@@ -46,6 +49,7 @@ struct MapKeyValidateParamsFactory<mojo::internal::Array_Data<char>*> {
 
 // Map serializes into a struct which has two arrays as struct fields, the keys
 // and the values.
+// TODO(vardhan): Fill out the missing validation error messages.
 template <typename Key, typename Value>
 class Map_Data {
  public:
@@ -53,62 +57,71 @@ class Map_Data {
     return new (buf->Allocate(sizeof(Map_Data))) Map_Data();
   }
 
-  static bool Validate(const void* data,
-                       BoundsChecker* bounds_checker,
-                       const ArrayValidateParams* value_validate_params) {
+  static ValidationError Validate(
+      const void* data,
+      BoundsChecker* bounds_checker,
+      const ArrayValidateParams* value_validate_params,
+      std::string* err) {
     if (!data)
-      return true;
+      return ValidationError::NONE;
 
-    if (!ValidateStructHeaderAndClaimMemory(data, bounds_checker))
-      return false;
+    ValidationError retval =
+        ValidateStructHeaderAndClaimMemory(data, bounds_checker, err);
+    if (retval != ValidationError::NONE)
+      return retval;
 
     const Map_Data* object = static_cast<const Map_Data*>(data);
     if (object->header_.num_bytes != sizeof(Map_Data) ||
         object->header_.version != 0) {
-      ReportValidationError(ValidationError::UNEXPECTED_STRUCT_HEADER);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::UNEXPECTED_STRUCT_HEADER;
     }
 
     if (!ValidateEncodedPointer(&object->keys.offset)) {
-      ReportValidationError(ValidationError::ILLEGAL_POINTER);
-      return false;
-    }
-    if (!object->keys.offset) {
-      ReportValidationError(ValidationError::UNEXPECTED_NULL_POINTER,
-                            "null key array in map struct");
-      return false;
-    }
-    const ArrayValidateParams* key_validate_params =
-        MapKeyValidateParamsFactory<Key>::Get();
-    if (!Array_Data<Key>::Validate(DecodePointerRaw(&object->keys.offset),
-                                   bounds_checker, key_validate_params)) {
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::ILLEGAL_POINTER;
     }
 
+    if (!object->keys.offset) {
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "null key array in map struct";
+      return ValidationError::UNEXPECTED_NULL_POINTER;
+    }
+
+    const ArrayValidateParams* key_validate_params =
+        MapKeyValidateParamsFactory<Key>::Get();
+    retval =
+        Array_Data<Key>::Validate(DecodePointerRaw(&object->keys.offset),
+                                  bounds_checker, key_validate_params, err);
+    if (retval != ValidationError::NONE)
+      return retval;
+
     if (!ValidateEncodedPointer(&object->values.offset)) {
-      ReportValidationError(ValidationError::ILLEGAL_POINTER);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::ILLEGAL_POINTER;
     }
+
     if (!object->values.offset) {
-      ReportValidationError(ValidationError::UNEXPECTED_NULL_POINTER,
-                            "null value array in map struct");
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+          << "null value array in map struct";
+      return ValidationError::UNEXPECTED_NULL_POINTER;
     }
-    if (!Array_Data<Value>::Validate(DecodePointerRaw(&object->values.offset),
-                                     bounds_checker, value_validate_params)) {
-      return false;
-    }
+
+    retval =
+        Array_Data<Value>::Validate(DecodePointerRaw(&object->values.offset),
+                                    bounds_checker, value_validate_params, err);
+    if (retval != ValidationError::NONE)
+      return retval;
 
     const ArrayHeader* key_header =
         static_cast<const ArrayHeader*>(DecodePointerRaw(&object->keys.offset));
     const ArrayHeader* value_header = static_cast<const ArrayHeader*>(
         DecodePointerRaw(&object->values.offset));
     if (key_header->num_elements != value_header->num_elements) {
-      ReportValidationError(ValidationError::DIFFERENT_SIZED_ARRAYS_IN_MAP);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+      return ValidationError::DIFFERENT_SIZED_ARRAYS_IN_MAP;
     }
 
-    return true;
+    return ValidationError::NONE;
   }
 
   StructHeader header_;

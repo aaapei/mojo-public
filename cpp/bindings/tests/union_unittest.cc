@@ -169,8 +169,9 @@ TEST(UnionTest, PodValidation) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(
-      internal::PodUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::PodUnion_Data::Validate(raw_buf, &bounds_checker, false,
+                                              nullptr));
   free(raw_buf);
 }
 
@@ -217,7 +218,9 @@ TEST(UnionTest, SerializeIsNullNotInlined) {
 TEST(UnionTest, NullValidation) {
   void* buf = nullptr;
   mojo::internal::BoundsChecker bounds_checker(buf, 0, 0);
-  EXPECT_TRUE(internal::PodUnion_Data::Validate(buf, &bounds_checker, false));
+  EXPECT_EQ(
+      mojo::internal::ValidationError::NONE,
+      internal::PodUnion_Data::Validate(buf, &bounds_checker, false, nullptr));
 }
 
 TEST(UnionTest, OutOfAlignmentValidation) {
@@ -232,7 +235,9 @@ TEST(UnionTest, OutOfAlignmentValidation) {
       reinterpret_cast<internal::PodUnion_Data*>(buf);
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_FALSE(internal::PodUnion_Data::Validate(buf, &bounds_checker, false));
+  EXPECT_NE(
+      mojo::internal::ValidationError::NONE,
+      internal::PodUnion_Data::Validate(buf, &bounds_checker, false, nullptr));
   free(raw_buf);
 }
 
@@ -244,8 +249,9 @@ TEST(UnionTest, OOBValidation) {
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
   void* raw_buf = buf.Leak();
-  EXPECT_FALSE(
-      internal::PodUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::PodUnion_Data::Validate(raw_buf, &bounds_checker, false,
+                                              nullptr));
   free(raw_buf);
 }
 
@@ -273,8 +279,9 @@ TEST(UnionTest, UnknownTagValidation) {
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
   void* raw_buf = buf.Leak();
-  EXPECT_TRUE(
-      internal::PodUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::PodUnion_Data::Validate(raw_buf, &bounds_checker, false,
+                                              nullptr));
   free(raw_buf);
 }
 
@@ -344,8 +351,9 @@ TEST(UnionTest, NullStringValidation) {
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
   void* raw_buf = buf.Leak();
-  EXPECT_FALSE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -360,8 +368,9 @@ TEST(UnionTest, StringPointerOverflowValidation) {
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
   void* raw_buf = buf.Leak();
-  EXPECT_FALSE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -381,8 +390,9 @@ TEST(UnionTest, StringValidateOOB) {
   array_header->num_elements = 20;
   mojo::internal::BoundsChecker bounds_checker(data, 32, 0);
   void* raw_buf = buf.Leak();
-  EXPECT_FALSE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -452,8 +462,9 @@ TEST(UnionTest, PodUnionInArrayValidation) {
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 1);
 
-  EXPECT_TRUE(Array<PodUnionPtr>::Data_::Validate(raw_buf, &bounds_checker,
-                                                  &validate_params));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            Array<PodUnionPtr>::Data_::Validate(raw_buf, &bounds_checker,
+                                                &validate_params, nullptr));
   free(raw_buf);
 }
 TEST(UnionTest, PodUnionInArraySerializationWithNull) {
@@ -559,7 +570,9 @@ TEST(UnionTest, Validation_UnionsInStruct) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(internal::SmallStruct_Data::Validate(raw_buf, &bounds_checker));
+  EXPECT_EQ(
+      mojo::internal::ValidationError::NONE,
+      internal::SmallStruct_Data::Validate(raw_buf, &bounds_checker, nullptr));
   free(raw_buf);
 }
 
@@ -585,7 +598,9 @@ TEST(UnionTest, Validation_PodUnionInStruct_Failure) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(internal::SmallStruct_Data::Validate(raw_buf, &bounds_checker));
+  EXPECT_EQ(
+      mojo::internal::ValidationError::NONE,
+      internal::SmallStruct_Data::Validate(raw_buf, &bounds_checker, nullptr));
   free(raw_buf);
 }
 
@@ -604,8 +619,9 @@ TEST(UnionTest, Validation_NullUnion_Failure) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_FALSE(internal::SmallStructNonNullableUnion_Data::Validate(
-      raw_buf, &bounds_checker));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::SmallStructNonNullableUnion_Data::Validate(
+                raw_buf, &bounds_checker, nullptr));
   free(raw_buf);
 }
 
@@ -628,7 +644,9 @@ TEST(UnionTest, Validation_NullableUnion) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(internal::SmallStruct_Data::Validate(raw_buf, &bounds_checker));
+  EXPECT_EQ(
+      mojo::internal::ValidationError::NONE,
+      internal::SmallStruct_Data::Validate(raw_buf, &bounds_checker, nullptr));
   free(raw_buf);
 }
 
@@ -665,8 +683,9 @@ TEST(UnionTest, Validation_NullableObjectUnion) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(
-      internal::StructNullObjectUnion_Data::Validate(raw_buf, &bounds_checker));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::StructNullObjectUnion_Data::Validate(
+                raw_buf, &bounds_checker, nullptr));
   free(raw_buf);
 }
 
@@ -791,8 +810,9 @@ TEST(UnionTest, StructInUnionValidation) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -816,8 +836,9 @@ TEST(UnionTest, StructInUnionValidationNonNullable) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_FALSE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -841,8 +862,9 @@ TEST(UnionTest, StructInUnionValidationNullable) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -911,8 +933,9 @@ TEST(UnionTest, ArrayInUnionValidation) {
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
 
-  EXPECT_TRUE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -980,8 +1003,9 @@ TEST(UnionTest, MapInUnionValidation) {
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
 
-  EXPECT_TRUE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -1040,8 +1064,9 @@ TEST(UnionTest, UnionInUnionValidation) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_TRUE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -1063,8 +1088,9 @@ TEST(UnionTest, UnionInUnionValidationNonNullable) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 0);
-  EXPECT_FALSE(
-      internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::ObjectUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -1142,8 +1168,9 @@ TEST(UnionTest, HandleInUnionValidation) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 1);
-  EXPECT_TRUE(
-      internal::HandleUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_EQ(mojo::internal::ValidationError::NONE,
+            internal::HandleUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 
@@ -1166,8 +1193,9 @@ TEST(UnionTest, HandleInUnionValidationNull) {
   void* raw_buf = buf.Leak();
   mojo::internal::BoundsChecker bounds_checker(data,
                                                static_cast<uint32_t>(size), 1);
-  EXPECT_FALSE(
-      internal::HandleUnion_Data::Validate(raw_buf, &bounds_checker, false));
+  EXPECT_NE(mojo::internal::ValidationError::NONE,
+            internal::HandleUnion_Data::Validate(raw_buf, &bounds_checker,
+                                                 false, nullptr));
   free(raw_buf);
 }
 

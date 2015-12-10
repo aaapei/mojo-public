@@ -35,14 +35,11 @@ class StructSerializationAPITest : public testing::Test {
     validation_error_observer_.set_last_error(
         mojo::internal::ValidationError::NONE);
     mojo::internal::BoundsChecker bounds_checker(bytes.data(), num_bytes, 0);
-    EXPECT_EQ(
-        expected_validation_error == mojo::internal::ValidationError::NONE,
-        Type::Data_::Validate(bytes.data(), &bounds_checker));
-    EXPECT_EQ(expected_validation_error,
-              validation_error_observer_.last_error());
+    auto actual_validation_error =
+        Type::Data_::Validate(bytes.data(), &bounds_checker, nullptr);
+    EXPECT_EQ(expected_validation_error, actual_validation_error);
 
-    if (validation_error_observer_.last_error() ==
-        mojo::internal::ValidationError::NONE) {
+    if (actual_validation_error == mojo::internal::ValidationError::NONE) {
       Type out_val;
       out_val.Deserialize(bytes.data());
       EXPECT_TRUE(val->Equals(out_val));

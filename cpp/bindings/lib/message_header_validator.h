@@ -5,7 +5,9 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_LIB_MESSAGE_HEADER_VALIDATOR_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_LIB_MESSAGE_HEADER_VALIDATOR_H_
 
-#include "mojo/public/cpp/bindings/message.h"
+#include <string>
+
+#include "mojo/public/cpp/bindings/lib/validation_errors.h"
 #include "mojo/public/cpp/bindings/message_filter.h"
 
 namespace mojo {
@@ -20,8 +22,10 @@ class MessageHeaderValidator : public MessageFilter {
 
 // The following methods validate control messages defined in
 // interface_control_messages.mojom.
-bool ValidateControlRequest(const Message* message);
-bool ValidateControlResponse(const Message* message);
+ValidationError ValidateControlRequest(const Message* message,
+                                       std::string* err);
+ValidationError ValidateControlResponse(const Message* message,
+                                        std::string* err);
 
 }  // namespace internal
 }  // namespace mojo

@@ -7,7 +7,10 @@
 
 #include <stdint.h>
 
+#include <string>
+
 #include "mojo/public/cpp/bindings/lib/bounds_checker.h"
+#include "mojo/public/cpp/bindings/lib/validation_errors.h"
 
 namespace mojo {
 namespace internal {
@@ -23,8 +26,10 @@ bool ValidateEncodedPointer(const uint64_t* offset);
 // |bounds_checker|. On success, the memory range is marked as occupied.
 // Note: Does not verify |version| or that |num_bytes| is correct for the
 // claimed version.
-bool ValidateStructHeaderAndClaimMemory(const void* data,
-                                        BoundsChecker* bounds_checker);
+ValidationError ValidateStructHeaderAndClaimMemory(
+    const void* data,
+    BoundsChecker* bounds_checker,
+    std::string* err);
 
 }  // namespace internal
 }  // namespace mojo

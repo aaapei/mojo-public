@@ -5,6 +5,10 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_LIB_VALIDATION_ERRORS_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_LIB_VALIDATION_ERRORS_H_
 
+#include <sstream>
+#include <string>
+
+#include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/system/macros.h"
 
 namespace mojo {
@@ -60,7 +64,7 @@ enum class ValidationError {
 const char* ValidationErrorToString(ValidationError error);
 
 void ReportValidationError(ValidationError error,
-                           const char* description = nullptr);
+                           std::string* description = nullptr);
 
 // Only used by validation tests and when there is only one thread doing message
 // validation.
@@ -78,15 +82,46 @@ class ValidationErrorObserverForTesting {
   MOJO_DISALLOW_COPY_AND_ASSIGN(ValidationErrorObserverForTesting);
 };
 
+// This takes in a string pointer, and provides a string stream which you can
+// write to. On destruction, it sets the provided string to the contents of the
+// string stream.
+class ValidationErrorStringStream {
+ public:
+  explicit ValidationErrorStringStream(std::string* err_msg);
+  ~ValidationErrorStringStream();
+  std::ostringstream& stream() { return stream_; }
+
+ private:
+  std::string* err_msg_;
+  std::ostringstream stream_;
+
+  MOJO_DISALLOW_COPY_AND_ASSIGN(ValidationErrorStringStream);
+};
+
 }  // namespace internal
 }  // namespace mojo
 
 // In a debug build, logs a serialization warning.
-// TODO(vardhan): Make this macro work like an ostream instead of having to
-// supply a description.
+// TODO(vardhan): Make this work like an ostream.
 #define MOJO_INTERNAL_DLOG_SERIALIZATION_WARNING(error, description) \
   MOJO_DLOG(WARNING) << "The outgoing message will trigger "         \
                      << ValidationErrorToString(error)               \
                      << " at the receiving side (" << description << ")."
+
+// In a debug build, this will use |ValidationErrorStringStream::stream()| and
+// write to the supplied string if it is not null. In a non-debug + optimized
+// build it should do nothing, while also discarding away operator<<() calls.
+#ifdef NDEBUG
+// The compiler will reduce the |true ? (void)0 : ...| expression to |(void)0|,
+// thereby discarding the |ValidationErrorStringStream()| while still keeping
+// this macro's use semantically valid.
+#define MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err_msg) \
+  true ? (void)0                                   \
+       : ::mojo::internal::VoidifyOstream() &      \
+             ::mojo::internal::ValidationErrorStringStream(err_msg).stream()
+#else
+#define MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err_msg) \
+  ::mojo::internal::ValidationErrorStringStream(err_msg).stream()
+#endif  // NDEBUG
 
 #endif  // MOJO_PUBLIC_CPP_BINDINGS_LIB_VALIDATION_ERRORS_H_

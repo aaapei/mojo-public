@@ -4,37 +4,53 @@
 
 #include "mojo/public/cpp/bindings/lib/message_validation.h"
 
+#include <string>
+
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
 #include "mojo/public/cpp/bindings/message.h"
 
 namespace mojo {
 namespace internal {
 
-bool ValidateMessageIsRequestWithoutResponse(const Message* message) {
-  if (message->has_flag(kMessageIsResponse) ||
-      message->has_flag(kMessageExpectsResponse)) {
-    ReportValidationError(ValidationError::MESSAGE_HEADER_INVALID_FLAGS);
-    return false;
+ValidationError ValidateMessageIsRequestWithoutResponse(const Message* message,
+                                                        std::string* err) {
+  if (message->has_flag(kMessageIsResponse)) {
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+        << "message should be a request, not a response";
+    return ValidationError::MESSAGE_HEADER_INVALID_FLAGS;
   }
-  return true;
+  if (message->has_flag(kMessageExpectsResponse)) {
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+        << "message should not expect a response";
+    return ValidationError::MESSAGE_HEADER_INVALID_FLAGS;
+  }
+  return ValidationError::NONE;
 }
 
-bool ValidateMessageIsRequestExpectingResponse(const Message* message) {
-  if (message->has_flag(kMessageIsResponse) ||
-      !message->has_flag(kMessageExpectsResponse)) {
-    ReportValidationError(ValidationError::MESSAGE_HEADER_INVALID_FLAGS);
-    return false;
+ValidationError ValidateMessageIsRequestExpectingResponse(
+    const Message* message,
+    std::string* err) {
+  if (message->has_flag(kMessageIsResponse)) {
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+        << "message should be a request, not a response";
+    return ValidationError::MESSAGE_HEADER_INVALID_FLAGS;
   }
-  return true;
+  if (!message->has_flag(kMessageExpectsResponse)) {
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+        << "message should expect a response";
+    return ValidationError::MESSAGE_HEADER_INVALID_FLAGS;
+  }
+  return ValidationError::NONE;
 }
 
-bool ValidateMessageIsResponse(const Message* message) {
+ValidationError ValidateMessageIsResponse(const Message* message,
+                                          std::string* err) {
   if (message->has_flag(kMessageExpectsResponse) ||
       !message->has_flag(kMessageIsResponse)) {
-    ReportValidationError(ValidationError::MESSAGE_HEADER_INVALID_FLAGS);
-    return false;
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "message should be a response";
+    return ValidationError::MESSAGE_HEADER_INVALID_FLAGS;
   }
-  return true;
+  return ValidationError::NONE;
 }
 
 }  // namespace internal

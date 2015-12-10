@@ -5,6 +5,7 @@
 #include "mojo/public/cpp/bindings/lib/validation_util.h"
 
 #include <limits>
+#include <string>
 
 #include "mojo/public/cpp/bindings/lib/bindings_serialization.h"
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
@@ -22,30 +23,32 @@ bool ValidateEncodedPointer(const uint64_t* offset) {
           reinterpret_cast<uintptr_t>(offset));
 }
 
-bool ValidateStructHeaderAndClaimMemory(const void* data,
-                                        BoundsChecker* bounds_checker) {
+ValidationError ValidateStructHeaderAndClaimMemory(
+    const void* data,
+    BoundsChecker* bounds_checker,
+    std::string* err) {
   if (!IsAligned(data)) {
-    ReportValidationError(ValidationError::MISALIGNED_OBJECT);
-    return false;
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+    return ValidationError::MISALIGNED_OBJECT;
   }
   if (!bounds_checker->IsValidRange(data, sizeof(StructHeader))) {
-    ReportValidationError(ValidationError::ILLEGAL_MEMORY_RANGE);
-    return false;
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+    return ValidationError::ILLEGAL_MEMORY_RANGE;
   }
 
   const StructHeader* header = static_cast<const StructHeader*>(data);
 
   if (header->num_bytes < sizeof(StructHeader)) {
-    ReportValidationError(ValidationError::UNEXPECTED_STRUCT_HEADER);
-    return false;
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+    return ValidationError::UNEXPECTED_STRUCT_HEADER;
   }
 
   if (!bounds_checker->ClaimMemory(data, header->num_bytes)) {
-    ReportValidationError(ValidationError::ILLEGAL_MEMORY_RANGE);
-    return false;
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "";
+    return ValidationError::ILLEGAL_MEMORY_RANGE;
   }
 
-  return true;
+  return ValidationError::NONE;
 }
 
 }  // namespace internal

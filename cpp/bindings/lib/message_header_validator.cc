@@ -4,6 +4,8 @@
 
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 
+#include <string>
+
 #include "mojo/public/cpp/bindings/lib/bounds_checker.h"
 #include "mojo/public/cpp/bindings/lib/message_validation.h"
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
@@ -14,25 +16,28 @@ namespace mojo {
 namespace internal {
 namespace {
 
-bool IsValidMessageHeader(const MessageHeader* header) {
+ValidationError ValidateMessageHeader(const MessageHeader* header,
+                                      std::string* err) {
   // NOTE: Our goal is to preserve support for future extension of the message
   // header. If we encounter fields we do not understand, we must ignore them.
-
   // Extra validation of the struct header:
   if (header->version == 0) {
     if (header->num_bytes != sizeof(MessageHeader)) {
-      ReportValidationError(ValidationError::UNEXPECTED_STRUCT_HEADER);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+          << "message header size is incorrect";
+      return ValidationError::UNEXPECTED_STRUCT_HEADER;
     }
   } else if (header->version == 1) {
     if (header->num_bytes != sizeof(MessageHeaderWithRequestID)) {
-      ReportValidationError(ValidationError::UNEXPECTED_STRUCT_HEADER);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+          << "message header (version = 1) size is incorrect";
+      return ValidationError::UNEXPECTED_STRUCT_HEADER;
     }
   } else if (header->version > 1) {
     if (header->num_bytes < sizeof(MessageHeaderWithRequestID)) {
-      ReportValidationError(ValidationError::UNEXPECTED_STRUCT_HEADER);
-      return false;
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+          << "message header (version > 1) size is too small";
+      return ValidationError::UNEXPECTED_STRUCT_HEADER;
     }
   }
 
@@ -41,18 +46,22 @@ bool IsValidMessageHeader(const MessageHeader* header) {
   // These flags require a RequestID.
   if (header->version < 1 && ((header->flags & kMessageExpectsResponse) ||
                               (header->flags & kMessageIsResponse))) {
-    ReportValidationError(ValidationError::MESSAGE_HEADER_MISSING_REQUEST_ID);
-    return false;
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+        << "message header associates itself with a response but does not "
+           "contain a request id";
+    return ValidationError::MESSAGE_HEADER_MISSING_REQUEST_ID;
   }
 
   // These flags are mutually exclusive.
   if ((header->flags & kMessageExpectsResponse) &&
       (header->flags & kMessageIsResponse)) {
-    ReportValidationError(ValidationError::MESSAGE_HEADER_INVALID_FLAGS);
-    return false;
+    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+        << "message header cannot indicate itself as a response while also "
+           "expecting a response";
+    return ValidationError::MESSAGE_HEADER_INVALID_FLAGS;
   }
 
-  return true;
+  return ValidationError::NONE;
 }
 
 }  // namespace
@@ -66,35 +75,76 @@ bool MessageHeaderValidator::Accept(Message* message) {
   // if |message| contains handles.
   BoundsChecker bounds_checker(message->data(), message->data_num_bytes(), 0);
 
-  if (!ValidateStructHeaderAndClaimMemory(message->data(), &bounds_checker))
-    return false;
+  std::string* err = nullptr;
+#ifndef NDEBUG
+  std::string err2;
+  err = &err2;
+#endif
 
-  if (!IsValidMessageHeader(message->header()))
+  ValidationError retval =
+      ValidateStructHeaderAndClaimMemory(message->data(), &bounds_checker, err);
+  if (retval != ValidationError::NONE) {
+    ReportValidationError(retval, err);
     return false;
+  }
+
+  retval = ValidateMessageHeader(message->header(), err);
+  if (retval != ValidationError::NONE) {
+    ReportValidationError(retval, err);
+    return false;
+  }
 
   return sink_->Accept(message);
 }
 
-bool ValidateControlRequest(const Message* message) {
+ValidationError ValidateControlRequest(const Message* message,
+                                       std::string* err) {
+  ValidationError retval;
   switch (message->header()->name) {
-    case kRunMessageId:
-      return ValidateMessageIsRequestExpectingResponse(message) &&
-             ValidateMessagePayload<RunMessageParams_Data>(message);
-    case kRunOrClosePipeMessageId:
-      return ValidateMessageIsRequestWithoutResponse(message) &&
-             ValidateMessagePayload<RunOrClosePipeMessageParams_Data>(message);
+    case kRunMessageId: {
+      retval = ValidateMessageIsRequestExpectingResponse(message, err);
+      if (retval != ValidationError::NONE)
+        return retval;
+
+      return ValidateMessagePayload<RunMessageParams_Data>(message, err);
+    }
+
+    case kRunOrClosePipeMessageId: {
+      retval = ValidateMessageIsRequestWithoutResponse(message, err);
+      if (retval != ValidationError::NONE)
+        return retval;
+
+      return ValidateMessagePayload<RunOrClosePipeMessageParams_Data>(message,
+                                                                      err);
+    }
+
+    default: {
+      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+          << "unknown InterfaceControlMessage request message name: "
+          << message->header()->name;
+      return ValidationError::MESSAGE_HEADER_UNKNOWN_METHOD;
+    }
   }
-  return false;
+
+  return ValidationError::NONE;
 }
 
-bool ValidateControlResponse(const Message* message) {
-  if (!ValidateMessageIsResponse(message))
-    return false;
+ValidationError ValidateControlResponse(const Message* message,
+                                        std::string* err) {
+  ValidationError retval = ValidateMessageIsResponse(message, err);
+  if (retval != ValidationError::NONE)
+    return retval;
+
   switch (message->header()->name) {
     case kRunMessageId:
-      return ValidateMessagePayload<RunResponseMessageParams_Data>(message);
+      return ValidateMessagePayload<RunResponseMessageParams_Data>(message,
+                                                                   err);
   }
-  return false;
+
+  MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
+      << "unknown InterfaceControlMessage response message name: "
+      << message->header()->name;
+  return ValidationError::MESSAGE_HEADER_UNKNOWN_METHOD;
 }
 
 }  // namespace internal

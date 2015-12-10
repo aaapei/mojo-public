@@ -4,6 +4,8 @@
 
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
 
+#include <string>
+
 #include "mojo/public/cpp/environment/logging.h"
 
 namespace mojo {
@@ -53,12 +55,12 @@ const char* ValidationErrorToString(ValidationError error) {
   return "Unknown error";
 }
 
-void ReportValidationError(ValidationError error, const char* description) {
+void ReportValidationError(ValidationError error, std::string* description) {
   if (g_validation_error_observer) {
     g_validation_error_observer->set_last_error(error);
   } else if (description) {
     MOJO_LOG(ERROR) << "Invalid message: " << ValidationErrorToString(error)
-                    << " (" << description << ")";
+                    << " (" << *description << ")";
   } else {
     MOJO_LOG(ERROR) << "Invalid message: " << ValidationErrorToString(error);
   }
@@ -73,6 +75,14 @@ ValidationErrorObserverForTesting::ValidationErrorObserverForTesting()
 ValidationErrorObserverForTesting::~ValidationErrorObserverForTesting() {
   MOJO_DCHECK(g_validation_error_observer == this);
   g_validation_error_observer = nullptr;
+}
+
+ValidationErrorStringStream::ValidationErrorStringStream(std::string* err_msg)
+    : err_msg_(err_msg) {}
+
+ValidationErrorStringStream::~ValidationErrorStringStream() {
+  if (err_msg_)
+    *err_msg_ = stream_.str();
 }
 
 }  // namespace internal
