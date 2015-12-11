@@ -454,7 +454,7 @@ TEST_F(ArrayTest, Serialization_StructWithArrayOfInterfacePtr) {
             size);
 
   FixedBufferForTesting buf(size * 2);
-  StructWithInterfaceArray::Data_* struct_arr_iface_data;
+  StructWithInterfaceArray::Data_* struct_arr_iface_data = nullptr;
   //  1. This should fail because |structs_array| has an invalid InterfacePtr<>
   //     and it is not nullable.
   EXPECT_EQ(mojo::internal::ValidationError::UNEXPECTED_NULL_POINTER,
@@ -764,7 +764,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfStructPtr) {
                 2 * 8U +      // array payload (2 pointers)
                 8U + 4 * 4U,  // struct header + contents (4 int32)
             size_with_null);
-  Array_Data<Rect::Data_*>* output_with_null;
+  Array_Data<Rect::Data_*>* output_with_null = nullptr;
 
   // 1. Array with non-nullable structs should fail serialization due to
   // the null first element.
@@ -808,7 +808,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfStructPtr) {
               size_without_null);
 
     FixedBufferForTesting buf_without_null(size_without_null);
-    Array_Data<Rect::Data_*>* output_without_null;
+    Array_Data<Rect::Data_*>* output_without_null = nullptr;
     EXPECT_EQ(mojo::internal::ValidationError::NONE,
               SerializeArray_(&array, &buf_without_null, &output_without_null,
                               &validate_non_nullable));
