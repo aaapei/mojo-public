@@ -67,12 +67,8 @@ template("mojo_native_application") {
                                    mojo_root) ]
       }
 
-      deps = rebase_path([
-                           "mojo/public/c/system",
-                           "mojo/public/platform/native:system",
-                         ],
-                         ".",
-                         mojo_root)
+      deps =
+          rebase_path([ "mojo/public/platform/native:system" ], ".", mojo_root)
       if (defined(invoker.deps)) {
         deps += invoker.deps
       }
@@ -310,7 +306,8 @@ if (is_android) {
         sources = invoker.sources
       }
 
-      deps = []
+      deps =
+          rebase_path([ "mojo/public/platform/native:system" ], ".", mojo_root)
       if (defined(invoker.jni_package)) {
         deps += [ ":${generate_jni_name}" ]
       }

@@ -18,13 +18,3 @@ mojo_sdk_source_set("system") {
     "types.h",
   ]
 }
-
-# TODO(vtl): Remove this.
-group("for_shared_library") {
-  public_deps = [
-    ":system",
-  ]
-  deps = [
-    "../../platform/native:system",
-  ]
-}
