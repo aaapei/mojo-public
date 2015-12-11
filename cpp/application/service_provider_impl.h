@@ -27,10 +27,12 @@ class ServiceProviderImpl : public ServiceProvider {
   void Close();
 
   template <typename Interface>
-  void AddService(InterfaceFactory<Interface>* factory) {
-    SetServiceConnectorForName(
-        new internal::InterfaceFactoryConnector<Interface>(factory),
-        Interface::Name_);
+  void AddService(InterfaceFactory<Interface>* factory,
+                  const std::string& interface_name = Interface::Name_) {
+    service_connector_registry_.SetServiceConnectorForName(
+        std::unique_ptr<ServiceConnector>(
+            new internal::InterfaceFactoryConnector<Interface>(factory)),
+        interface_name);
   }
 
   // ServiceProviderImpl uses the fallback_service_provider_ whenever someone
@@ -47,9 +49,6 @@ class ServiceProviderImpl : public ServiceProvider {
   // Overridden from ServiceProvider:
   void ConnectToService(const String& service_name,
                         ScopedMessagePipeHandle client_handle) override;
-
-  void SetServiceConnectorForName(ServiceConnector* service_connector,
-                                  const std::string& interface_name);
 
   Binding<ServiceProvider> binding_;
 

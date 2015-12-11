@@ -4,28 +4,21 @@
 
 #include "mojo/public/cpp/application/lib/service_connector_registry.h"
 
+#include <utility>
+
 #include "mojo/public/cpp/application/service_connector.h"
 
 namespace mojo {
 namespace internal {
 
-ServiceConnectorRegistry::ServiceConnectorRegistry() {
-}
+ServiceConnectorRegistry::ServiceConnectorRegistry() {}
 
-ServiceConnectorRegistry::~ServiceConnectorRegistry() {
-  for (NameToServiceConnectorMap::iterator i =
-           name_to_service_connector_.begin();
-       i != name_to_service_connector_.end(); ++i) {
-    delete i->second;
-  }
-  name_to_service_connector_.clear();
-}
+ServiceConnectorRegistry::~ServiceConnectorRegistry() {}
 
 void ServiceConnectorRegistry::SetServiceConnectorForName(
-    ServiceConnector* service_connector,
+    std::unique_ptr<ServiceConnector> service_connector,
     const std::string& interface_name) {
-  RemoveServiceConnectorForName(interface_name);
-  name_to_service_connector_[interface_name] = service_connector;
+  name_to_service_connector_[interface_name] = std::move(service_connector);
 }
 
 void ServiceConnectorRegistry::RemoveServiceConnectorForName(
@@ -34,7 +27,6 @@ void ServiceConnectorRegistry::RemoveServiceConnectorForName(
       name_to_service_connector_.find(interface_name);
   if (it == name_to_service_connector_.end())
     return;
-  delete it->second;
   name_to_service_connector_.erase(it);
 }
 

@@ -43,11 +43,4 @@ void ServiceProviderImpl::ConnectToService(
   }
 }
 
-void ServiceProviderImpl::SetServiceConnectorForName(
-    ServiceConnector* service_connector,
-    const std::string& interface_name) {
-  service_connector_registry_.SetServiceConnectorForName(service_connector,
-                                                         interface_name);
-}
-
 }  // namespace mojo

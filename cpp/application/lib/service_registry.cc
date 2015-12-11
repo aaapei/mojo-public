@@ -36,8 +36,8 @@ ServiceRegistry::~ServiceRegistry() {
 void ServiceRegistry::SetServiceConnectorForName(
     ServiceConnector* service_connector,
     const std::string& interface_name) {
-  service_connector_registry_.SetServiceConnectorForName(service_connector,
-                                                         interface_name);
+  service_connector_registry_.SetServiceConnectorForName(
+      std::unique_ptr<ServiceConnector>(service_connector), interface_name);
 }
 
 void ServiceRegistry::RemoveServiceConnectorForName(

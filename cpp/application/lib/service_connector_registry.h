@@ -6,6 +6,7 @@
 #define MOJO_PUBLIC_CPP_APPLICATION_LIB_SERVICE_CONNECTOR_REGISTRY_H_
 
 #include <map>
+#include <memory>
 #include <string>
 
 #include "mojo/public/cpp/system/message_pipe.h"
@@ -28,10 +29,11 @@ class ServiceConnectorRegistry {
   // Returns true if non ServiceConnectors have been registered by name.
   bool empty() const { return name_to_service_connector_.empty(); }
 
-  // Sets a ServiceConnector by name. This deletes the existing ServiceConnector
-  // and takes ownership of |service_connector|.
-  void SetServiceConnectorForName(ServiceConnector* service_connector,
-                                  const std::string& interface_name);
+  // Sets a ServiceConnector by name. This deletes any existing ServiceConnector
+  // of the same name.
+  void SetServiceConnectorForName(
+      std::unique_ptr<ServiceConnector> service_connector,
+      const std::string& interface_name);
   void RemoveServiceConnectorForName(const std::string& interface_name);
 
   // ConnectToService returns true if this registery has an entry for
@@ -43,7 +45,8 @@ class ServiceConnectorRegistry {
                         ScopedMessagePipeHandle* client_handle);
 
  private:
-  using NameToServiceConnectorMap = std::map<std::string, ServiceConnector*>;
+  using NameToServiceConnectorMap =
+      std::map<std::string, std::unique_ptr<ServiceConnector>>;
 
   NameToServiceConnectorMap name_to_service_connector_;
 
