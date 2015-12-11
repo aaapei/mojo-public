@@ -4,10 +4,9 @@
 
 import("../../mojo_sdk.gni")
 
-# Depend on this target to use the types etc defined in the system without
-# linking against a specific implementation of the system. To link against a
-# particular implementation, use the :for_component or
-# :for_shared_library targets, depending on the type of target you are.
+# This target merely declares the Mojo system API's types, functions, etc. To
+# use the functions, you must also depend on a specific implementation (e.g.,
+# ../../platform/native:system).
 mojo_sdk_source_set("system") {
   sources = [
     "buffer.h",
@@ -20,19 +19,7 @@ mojo_sdk_source_set("system") {
   ]
 }
 
-# In an is_component_build build, everything can link against //mojo/edk/system
-# because it is built as a shared library. However, in a static build,
-# //mojo/edk/system is linked into an executable (e.g., mojo_shell), and must be
-# injected into other shared libraries (i.e., Mojo Apps) that need the mojo
-# system API.
-#
-# For component targets, add //mojo/public/c/system:for_component to your deps
-# section.
-#
-# For shared_library targets (e.g., a Mojo App), add
-# //mojo/public/c/system:for_shared_library to your deps
-
-# TODO(jamesr): Eliminate the need for these targets. crbug.com/438701
+# TODO(vtl): Remove this.
 group("for_shared_library") {
   public_deps = [
     ":system",
@@ -40,15 +27,4 @@ group("for_shared_library") {
   deps = [
     "../../platform/native:system",
   ]
-}
-
-group("for_component") {
-  public_deps = [
-    ":system",
-  ]
-  if (is_component_build) {
-    deps = [
-      "../../../edk/system",
-    ]
-  }
 }
