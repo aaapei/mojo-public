@@ -39,10 +39,7 @@ static void PostSignal(Dart_Port port, int32_t signalled) {
   if (port == ILLEGAL_PORT) {
     return;
   }
-  Dart_CObject message;
-  message.type = Dart_CObject_kInt32;
-  message.value.as_int32 = signalled;
-  Dart_PostCObject(port, &message);
+  Dart_PostInteger(port, signalled);
 }
 
 // The internal state of the handle watcher thread.
@@ -306,16 +303,11 @@ void HandleWatcherThreadState::ProcessControlMessage() {
   }
 }
 
-// Dart's DateTime class calls gettimeofday to get the time.
-// TODO(johnmccutchan): Expose an API in |dart_api.h| that returns the same
-// value that DateTime uses.
+// Dart's Timer class uses MojoCoreNatives.timerMillisecondClock(), which
+// calls MojoGetTimeTicksNow() and divides by 1000;
 static int64_t GetDartTimeInMillis() {
-  struct timeval tv;
-  if (gettimeofday(&tv, nullptr) < 0) {
-    MOJO_CHECK(false);
-    return 0;
-  }
-  return ((static_cast<int64_t>(tv.tv_sec) * 1000000) + tv.tv_usec) / 1000;
+  MojoTimeTicks ticks = MojoGetTimeTicksNow();
+  return static_cast<int64_t>(ticks) / 1000;
 }
 
 void HandleWatcherThreadState::ProcessTimers() {
