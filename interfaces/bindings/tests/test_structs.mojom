@@ -402,3 +402,15 @@ struct ContainsInterfaceRequest {
   SomeInterface& req;
   SomeInterface&? nullable_req;
 };
+
+
+struct DartKeywordStruct {
+  enum Keywords {
+    AWAIT,
+    IS,
+    RETHROW,
+  };
+  Keywords await;
+  Keywords is;
+  Keywords rethrow;
+};
