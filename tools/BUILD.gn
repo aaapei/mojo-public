@@ -11,7 +11,7 @@ if (mojo_use_prebuilt_mojo_shell) {
     if (is_android) {
       filename = "MojoShell.apk"
       sources = [
-        "prebuilt/shell/android-arm-official/$filename",
+        "prebuilt/shell/android-arm/$filename",
       ]
       outputs = [
         "$root_out_dir/apks/$filename",

@@ -12,7 +12,7 @@ import zipfile
 
 BINARY_FOR_PLATFORM = {
     "linux-x64" : "mojo_shell",
-    "android-arm-official" : "MojoShell.apk"
+    "android-arm" : "MojoShell.apk"
 }
 
 CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -38,9 +38,9 @@ def download(tools_directory, version_file):
     pass  # If the stamp file does not exist we need to download new binaries.
 
   if sys.platform.startswith("linux"):
-    platforms = ["linux-x64", "android-arm-official"]
+    platforms = ["linux-x64", "android-arm"]
   elif sys.platform == "darwin":
-    platforms = ["android-arm-official"]
+    platforms = ["android-arm"]
   else:
     print "No prebuilt shell available for %s" % sys.platform
     return 0
