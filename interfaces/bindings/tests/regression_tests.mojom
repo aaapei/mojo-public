@@ -91,3 +91,7 @@ struct ContainsArrayOfEnum {
 interface Regression551 {
   Get(array<string> key_prefixes) => (int32 result);
 };
+
+interface ServiceName {
+  serviceName() => (string serviceName);
+};
