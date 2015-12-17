@@ -5,6 +5,7 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_MAP_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_MAP_H_
 
+#include <iosfwd>
 #include <map>
 #include <type_traits>
 
@@ -292,6 +293,26 @@ struct TypeConverter<std::map<STLKey, STLValue>, Map<MojoKey, MojoValue>> {
     return result;
   }
 };
+
+// Prints the contents of a map to an output stream for debugging purposes.
+template <typename Key, typename Value>
+std::ostream& operator<<(std::ostream& os, const mojo::Map<Key, Value>& map) {
+  if (map) {
+    os << "[";
+    bool first = true;
+    for (auto it = map.cbegin(); it != map.cend(); ++it) {
+      if (first)
+        first = false;
+      else
+        os << ", ";
+      os << "{" << it.GetKey() << ": " << it.GetValue() << "}";
+    }
+    os << "]";
+  } else {
+    os << "null";
+  }
+  return os;
+}
 
 }  // namespace mojo
 

@@ -463,5 +463,34 @@ TEST_F(StructTest, Versioning_NewToOld) {
   }
 }
 
+static std::ostream& operator<<(std::ostream& os, const Rect& value) {
+  return os << "{x=" << value.x << ", y=" << value.y
+            << ", width=" << value.width << ", height=" << value.height << "}";
+}
+
+static std::ostream& operator<<(std::ostream& os, const RectPair& value) {
+  return os << "{first=" << value.first << ", second=" << value.second << "}";
+}
+
+TEST_F(StructTest, OutputFormatting) {
+  InlinedStructPtr<Rect> inlined_struct_ptr = MakeRect(1);
+  InlinedStructPtr<Rect> null_inlined_struct_ptr;
+  StructPtr<RectPair> struct_ptr = RectPair::New();
+  struct_ptr->first = MakeRect(2);
+  StructPtr<RectPair> null_struct_ptr;
+
+  std::ostringstream so;
+  so << "inlined_struct_ptr=" << inlined_struct_ptr
+     << ", null_inlined_struct_ptr=" << null_inlined_struct_ptr
+     << ", struct_ptr=" << struct_ptr
+     << ", null_struct_ptr=" << null_struct_ptr;
+  EXPECT_EQ(
+      "inlined_struct_ptr={x=1, y=2, width=10, height=20}, "
+      "null_inlined_struct_ptr=null, "
+      "struct_ptr={first={x=2, y=4, width=20, height=40}, second=null}, "
+      "null_struct_ptr=null",
+      so.str());
+}
+
 }  // namespace test
 }  // namespace mojo

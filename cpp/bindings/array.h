@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iosfwd>
 #include <set>
 #include <string>
 #include <vector>
@@ -308,6 +309,27 @@ struct TypeConverter<std::set<E>, Array<T>> {
     return result;
   }
 };
+
+// Prints the contents of an array to an output stream for debugging purposes.
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const mojo::Array<T>& array) {
+  if (array) {
+    os << "[";
+    bool first = true;
+    for (auto it = array.storage().cbegin(); it != array.storage().cend();
+         ++it) {
+      if (first)
+        first = false;
+      else
+        os << ", ";
+      os << *it;
+    }
+    os << "]";
+  } else {
+    os << "null";
+  }
+  return os;
+}
 
 }  // namespace mojo
 

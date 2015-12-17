@@ -828,6 +828,30 @@ TEST_F(ArrayTest, Serialization_ArrayOfStructPtr) {
   }
 }
 
+TEST_F(ArrayTest, OutputFormatting) {
+  Array<int32_t> null_array;
+  Array<int32_t> empty_array;
+  empty_array.resize(0);
+  Array<int32_t> one_element_array;
+  one_element_array.push_back(123);
+  Array<int32_t> three_element_array;
+  three_element_array.push_back(4);
+  three_element_array.push_back(5);
+  three_element_array.push_back(6);
+
+  std::ostringstream so;
+  so << "null_array=" << null_array << ", empty_array=" << empty_array
+     << ", one_element_array=" << one_element_array
+     << ", three_element_array=" << three_element_array;
+
+  EXPECT_EQ(
+      "null_array=null, "
+      "empty_array=[], "
+      "one_element_array=[123], "
+      "three_element_array=[4, 5, 6]",
+      so.str());
+}
+
 }  // namespace
 }  // namespace test
 }  // namespace mojo
