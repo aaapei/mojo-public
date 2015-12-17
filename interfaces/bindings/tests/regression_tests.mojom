@@ -95,3 +95,17 @@ interface Regression551 {
 interface ServiceName {
   serviceName() => (string serviceName);
 };
+
+enum CamelCaseTestEnum {
+  BOOL_THING,
+  DOUBLE_THING,
+  FLOAT_THING,
+  INT8_THING,
+  INT16THING,
+  INT32_TH1NG,
+  INT64_Th1ng,
+  UINT8T_h1ng,
+  UINT16t_h1NG,
+  UINT32_TH1ng,
+  UINT64_TH1NG
+};
