@@ -31,10 +31,10 @@ struct StringIntData {
   const char* string_data;
   int int_data;
 } kStringIntData[] = {
-    {"one", 1},
-    {"two", 2},
-    {"three", 3},
-    {"four", 4},
+      {"one", 1},
+      {"two", 2},
+      {"three", 3},
+      {"four", 4},
 };
 
 const size_t kStringIntDataSize = 4;
@@ -431,30 +431,6 @@ TEST_F(MapTest, Serialization_MapOfNullableStructs) {
   EXPECT_EQ(2, map2[1]->y);
   EXPECT_EQ(3, map2[1]->width);
   EXPECT_EQ(4, map2[1]->height);
-}
-
-TEST_F(MapTest, OutputFormatting) {
-  Map<int32_t, std::string> null_map;
-  Map<int32_t, std::string> empty_map;
-  empty_map.mark_non_null();
-  Map<int32_t, std::string> one_element_map;
-  one_element_map.insert(123, "abc");
-  Map<int32_t, std::string> three_element_map;
-  three_element_map.insert(4, "d");
-  three_element_map.insert(5, "e");
-  three_element_map.insert(6, "f");
-
-  std::ostringstream so;
-  so << "null_map=" << null_map << ", empty_map=" << empty_map
-     << ", one_element_map=" << one_element_map
-     << ", three_element_map=" << three_element_map;
-
-  EXPECT_EQ(
-      "null_map=null, "
-      "empty_map=[], "
-      "one_element_map=[{123: abc}], "
-      "three_element_map=[{4: d}, {5: e}, {6: f}]",
-      so.str());
 }
 
 }  // namespace

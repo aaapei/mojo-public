@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <sstream>
-
 #include "mojo/public/cpp/bindings/string.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -116,15 +114,6 @@ TEST(StringTest, LessThanNullness) {
   String real("real");
   EXPECT_TRUE(null < real);
   EXPECT_FALSE(real < null);
-}
-
-TEST(StringText, OutputFormatting) {
-  String s("abc");
-  String null;
-
-  std::ostringstream so;
-  so << "s=" << s << ", null=" << null;
-  EXPECT_EQ("s=abc, null=", so.str());
 }
 
 }  // namespace test

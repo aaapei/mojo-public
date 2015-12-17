@@ -5,7 +5,6 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_STRING_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_STRING_H_
 
-#include <iosfwd>
 #include <string>
 
 #include "mojo/public/cpp/bindings/lib/array_internal.h"
@@ -123,8 +122,6 @@ inline bool operator!=(const String& a, const char* b) {
   return !(a == b);
 }
 
-// TODO(jeffbrown): Decide whether this should print a sentinel value
-// such as "<null>" when formatting null strings.
 inline std::ostream& operator<<(std::ostream& out, const String& s) {
   return out << s.get();
 }

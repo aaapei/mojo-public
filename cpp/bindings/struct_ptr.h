@@ -6,7 +6,6 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_STRUCT_PTR_H_
 
 #include <cstddef>
-#include <iosfwd>
 #include <memory>
 #include <new>
 
@@ -128,7 +127,7 @@ class InlinedStructPtr {
 
   void reset() {
     is_null_ = true;
-    value_.~Struct();
+    value_. ~Struct();
     new (&value_) Struct();
   }
 
@@ -175,22 +174,6 @@ class InlinedStructPtr {
 
   MOJO_MOVE_ONLY_TYPE(InlinedStructPtr);
 };
-
-// Prints the pointee of a Mojo structure pointer to an output stream
-// for debugging purposes, assuming there exists an operator<< overload
-// that accepts a const reference to the object.
-template <typename T, typename = typename T::Data_>
-auto operator<<(std::ostream& os, const T* value) -> decltype(os << *value) {
-  return value ? os << *value : os << "null";
-}
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const StructPtr<T>& value) {
-  return os << value.get();
-}
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const InlinedStructPtr<T>& value) {
-  return os << value.get();
-}
 
 }  // namespace mojo
 
