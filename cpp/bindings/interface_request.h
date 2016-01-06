@@ -5,6 +5,8 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_INTERFACE_REQUEST_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_INTERFACE_REQUEST_H_
 
+#include <cstddef>
+
 #include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
@@ -27,7 +29,7 @@ class InterfaceRequest {
   // Constructs an empty InterfaceRequest, representing that the client is not
   // requesting an implementation of Interface.
   InterfaceRequest() {}
-  InterfaceRequest(decltype(nullptr)) {}
+  InterfaceRequest(std::nullptr_t) {}
 
   // Takes the message pipe from another InterfaceRequest.
   InterfaceRequest(InterfaceRequest&& other) { handle_ = other.handle_.Pass(); }
@@ -38,7 +40,7 @@ class InterfaceRequest {
 
   // Assigning to nullptr resets the InterfaceRequest to an empty state,
   // closing the message pipe currently bound to it (if any).
-  InterfaceRequest& operator=(decltype(nullptr)) {
+  InterfaceRequest& operator=(std::nullptr_t) {
     handle_.reset();
     return *this;
   }

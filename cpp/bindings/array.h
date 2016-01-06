@@ -5,6 +5,7 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_ARRAY_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_ARRAY_H_
 
+#include <stddef.h>
 #include <string.h>
 
 #include <algorithm>
@@ -38,7 +39,7 @@ class Array {
   Array() : is_null_(true) {}
 
   // Makes null arrays implicitly constructible from |nullptr|.
-  Array(decltype(nullptr)) : is_null_(true) {}
+  Array(std::nullptr_t) : is_null_(true) {}
 
   ~Array() {}
 

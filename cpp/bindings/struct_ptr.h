@@ -105,11 +105,11 @@ template <typename Struct>
 class InlinedStructPtr {
  public:
   InlinedStructPtr() : is_null_(true) {}
-  InlinedStructPtr(decltype(nullptr)) : is_null_(true) {}
+  InlinedStructPtr(std::nullptr_t) : is_null_(true) {}
 
   ~InlinedStructPtr() {}
 
-  InlinedStructPtr& operator=(decltype(nullptr)) {
+  InlinedStructPtr& operator=(std::nullptr_t) {
     reset();
     return *this;
   }

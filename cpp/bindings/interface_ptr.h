@@ -6,6 +6,7 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_INTERFACE_PTR_H_
 
 #include <algorithm>
+#include <cstddef>
 
 #include "mojo/public/cpp/bindings/callback.h"
 #include "mojo/public/cpp/bindings/interface_ptr_info.h"
@@ -31,7 +32,7 @@ class InterfacePtr {
  public:
   // Constructs an unbound InterfacePtr.
   InterfacePtr() {}
-  InterfacePtr(decltype(nullptr)) {}
+  InterfacePtr(std::nullptr_t) {}
 
   // Takes over the binding of another InterfacePtr.
   InterfacePtr(InterfacePtr&& other) {
@@ -48,7 +49,7 @@ class InterfacePtr {
 
   // Assigning nullptr to this class causes it to close the currently bound
   // message pipe (if any) and returns the pointer to the unbound state.
-  InterfacePtr& operator=(decltype(nullptr)) {
+  InterfacePtr& operator=(std::nullptr_t) {
     reset();
     return *this;
   }
