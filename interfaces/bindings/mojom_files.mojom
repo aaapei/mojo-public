@@ -35,6 +35,21 @@ struct MojomFile {
   // MojomFileGraph
   string file_name;
 
+  // |specified_file_name| is used to record information about the request that
+  // triggered the construction of the |MojomFileGraph| of which this
+  // |MojomFile| is a part. This field is populated by some producers (such
+  // as the Mojom compiler) but not necessarily all producers of this structure.
+  // If this field is null it means it is not supported by the producer.
+  //
+  // If this field is non-null but empty it means that this |MojomFile|
+  // was not explicitly requested but rather is included in the |MojomFileGraph|
+  // because it is referenced in the |imports| field of another |MojomFile|
+  // in the graph. If this field is non-empty it means that the corresponding
+  // .mojom file was explicitly requested, using |specified_file_name|. Note
+  // that in this case it is still possible that this file is also referenced
+  // in the |imports| field of another |MojomFile|.
+  string? specified_file_name;
+
    // The namespace is the identifier declared via the "module" declaration
    // in the .mojom file.
   string? module_namespace;
@@ -56,7 +71,7 @@ struct MojomFile {
 
 // Represents a directed acyclic graph of MojomFiles.
 struct MojomFileGraph {
-  // All the files in this graph. The keys are file names
+  // All the files in this graph. The keys are |file_name|s.
   map<string, MojomFile> files;
 
   // All the resolved user-defined types known to this structure. The keys are
