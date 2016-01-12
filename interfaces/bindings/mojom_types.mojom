@@ -378,6 +378,10 @@ struct DeclaredConstant {
 struct Attribute {
   string key;
 
+  // TODO(rudominer) The grammar allows an attribute value to be a name but the
+  // parser currently converts the name into a string literal. Do we want to
+  // maintain the distinction between a name and a string literal for attribute
+  // values?
   LiteralValue value;
 };
 
