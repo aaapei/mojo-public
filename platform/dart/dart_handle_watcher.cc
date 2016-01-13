@@ -143,7 +143,12 @@ void HandleWatcherThreadState::AddHandle(MojoHandle handle,
     // Sanity check.
     MOJO_CHECK(wait_many_handles_[index] == handle);
     // We only support 1:1 mapping from handles to ports.
-    MOJO_CHECK(handle_ports_[index] == port);
+    if (handle_ports_[index] != port) {
+      MOJO_LOG(ERROR) << "(Dart Handle Watcher) "
+                      << "Handle " << handle << " is already bound!";
+      PostSignal(port, MOJO_HANDLE_SIGNAL_PEER_CLOSED);
+      return;
+    }
     // Adjust the signals for this handle.
     wait_many_signals_[index] |= signals;
   } else {
