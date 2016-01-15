@@ -5,7 +5,9 @@
 #ifndef MOJO_PUBLIC_PLATFORM_DART_DART_HANDLE_WATCHER_H_
 #define MOJO_PUBLIC_PLATFORM_DART_DART_HANDLE_WATCHER_H_
 
+#include <mutex>
 #include <thread>
+#include <unordered_map>
 
 #include "dart/runtime/include/dart_api.h"
 
@@ -73,10 +75,10 @@ class HandleWatcherCommand {
   }
 
   // Construct a command to shutdown the handle watcher thread.
-  static HandleWatcherCommand Shutdown(Dart_Port port) {
+  static HandleWatcherCommand Shutdown() {
     HandleWatcherCommand result;
     result.handle_or_deadline_ = MOJO_HANDLE_INVALID;
-    result.port_ = port;
+    result.port_ = ILLEGAL_PORT;
     result.set_data(kCommandShutdownHandleWatcher, MOJO_HANDLE_SIGNAL_NONE);
     return result;
   }
@@ -106,7 +108,7 @@ class HandleWatcherCommand {
         return Timer(handle_or_deadline, port);
       break;
       case kCommandShutdownHandleWatcher:
-        return Shutdown(port);
+        return Shutdown();
       break;
       default:
         // Unreachable.
@@ -177,8 +179,30 @@ class HandleWatcher {
   static MojoResult SendCommand(MojoHandle control_pipe_producer_handle,
                                 const HandleWatcherCommand& command);
 
+  // Stops and joins the handle watcher thread at the other end of the
+  // given pipe handle.
+  static void Stop(MojoHandle control_pipe_consumer_handle);
+
+  // Stops and joins all handle watcher threads.
+  static void StopAll();
+
  private:
   static void ThreadMain(MojoHandle control_pipe_consumer_handle);
+
+  // Remove the mapping for |handle| from |handle_watcher_threads_| and return
+  // the associated thread object. Assumes |handle_watcher_threads_mutex_| is
+  // held.
+  static std::thread* RemoveLocked(MojoHandle handle);
+
+  // Remove the mapping for |handle| from |handle_watcher_threads_| and join
+  // the associated thread. Assumes |handle_watcher_threads_mutex_| is held.
+  static void StopLocked(MojoHandle handle);
+
+  // A mapping from control handle to handle watcher thread.
+  static std::unordered_map<MojoHandle, std::thread*> handle_watcher_threads_;
+
+  // Protects |handle_watcher_threads_|
+  static std::mutex handle_watcher_threads_mutex_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(HandleWatcher);
 };

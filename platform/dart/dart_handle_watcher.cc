@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -73,7 +74,7 @@ class HandleWatcherThreadState {
 
   void UpdateTimer(int64_t deadline, Dart_Port port);
 
-  void Shutdown(Dart_Port port);
+  void Shutdown();
 
   void RemoveHandleAtIndex(intptr_t i);
 
@@ -93,7 +94,7 @@ class HandleWatcherThreadState {
 
   int64_t WaitDeadline();
 
-  Dart_Port shutdown_port_;
+  bool shutdown_;
 
   MojoHandle control_pipe_consumer_handle_;
 
@@ -114,7 +115,7 @@ class HandleWatcherThreadState {
 
 HandleWatcherThreadState::HandleWatcherThreadState(
     MojoHandle control_pipe_consumer_handle)
-    : shutdown_port_(ILLEGAL_PORT),
+    : shutdown_(false),
       control_pipe_consumer_handle_(control_pipe_consumer_handle) {
   MOJO_CHECK(control_pipe_consumer_handle_ != MOJO_HANDLE_INVALID);
   // Add the control handle.
@@ -234,10 +235,9 @@ void HandleWatcherThreadState::UpdateTimer(int64_t deadline, Dart_Port port) {
   timers_.insert(timer);
 }
 
-void HandleWatcherThreadState::Shutdown(Dart_Port port) {
-  // Break out of the loop by setting the shutdown port.
-  MOJO_CHECK(port != ILLEGAL_PORT);
-  shutdown_port_ = port;
+void HandleWatcherThreadState::Shutdown() {
+  // Break out of the loop by setting the shutdown_ to true.
+  shutdown_ = true;
 }
 
 void HandleWatcherThreadState::RemoveHandleAtIndex(intptr_t index) {
@@ -300,7 +300,7 @@ void HandleWatcherThreadState::ProcessControlMessage() {
       UpdateTimer(command.deadline(), command.port());
     break;
     case HandleWatcherCommand::kCommandShutdownHandleWatcher:
-      Shutdown(command.port());
+      Shutdown();
     break;
     default:
       MOJO_CHECK(false);
@@ -452,7 +452,7 @@ void HandleWatcherThreadState::ProcessWaitManyResults(MojoResult result,
 }
 
 void HandleWatcherThreadState::Run() {
-  while (shutdown_port_ == ILLEGAL_PORT) {
+  while (!shutdown_) {
     // Process timers.
     ProcessTimers();
     // Wait for the next timer or an event on a handle.
@@ -477,9 +477,11 @@ void HandleWatcherThreadState::Run() {
 
   // Close our end of the message pipe.
   MojoClose(control_pipe_consumer_handle_);
-  // Notify that we've shutdown.
-  PostNull(shutdown_port_);
 }
+
+std::unordered_map<MojoHandle, std::thread*>
+    HandleWatcher::handle_watcher_threads_;
+std::mutex HandleWatcher::handle_watcher_threads_mutex_;
 
 // Create a message pipe for communication and spawns a handle watcher thread.
 MojoHandle HandleWatcher::Start() {
@@ -497,12 +499,16 @@ MojoHandle HandleWatcher::Start() {
   }
 
   // Spawn thread and pass both ends of the pipe to it.
-  std::thread thread = std::thread(ThreadMain,
-                                   control_pipe_consumer_handle);
+  std::thread* thread = new std::thread(
+      ThreadMain, control_pipe_consumer_handle);
 
-  // Detach the thread. Thread can be made to exit by sending a shutdown
-  // command.
-  thread.detach();
+  {
+    std::lock_guard<std::mutex> lock(handle_watcher_threads_mutex_);
+    // Record the thread object so that we can join on it during shutdown.
+    MOJO_CHECK(handle_watcher_threads_.find(control_pipe_producer_handle) ==
+               handle_watcher_threads_.end());
+    handle_watcher_threads_[control_pipe_producer_handle] = thread;
+  }
 
   // Return producer end of pipe to caller.
   return control_pipe_producer_handle;
@@ -523,6 +529,61 @@ MojoResult HandleWatcher::SendCommand(MojoHandle control_pipe_producer_handle,
                           nullptr,
                           0,
                           0);
+}
+
+std::thread* HandleWatcher::RemoveLocked(MojoHandle handle) {
+  std::thread* t;
+  auto mapping = handle_watcher_threads_.find(handle);
+  if (mapping == handle_watcher_threads_.end()) {
+    return nullptr;
+  }
+  t = mapping->second;
+  handle_watcher_threads_.erase(handle);
+  return t;
+}
+
+void HandleWatcher::Stop(MojoHandle control_pipe_producer_handle) {
+  std::thread *t;
+  {
+    std::lock_guard<std::mutex> lock(handle_watcher_threads_mutex_);
+    t = RemoveLocked(control_pipe_producer_handle);
+  }
+
+  if (t == nullptr) {
+    return;
+  }
+
+  SendCommand(control_pipe_producer_handle, HandleWatcherCommand::Shutdown());
+  t->join();
+
+  MojoClose(control_pipe_producer_handle);
+  delete t;
+}
+
+void HandleWatcher::StopLocked(MojoHandle handle) {
+  std::thread *t = RemoveLocked(handle);
+  MOJO_CHECK(t != nullptr);
+
+  SendCommand(handle, HandleWatcherCommand::Shutdown());
+  t->join();
+
+  MojoClose(handle);
+  delete t;
+}
+
+void HandleWatcher::StopAll() {
+  std::lock_guard<std::mutex> lock(handle_watcher_threads_mutex_);
+
+  std::vector<MojoHandle> control_handles;
+  control_handles.reserve(handle_watcher_threads_.size());
+
+  for (const auto& it : handle_watcher_threads_) {
+    control_handles.push_back(it.first);
+  }
+
+  for (auto it : control_handles) {
+    StopLocked(it);
+  }
 }
 
 }  // namespace dart
