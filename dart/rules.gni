@@ -42,6 +42,8 @@ template("dartx") {
     script =
         rebase_path("mojo/public/tools/dart_snapshotter.py", ".", mojo_sdk_root)
 
+    depfile = "$target_gen_dir/${bundle_prefix}_snapshot.bin.d"
+
     args = [
       rebase_path(dart_snapshotter),
       rebase_path(main_dart),
@@ -49,6 +51,10 @@ template("dartx") {
       rebase_path("$root_gen_dir/dart-pkg/packages"),
       "--snapshot",
       rebase_path(snapshot),
+      "--depfile",
+      rebase_path(depfile),
+      "--build-output",
+      "${bundle_prefix}_snapshot.bin",
     ]
 
     deps = [

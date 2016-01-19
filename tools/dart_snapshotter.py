@@ -14,6 +14,8 @@ def main():
   parser.add_argument('main', type=str)
   parser.add_argument('--package-root', type=str)
   parser.add_argument('--snapshot', type=str)
+  parser.add_argument('--depfile', type=str)
+  parser.add_argument('--build-output', type=str)
 
   args = parser.parse_args()
   if not os.path.isfile(args.executable):
@@ -23,6 +25,8 @@ def main():
     args.main,
     '--package-root=%s' % args.package_root,
     '--snapshot=%s' % args.snapshot,
+    '--depfile=%s' % args.depfile,
+    '--build-output=%s' % args.build_output,
   ])
 
 if __name__ == '__main__':
