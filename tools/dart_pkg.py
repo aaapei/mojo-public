@@ -200,10 +200,6 @@ def main():
                       metavar='package_name',
                       help='Name of package',
                       required=True)
-  parser.add_argument('--gen-directory',
-                      metavar='gen_directory',
-                      help="dart-gen directory",
-                      required=True)
   parser.add_argument('--pkg-directory',
                       metavar='pkg_directory',
                       help='Directory where dart_pkg should go',

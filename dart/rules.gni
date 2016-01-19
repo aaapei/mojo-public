@@ -241,8 +241,6 @@ template("dart_pkg_helper") {
              package_name,
              "--dart-sdk",
              rebase_path(dart_sdk_root),
-             "--gen-directory",
-             rebase_path("$root_gen_dir/dart-gen"),
              "--pkg-directory",
              pkg_directory,
              "--package-root",
