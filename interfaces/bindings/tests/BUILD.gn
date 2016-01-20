@@ -6,6 +6,8 @@ import("../../../tools/bindings/mojom.gni")
 
 mojom("test_interfaces") {
   testonly = true
+  # Some of those files are part of tests that check type info generation.
+  generate_type_info = true
   sources = [
     "math_calculator.mojom",
     "no_module.mojom",
