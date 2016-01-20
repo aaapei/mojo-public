@@ -13,6 +13,7 @@ template("dartx") {
   bundle_prefix = target_name
   bundle = "$target_gen_dir/${bundle_prefix}.dartx"
   snapshot = "$target_gen_dir/${bundle_prefix}_snapshot.bin"
+  depfile_path = "${snapshot}.d"
 
   if (mojo_use_prebuilt_dart_snapshotter) {
     dart_snapshotter_path =
@@ -28,6 +29,8 @@ template("dartx") {
   action("gen_${bundle_prefix}_snapshot") {
     main_dart = invoker.main_dart
 
+    depfile = depfile_path
+
     inputs = [
       dart_snapshotter,
     ]
@@ -42,8 +45,6 @@ template("dartx") {
     script =
         rebase_path("mojo/public/tools/dart_snapshotter.py", ".", mojo_sdk_root)
 
-    depfile = "$target_gen_dir/${bundle_prefix}_snapshot.bin.d"
-
     args = [
       rebase_path(dart_snapshotter),
       rebase_path(main_dart),
@@ -52,9 +53,9 @@ template("dartx") {
       "--snapshot",
       rebase_path(snapshot),
       "--depfile",
-      rebase_path(depfile),
+      rebase_path(depfile_path),
       "--build-output",
-      "${bundle_prefix}_snapshot.bin",
+      rebase_path(snapshot, root_build_dir),  # Relative to build directory
     ]
 
     deps = [
