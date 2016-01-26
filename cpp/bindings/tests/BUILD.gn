@@ -19,6 +19,7 @@ mojo_sdk_source_set("tests") {
     "constant_unittest.cc",
     "container_test_util.cc",
     "equals_unittest.cc",
+    "formatting_unittest.cc",
     "handle_passing_unittest.cc",
     "interface_ptr_unittest.cc",
     "interface_unittest.cc",

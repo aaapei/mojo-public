@@ -10,6 +10,7 @@ import("../../mojo_sdk.gni")
 mojo_sdk_source_set("serialization") {
   sources = [
     "array.h",
+    "formatting.h",
     "lib/array_internal.cc",
     "lib/array_internal.h",
     "lib/array_serialization.h",
