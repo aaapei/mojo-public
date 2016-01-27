@@ -9,17 +9,20 @@
 
 #include "mojo/public/cpp/bindings/callback.h"
 #include "mojo/public/cpp/bindings/lib/connector.h"
-#include "mojo/public/cpp/bindings/lib/filter_chain.h"
 #include "mojo/public/cpp/bindings/lib/shared_data.h"
+#include "mojo/public/cpp/bindings/lib/validation_errors.h"
+#include "mojo/public/cpp/bindings/message_validator.h"
 #include "mojo/public/cpp/environment/environment.h"
 
 namespace mojo {
 namespace internal {
 
+// Router provides a way for sending messages over a MessagePipe, and re-routing
+// response messages back to the sender.
 class Router : public MessageReceiverWithResponder {
  public:
   Router(ScopedMessagePipeHandle message_pipe,
-         FilterChain filters,
+         MessageValidatorList validators,
          const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter());
   ~Router() override;
 
@@ -75,9 +78,11 @@ class Router : public MessageReceiverWithResponder {
  private:
   typedef std::map<uint64_t, MessageReceiver*> ResponderMap;
 
+  // This class is registered for incoming messages from the |Connector|.  It
+  // simply forwards them to |Router::HandleIncomingMessages|.
   class HandleIncomingMessageThunk : public MessageReceiver {
    public:
-    HandleIncomingMessageThunk(Router* router);
+    explicit HandleIncomingMessageThunk(Router* router);
     ~HandleIncomingMessageThunk() override;
 
     // MessageReceiver implementation:
@@ -90,7 +95,7 @@ class Router : public MessageReceiverWithResponder {
   bool HandleIncomingMessage(Message* message);
 
   HandleIncomingMessageThunk thunk_;
-  FilterChain filters_;
+  MessageValidatorList validators_;
   Connector connector_;
   SharedData<Router*> weak_self_;
   MessageReceiverWithResponderStatus* incoming_receiver_;

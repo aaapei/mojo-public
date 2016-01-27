@@ -6,13 +6,13 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_BINDING_H_
 
 #include <memory>
+#include <utility>
 
 #include "mojo/public/c/environment/async_waiter.h"
 #include "mojo/public/cpp/bindings/callback.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "mojo/public/cpp/bindings/interface_ptr_info.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
-#include "mojo/public/cpp/bindings/lib/filter_chain.h"
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
 #include "mojo/public/cpp/environment/logging.h"
@@ -111,12 +111,15 @@ class Binding {
       ScopedMessagePipeHandle handle,
       const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
     MOJO_DCHECK(!internal_router_);
-    internal::FilterChain filters;
-    filters.Append<internal::MessageHeaderValidator>();
-    filters.Append<typename Interface::RequestValidator_>();
+
+    internal::MessageValidatorList validators;
+    validators.push_back(std::unique_ptr<internal::MessageValidator>(
+        new internal::MessageHeaderValidator));
+    validators.push_back(std::unique_ptr<internal::MessageValidator>(
+        new typename Interface::RequestValidator_));
 
     internal_router_.reset(
-        new internal::Router(handle.Pass(), filters.Pass(), waiter));
+        new internal::Router(std::move(handle), std::move(validators), waiter));
     internal_router_->set_incoming_receiver(&stub_);
     internal_router_->set_connection_error_handler(
         [this]() { connection_error_handler_.Run(); });

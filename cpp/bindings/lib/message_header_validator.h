@@ -8,16 +8,14 @@
 #include <string>
 
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
-#include "mojo/public/cpp/bindings/message_filter.h"
+#include "mojo/public/cpp/bindings/message_validator.h"
 
 namespace mojo {
 namespace internal {
 
-class MessageHeaderValidator : public MessageFilter {
+class MessageHeaderValidator final : public MessageValidator {
  public:
-  explicit MessageHeaderValidator(MessageReceiver* sink = nullptr);
-
-  bool Accept(Message* message) override;
+  ValidationError Validate(const Message* message, std::string* err) override;
 };
 
 // The following methods validate control messages defined in

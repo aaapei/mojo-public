@@ -4,6 +4,10 @@
 
 #include "mojo/public/cpp/bindings/lib/router.h"
 
+#include <string>
+#include <utility>
+
+#include "mojo/public/cpp/bindings/message_validator.h"
 #include "mojo/public/cpp/environment/logging.h"
 
 namespace mojo {
@@ -58,11 +62,9 @@ class ResponderThunk : public MessageReceiverWithStatus {
 // ----------------------------------------------------------------------------
 
 Router::HandleIncomingMessageThunk::HandleIncomingMessageThunk(Router* router)
-    : router_(router) {
-}
+    : router_(router) {}
 
-Router::HandleIncomingMessageThunk::~HandleIncomingMessageThunk() {
-}
+Router::HandleIncomingMessageThunk::~HandleIncomingMessageThunk() {}
 
 bool Router::HandleIncomingMessageThunk::Accept(Message* message) {
   return router_->HandleIncomingMessage(message);
@@ -71,17 +73,17 @@ bool Router::HandleIncomingMessageThunk::Accept(Message* message) {
 // ----------------------------------------------------------------------------
 
 Router::Router(ScopedMessagePipeHandle message_pipe,
-               FilterChain filters,
+               MessageValidatorList validators,
                const MojoAsyncWaiter* waiter)
     : thunk_(this),
-      filters_(filters.Pass()),
+      validators_(std::move(validators)),
       connector_(message_pipe.Pass(), waiter),
       weak_self_(this),
       incoming_receiver_(nullptr),
       next_request_id_(0),
       testing_mode_(false) {
-  filters_.SetSink(&thunk_);
-  connector_.set_incoming_receiver(filters_.GetHead());
+  // This receiver thunk redirects to Router::HandleIncomingMessage.
+  connector_.set_incoming_receiver(&thunk_);
 }
 
 Router::~Router() {
@@ -122,6 +124,16 @@ void Router::EnableTestingMode() {
 }
 
 bool Router::HandleIncomingMessage(Message* message) {
+  std::string* err = nullptr;
+#ifndef NDEBUG
+  std::string err2;
+  err = &err2;
+#endif
+
+  ValidationError result = RunValidatorsOnMessage(validators_, message, err);
+  if (result != ValidationError::NONE)
+    return false;
+
   if (message->has_flag(kMessageExpectsResponse)) {
     if (incoming_receiver_) {
       MessageReceiverWithStatus* responder = new ResponderThunk(weak_self_);

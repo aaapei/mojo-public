@@ -12,7 +12,6 @@
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "mojo/public/cpp/bindings/lib/connector.h"
-#include "mojo/public/cpp/bindings/lib/filter_chain.h"
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
@@ -26,6 +25,12 @@
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {
+
+using internal::MessageValidator;
+using internal::MessageValidatorList;
+using internal::ValidationError;
+using internal::ValidationErrorToString;
+
 namespace test {
 namespace {
 
@@ -156,6 +161,7 @@ bool ReadTestCase(const std::string& test,
 }
 
 void RunValidationTests(const std::string& prefix,
+                        const MessageValidatorList& validators,
                         MessageReceiver* test_message_receiver) {
   std::vector<std::string> names =
       EnumerateSourceRootRelativeDirectory(GetPath("", ""));
@@ -166,15 +172,16 @@ void RunValidationTests(const std::string& prefix,
     std::string expected;
     ASSERT_TRUE(ReadTestCase(tests[i], &message, &expected));
 
-    std::string result;
-    mojo::internal::ValidationErrorObserverForTesting observer;
-    mojo_ignore_result(test_message_receiver->Accept(&message));
-    if (observer.last_error() == mojo::internal::ValidationError::NONE)
-      result = "PASS";
-    else
-      result = mojo::internal::ValidationErrorToString(observer.last_error());
+    std::string actual;
+    auto result = RunValidatorsOnMessage(validators, &message, nullptr);
+    if (result == ValidationError::NONE) {
+      mojo_ignore_result(test_message_receiver->Accept(&message));
+      actual = "PASS";
+    } else {
+      actual = ValidationErrorToString(result);
+    }
 
-    EXPECT_EQ(expected, result) << "failed test: " << tests[i];
+    EXPECT_EQ(expected, actual) << "failed test: " << tests[i];
   }
 }
 
@@ -256,6 +263,17 @@ class IntegrationTestInterfaceImpl : public IntegrationTestInterface {
                const Method0Callback& callback) override {
     callback.Run(Array<uint8_t>::New(0u));
   }
+};
+
+class FailingValidator : public mojo::internal::MessageValidator {
+ public:
+  explicit FailingValidator(ValidationError err) : err_(err) {}
+  ValidationError Validate(const Message* message, std::string* err) override {
+    return err_;
+  }
+
+ private:
+  ValidationError err_;
 };
 
 TEST_F(ValidationTest, InputParser) {
@@ -364,11 +382,13 @@ TEST_F(ValidationTest, InputParser) {
 
 TEST_F(ValidationTest, Conformance) {
   DummyMessageReceiver dummy_receiver;
-  mojo::internal::FilterChain validators(&dummy_receiver);
-  validators.Append<mojo::internal::MessageHeaderValidator>();
-  validators.Append<ConformanceTestInterface::RequestValidator_>();
+  MessageValidatorList validators;
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new mojo::internal::MessageHeaderValidator));
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new ConformanceTestInterface::RequestValidator_));
 
-  RunValidationTests("conformance_", validators.GetHead());
+  RunValidationTests("conformance_", validators, &dummy_receiver);
 }
 
 // This test is similar to Conformance test but its goal is specifically
@@ -376,31 +396,37 @@ TEST_F(ValidationTest, Conformance) {
 // detection of off-by-one errors in method ordinals.
 TEST_F(ValidationTest, BoundsCheck) {
   DummyMessageReceiver dummy_receiver;
-  mojo::internal::FilterChain validators(&dummy_receiver);
-  validators.Append<mojo::internal::MessageHeaderValidator>();
-  validators.Append<BoundsCheckTestInterface::RequestValidator_>();
+  MessageValidatorList validators;
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new mojo::internal::MessageHeaderValidator));
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new BoundsCheckTestInterface::RequestValidator_));
 
-  RunValidationTests("boundscheck_", validators.GetHead());
+  RunValidationTests("boundscheck_", validators, &dummy_receiver);
 }
 
 // This test is similar to the Conformance test but for responses.
 TEST_F(ValidationTest, ResponseConformance) {
   DummyMessageReceiver dummy_receiver;
-  mojo::internal::FilterChain validators(&dummy_receiver);
-  validators.Append<mojo::internal::MessageHeaderValidator>();
-  validators.Append<ConformanceTestInterface::ResponseValidator_>();
+  MessageValidatorList validators;
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new mojo::internal::MessageHeaderValidator));
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new ConformanceTestInterface::ResponseValidator_));
 
-  RunValidationTests("resp_conformance_", validators.GetHead());
+  RunValidationTests("resp_conformance_", validators, &dummy_receiver);
 }
 
 // This test is similar to the BoundsCheck test but for responses.
 TEST_F(ValidationTest, ResponseBoundsCheck) {
   DummyMessageReceiver dummy_receiver;
-  mojo::internal::FilterChain validators(&dummy_receiver);
-  validators.Append<mojo::internal::MessageHeaderValidator>();
-  validators.Append<BoundsCheckTestInterface::ResponseValidator_>();
+  MessageValidatorList validators;
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new mojo::internal::MessageHeaderValidator));
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new BoundsCheckTestInterface::ResponseValidator_));
 
-  RunValidationTests("resp_boundscheck_", validators.GetHead());
+  RunValidationTests("resp_boundscheck_", validators, &dummy_receiver);
 }
 
 // Test that InterfacePtr<X> applies the correct validators and they don't
@@ -412,8 +438,15 @@ TEST_F(ValidationIntegrationTest, InterfacePtr) {
       InterfacePtrInfo<IntegrationTestInterface>(testee_endpoint().Pass(), 0u));
   interface_ptr.internal_state()->router_for_testing()->EnableTestingMode();
 
-  RunValidationTests("integration_intf_resp", test_message_receiver());
-  RunValidationTests("integration_msghdr", test_message_receiver());
+  mojo::internal::MessageValidatorList validators;
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new mojo::internal::MessageHeaderValidator));
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new typename IntegrationTestInterface::ResponseValidator_));
+
+  RunValidationTests("integration_intf_resp", validators,
+                     test_message_receiver());
+  RunValidationTests("integration_msghdr", validators, test_message_receiver());
 }
 
 // Test that Binding<X> applies the correct validators and they don't
@@ -427,8 +460,15 @@ TEST_F(ValidationIntegrationTest, Binding) {
       MakeRequest<IntegrationTestInterface>(testee_endpoint().Pass()));
   binding.internal_router()->EnableTestingMode();
 
-  RunValidationTests("integration_intf_rqst", test_message_receiver());
-  RunValidationTests("integration_msghdr", test_message_receiver());
+  mojo::internal::MessageValidatorList validators;
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new mojo::internal::MessageHeaderValidator));
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new typename IntegrationTestInterface::RequestValidator_));
+
+  RunValidationTests("integration_intf_rqst", validators,
+                     test_message_receiver());
+  RunValidationTests("integration_msghdr", validators, test_message_receiver());
 }
 
 // Test pointer validation (specifically, that the encoded offset is 32-bit)
@@ -444,6 +484,27 @@ TEST_F(ValidationTest, ValidateEncodedPointer) {
   // offset must be <= 32-bit.
   offset = std::numeric_limits<uint32_t>::max() + 1ULL;
   EXPECT_FALSE(mojo::internal::ValidateEncodedPointer(&offset));
+}
+
+TEST_F(ValidationTest, RunValidatorsOnMessageTest) {
+  Message msg;
+  mojo::internal::MessageValidatorList validators;
+
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new mojo::internal::PassThroughValidator));
+  EXPECT_EQ(ValidationError::NONE,
+            RunValidatorsOnMessage(validators, &msg, nullptr));
+
+  validators.push_back(std::unique_ptr<MessageValidator>(
+      new FailingValidator(ValidationError::MESSAGE_HEADER_INVALID_FLAGS)));
+  EXPECT_EQ(ValidationError::MESSAGE_HEADER_INVALID_FLAGS,
+            RunValidatorsOnMessage(validators, &msg, nullptr));
+
+  validators.insert(validators.begin(),
+                    std::unique_ptr<MessageValidator>(
+                        new FailingValidator(ValidationError::ILLEGAL_HANDLE)));
+  EXPECT_EQ(ValidationError::ILLEGAL_HANDLE,
+            RunValidatorsOnMessage(validators, &msg, nullptr));
 }
 
 // Tests the IsValidValue() function generated for BasicEnum.

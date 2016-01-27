@@ -6,7 +6,7 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_NO_INTERFACE_H_
 
 #include "mojo/public/cpp/bindings/message.h"
-#include "mojo/public/cpp/bindings/message_filter.h"
+#include "mojo/public/cpp/bindings/message_validator.h"
 #include "mojo/public/cpp/system/core.h"
 
 namespace mojo {
@@ -20,10 +20,10 @@ class NoInterfaceStub;
 class NoInterface {
  public:
   static const char* Name_;
-  typedef NoInterfaceProxy Proxy_;
-  typedef NoInterfaceStub Stub_;
-  typedef PassThroughFilter RequestValidator_;
-  typedef PassThroughFilter ResponseValidator_;
+  using Proxy_ = NoInterfaceProxy;
+  using Stub_ = NoInterfaceStub;
+  using RequestValidator_ = internal::PassThroughValidator;
+  using ResponseValidator_ = internal::PassThroughValidator;
   virtual ~NoInterface() {}
 };
 

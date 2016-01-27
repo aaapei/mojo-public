@@ -66,35 +66,18 @@ ValidationError ValidateMessageHeader(const MessageHeader* header,
 
 }  // namespace
 
-MessageHeaderValidator::MessageHeaderValidator(MessageReceiver* sink)
-    : MessageFilter(sink) {
-}
-
-bool MessageHeaderValidator::Accept(Message* message) {
+ValidationError MessageHeaderValidator::Validate(const Message* message,
+                                                 std::string* err) {
   // Pass 0 as number of handles because we don't expect any in the header, even
   // if |message| contains handles.
   BoundsChecker bounds_checker(message->data(), message->data_num_bytes(), 0);
 
-  std::string* err = nullptr;
-#ifndef NDEBUG
-  std::string err2;
-  err = &err2;
-#endif
-
-  ValidationError retval =
+  ValidationError result =
       ValidateStructHeaderAndClaimMemory(message->data(), &bounds_checker, err);
-  if (retval != ValidationError::NONE) {
-    ReportValidationError(retval, err);
-    return false;
-  }
+  if (result != ValidationError::NONE)
+    return result;
 
-  retval = ValidateMessageHeader(message->header(), err);
-  if (retval != ValidationError::NONE) {
-    ReportValidationError(retval, err);
-    return false;
-  }
-
-  return sink_->Accept(message);
+  return ValidateMessageHeader(message->header(), err);
 }
 
 ValidationError ValidateControlRequest(const Message* message,

@@ -32,8 +32,6 @@ class StructSerializationAPITest : public testing::Test {
     val->Serialize(bytes.data(), num_bytes);
     EXPECT_EQ(170u, bytes[num_bytes]);
 
-    validation_error_observer_.set_last_error(
-        mojo::internal::ValidationError::NONE);
     mojo::internal::BoundsChecker bounds_checker(bytes.data(), num_bytes, 0);
     auto actual_validation_error =
         Type::Data_::Validate(bytes.data(), &bounds_checker, nullptr);
@@ -48,7 +46,6 @@ class StructSerializationAPITest : public testing::Test {
 
  private:
   Environment env_;
-  mojo::internal::ValidationErrorObserverForTesting validation_error_observer_;
 };
 
 TEST_F(StructSerializationAPITest, GetSerializedSize) {

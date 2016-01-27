@@ -6,11 +6,12 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_LIB_INTERFACE_PTR_INTERNAL_H_
 
 #include <algorithm>  // For |std::swap()|.
+#include <memory>
+#include <utility>
 
 #include "mojo/public/cpp/bindings/callback.h"
 #include "mojo/public/cpp/bindings/interface_ptr_info.h"
 #include "mojo/public/cpp/bindings/lib/control_message_proxy.h"
-#include "mojo/public/cpp/bindings/lib/filter_chain.h"
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
 #include "mojo/public/cpp/environment/logging.h"
@@ -140,11 +141,13 @@ class InterfacePtrState {
       return;
     }
 
-    FilterChain filters;
-    filters.Append<MessageHeaderValidator>();
-    filters.Append<typename Interface::ResponseValidator_>();
+    MessageValidatorList validators;
+    validators.push_back(
+        std::unique_ptr<MessageValidator>(new MessageHeaderValidator));
+    validators.push_back(std::unique_ptr<MessageValidator>(
+        new typename Interface::ResponseValidator_));
 
-    router_ = new Router(handle_.Pass(), filters.Pass(), waiter_);
+    router_ = new Router(std::move(handle_), std::move(validators), waiter_);
     waiter_ = nullptr;
 
     proxy_ = new Proxy(router_);
