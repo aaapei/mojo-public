@@ -57,6 +57,18 @@ class InterfacePtr {
   // Closes the bound message pipe (if any) on destruction.
   ~InterfacePtr() {}
 
+  // If |info| is valid (containing a valid message pipe handle), returns an
+  // InterfacePtr bound to it. Otherwise, returns an unbound InterfacePtr. The
+  // specified |waiter| will be used as in the InterfacePtr::Bind() method.
+  static InterfacePtr<Interface> Create(
+      InterfaceHandle<Interface> info,
+      const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
+    InterfacePtr<Interface> ptr;
+    if (info.is_valid())
+      ptr.Bind(info.Pass(), waiter);
+    return ptr;
+  }
+
   // Binds the InterfacePtr to a remote implementation of Interface. The
   // |waiter| is used for receiving notifications when there is data to read
   // from the message pipe. For most callers, the default |waiter| will be
@@ -171,19 +183,6 @@ class InterfacePtr {
 
   MOJO_MOVE_ONLY_TYPE(InterfacePtr);
 };
-
-// If |info| is valid (containing a valid message pipe handle), returns an
-// InterfacePtr bound to it. Otherwise, returns an unbound InterfacePtr. The
-// specified |waiter| will be used as in the InterfacePtr::Bind() method.
-template <typename Interface>
-InterfacePtr<Interface> MakeProxy(
-    InterfaceHandle<Interface> info,
-    const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
-  InterfacePtr<Interface> ptr;
-  if (info.is_valid())
-    ptr.Bind(info.Pass(), waiter);
-  return ptr;
-}
 
 }  // namespace mojo
 

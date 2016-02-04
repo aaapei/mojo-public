@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <utility>
+
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
 #include "mojo/public/cpp/environment/environment.h"
@@ -274,7 +276,8 @@ TEST_F(InterfacePtrTest, Resettable) {
   // Save this so we can test it later.
   Handle handle = pipe.handle0.get();
 
-  a = MakeProxy(InterfaceHandle<math::Calculator>(pipe.handle0.Pass(), 0u));
+  a = math::CalculatorPtr::Create(
+      InterfaceHandle<math::Calculator>(std::move(pipe.handle0), 0u));
 
   EXPECT_FALSE(!a);
 

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "mojo/public/c/system/macros.h"
@@ -434,8 +435,9 @@ TEST_F(ValidationTest, ResponseBoundsCheck) {
 //   - MessageHeaderValidator
 //   - X::ResponseValidator_
 TEST_F(ValidationIntegrationTest, InterfacePtr) {
-  IntegrationTestInterfacePtr interface_ptr = MakeProxy(
-      InterfaceHandle<IntegrationTestInterface>(testee_endpoint().Pass(), 0u));
+  IntegrationTestInterfacePtr interface_ptr =
+      IntegrationTestInterfacePtr::Create(
+          InterfaceHandle<IntegrationTestInterface>(testee_endpoint(), 0u));
   interface_ptr.internal_state()->router_for_testing()->EnableTestingMode();
 
   mojo::internal::MessageValidatorList validators;
