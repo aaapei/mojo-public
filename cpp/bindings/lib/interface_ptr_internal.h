@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "mojo/public/cpp/bindings/callback.h"
-#include "mojo/public/cpp/bindings/interface_ptr_info.h"
+#include "mojo/public/cpp/bindings/interface_handle.h"
 #include "mojo/public/cpp/bindings/lib/control_message_proxy.h"
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
@@ -80,7 +80,7 @@ class InterfacePtrState {
     swap(other->version_, version_);
   }
 
-  void Bind(InterfacePtrInfo<Interface> info, const MojoAsyncWaiter* waiter) {
+  void Bind(InterfaceHandle<Interface> info, const MojoAsyncWaiter* waiter) {
     MOJO_DCHECK(!proxy_);
     MOJO_DCHECK(!router_);
     MOJO_DCHECK(!handle_.is_valid());
@@ -103,8 +103,8 @@ class InterfacePtrState {
 
   // After this method is called, the object is in an invalid state and
   // shouldn't be reused.
-  InterfacePtrInfo<Interface> PassInterface() {
-    return InterfacePtrInfo<Interface>(
+  InterfaceHandle<Interface> PassInterface() {
+    return InterfaceHandle<Interface>(
         router_ ? router_->PassMessagePipe() : handle_.Pass(), version_);
   }
 

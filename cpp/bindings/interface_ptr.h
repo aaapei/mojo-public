@@ -9,7 +9,7 @@
 #include <cstddef>
 
 #include "mojo/public/cpp/bindings/callback.h"
-#include "mojo/public/cpp/bindings/interface_ptr_info.h"
+#include "mojo/public/cpp/bindings/interface_handle.h"
 #include "mojo/public/cpp/bindings/lib/interface_ptr_internal.h"
 #include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/macros.h"
@@ -24,7 +24,7 @@ namespace mojo {
 // This class is thread hostile, as is the local proxy it manages. All calls to
 // this class or the proxy should be from the same thread that created it. If
 // you need to move the proxy to a different thread, extract the
-// InterfacePtrInfo (containing just the message pipe and any version
+// InterfaceHandle (containing just the message pipe and any version
 // information) using PassInterface(), pass it to a different thread, and
 // create and bind a new InterfacePtr from that thread.
 template <typename Interface>
@@ -66,7 +66,7 @@ class InterfacePtr {
   // has the same effect as reset(). In this case, the InterfacePtr is not
   // considered as bound.
   void Bind(
-      InterfacePtrInfo<Interface> info,
+      InterfaceHandle<Interface> info,
       const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
     reset();
     if (info.is_valid())
@@ -153,7 +153,7 @@ class InterfacePtr {
   // Unbinds the InterfacePtr and returns the information which could be used
   // to setup an InterfacePtr again. This method may be used to move the proxy
   // to a different thread (see class comments for details).
-  InterfacePtrInfo<Interface> PassInterface() {
+  InterfaceHandle<Interface> PassInterface() {
     State state;
     internal_state_.Swap(&state);
 
@@ -177,7 +177,7 @@ class InterfacePtr {
 // specified |waiter| will be used as in the InterfacePtr::Bind() method.
 template <typename Interface>
 InterfacePtr<Interface> MakeProxy(
-    InterfacePtrInfo<Interface> info,
+    InterfaceHandle<Interface> info,
     const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
   InterfacePtr<Interface> ptr;
   if (info.is_valid())

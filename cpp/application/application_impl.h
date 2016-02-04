@@ -59,9 +59,9 @@ class ApplicationImpl : public Application {
 
   // Creates a new |ApplicationConnector|. The result can be bound to an
   // |ApplicationConnectorPtr| and used to connect to other applications. (It
-  // returns an |InterfacePtrInfo| instead of an |InterfacePtr| to facilitate
+  // returns an |InterfaceHandle| instead of an |InterfacePtr| to facilitate
   // passing it to another thread.)
-  InterfacePtrInfo<ApplicationConnector> CreateApplicationConnector();
+  InterfaceHandle<ApplicationConnector> CreateApplicationConnector();
 
   // Requests a new connection to an application. Returns a pointer to the
   // connection if the connection is permitted by this application's delegate,

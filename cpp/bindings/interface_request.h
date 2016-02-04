@@ -15,7 +15,7 @@ template <typename I>
 class InterfacePtr;
 
 template <typename I>
-class InterfacePtrInfo;
+class InterfaceHandle;
 
 // Represents a request from a remote client for an implementation of Interface
 // over a specified message pipe. The implementor of the interface should
@@ -118,7 +118,7 @@ InterfaceRequest<Interface> MakeRequest(ScopedMessagePipeHandle handle) {
 template <typename Interface>
 InterfaceRequest<Interface> GetProxy(InterfacePtr<Interface>* ptr) {
   MessagePipe pipe;
-  ptr->Bind(InterfacePtrInfo<Interface>(pipe.handle0.Pass(), 0u));
+  ptr->Bind(InterfaceHandle<Interface>(pipe.handle0.Pass(), 0u));
   return MakeRequest<Interface>(pipe.handle1.Pass());
 }
 

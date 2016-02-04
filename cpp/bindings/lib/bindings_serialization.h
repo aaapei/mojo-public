@@ -16,7 +16,7 @@ template <typename I>
 class InterfacePtr;
 
 template <typename I>
-class InterfacePtrInfo;
+class InterfaceHandle;
 
 namespace internal {
 
@@ -79,7 +79,7 @@ inline void Decode(T* obj, std::vector<Handle>* handles) {
 template <typename T>
 inline void InterfacePointerToData(InterfacePtr<T> input,
                                    Interface_Data* output) {
-  InterfacePtrInfo<T> info = input.PassInterface();
+  InterfaceHandle<T> info = input.PassInterface();
   output->handle = info.PassHandle().release();
   output->version = info.version();
 }
@@ -87,7 +87,7 @@ inline void InterfacePointerToData(InterfacePtr<T> input,
 template <typename T>
 inline void InterfaceDataToPointer(Interface_Data* input,
                                    InterfacePtr<T>* output) {
-  output->Bind(InterfacePtrInfo<T>(
+  output->Bind(InterfaceHandle<T>(
       MakeScopedHandle(FetchAndReset(&input->handle)), input->version));
 }
 

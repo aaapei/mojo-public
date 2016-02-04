@@ -435,7 +435,7 @@ TEST_F(ValidationTest, ResponseBoundsCheck) {
 //   - X::ResponseValidator_
 TEST_F(ValidationIntegrationTest, InterfacePtr) {
   IntegrationTestInterfacePtr interface_ptr = MakeProxy(
-      InterfacePtrInfo<IntegrationTestInterface>(testee_endpoint().Pass(), 0u));
+      InterfaceHandle<IntegrationTestInterface>(testee_endpoint().Pass(), 0u));
   interface_ptr.internal_state()->router_for_testing()->EnableTestingMode();
 
   mojo::internal::MessageValidatorList validators;

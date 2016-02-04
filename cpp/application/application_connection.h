@@ -54,7 +54,7 @@ class ApplicationConnection {
   void ConnectToService(InterfacePtr<Interface>* ptr) {
     if (ServiceProvider* sp = GetServiceProvider()) {
       MessagePipe pipe;
-      ptr->Bind(InterfacePtrInfo<Interface>(pipe.handle0.Pass(), 0u));
+      ptr->Bind(InterfaceHandle<Interface>(pipe.handle0.Pass(), 0u));
       sp->ConnectToService(Interface::Name_, pipe.handle1.Pass());
     }
   }

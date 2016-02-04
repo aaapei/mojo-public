@@ -10,8 +10,8 @@
 
 #include "mojo/public/c/environment/async_waiter.h"
 #include "mojo/public/cpp/bindings/callback.h"
+#include "mojo/public/cpp/bindings/interface_handle.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
-#include "mojo/public/cpp/bindings/interface_ptr_info.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
@@ -136,7 +136,7 @@ class Binding {
       const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
     MessagePipe pipe;
     ptr->Bind(
-        InterfacePtrInfo<Interface>(pipe.handle0.Pass(), Interface::Version_),
+        InterfaceHandle<Interface>(pipe.handle0.Pass(), Interface::Version_),
         waiter);
     Bind(pipe.handle1.Pass(), waiter);
   }

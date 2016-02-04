@@ -25,13 +25,13 @@ bool ApplicationImpl::HasArg(const std::string& arg) const {
   return std::find(args_.begin(), args_.end(), arg) != args_.end();
 }
 
-InterfacePtrInfo<ApplicationConnector>
+InterfaceHandle<ApplicationConnector>
 ApplicationImpl::CreateApplicationConnector() {
   MOJO_CHECK(shell_);
   MessagePipe pipe;
   shell_->CreateApplicationConnector(
       MakeRequest<ApplicationConnector>(pipe.handle1.Pass()));
-  return InterfacePtrInfo<ApplicationConnector>(pipe.handle0.Pass(), 0u);
+  return InterfaceHandle<ApplicationConnector>(pipe.handle0.Pass(), 0u);
 }
 
 ApplicationConnection* ApplicationImpl::ConnectToApplication(

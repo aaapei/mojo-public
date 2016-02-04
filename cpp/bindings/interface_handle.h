@@ -10,24 +10,24 @@
 
 namespace mojo {
 
-// InterfacePtrInfo stores necessary information to communicate with a remote
+// InterfaceHandle stores necessary information to communicate with a remote
 // interface implementation, which could be used to construct an InterfacePtr.
 template <typename Interface>
-class InterfacePtrInfo {
+class InterfaceHandle {
  public:
-  InterfacePtrInfo() : version_(0u) {}
+  InterfaceHandle() : version_(0u) {}
 
-  InterfacePtrInfo(ScopedMessagePipeHandle handle, uint32_t version)
+  InterfaceHandle(ScopedMessagePipeHandle handle, uint32_t version)
       : handle_(handle.Pass()), version_(version) {}
 
-  InterfacePtrInfo(InterfacePtrInfo&& other)
+  InterfaceHandle(InterfaceHandle&& other)
       : handle_(other.handle_.Pass()), version_(other.version_) {
     other.version_ = 0u;
   }
 
-  ~InterfacePtrInfo() {}
+  ~InterfaceHandle() {}
 
-  InterfacePtrInfo& operator=(InterfacePtrInfo&& other) {
+  InterfaceHandle& operator=(InterfaceHandle&& other) {
     if (this != &other) {
       handle_ = other.handle_.Pass();
       version_ = other.version_;
@@ -50,7 +50,7 @@ class InterfacePtrInfo {
   ScopedMessagePipeHandle handle_;
   uint32_t version_;
 
-  MOJO_MOVE_ONLY_TYPE(InterfacePtrInfo);
+  MOJO_MOVE_ONLY_TYPE(InterfaceHandle);
 };
 
 }  // namespace mojo
