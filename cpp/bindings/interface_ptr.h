@@ -25,7 +25,7 @@ namespace mojo {
 // this class or the proxy should be from the same thread that created it. If
 // you need to move the proxy to a different thread, extract the
 // InterfaceHandle (containing just the message pipe and any version
-// information) using PassInterface(), pass it to a different thread, and
+// information) using PassInterfaceHandle(), pass it to a different thread, and
 // create and bind a new InterfacePtr from that thread.
 template <typename Interface>
 class InterfacePtr {
@@ -165,11 +165,11 @@ class InterfacePtr {
   // Unbinds the InterfacePtr and returns the information which could be used
   // to setup an InterfacePtr again. This method may be used to move the proxy
   // to a different thread (see class comments for details).
-  InterfaceHandle<Interface> PassInterface() {
+  InterfaceHandle<Interface> PassInterfaceHandle() {
     State state;
     internal_state_.Swap(&state);
 
-    return state.PassInterface();
+    return state.PassInterfaceHandle();
   }
 
   // DO NOT USE. Exposed only for internal use and for testing.

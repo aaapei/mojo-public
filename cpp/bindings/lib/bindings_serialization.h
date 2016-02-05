@@ -79,7 +79,7 @@ inline void Decode(T* obj, std::vector<Handle>* handles) {
 template <typename T>
 inline void InterfacePointerToData(InterfacePtr<T> input,
                                    Interface_Data* output) {
-  InterfaceHandle<T> info = input.PassInterface();
+  InterfaceHandle<T> info = input.PassInterfaceHandle();
   output->handle = info.PassHandle().release();
   output->version = info.version();
 }

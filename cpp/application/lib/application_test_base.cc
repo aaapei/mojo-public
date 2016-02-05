@@ -115,7 +115,7 @@ MojoResult RunAllTests(MojoHandle application_request_handle) {
 
   // Shut down our message pipes before exiting.
   (void)g_application_request.PassMessagePipe();
-  (void)g_shell.PassInterface();
+  (void)g_shell.PassInterfaceHandle();
 
   return (result == 0) ? MOJO_RESULT_OK : MOJO_RESULT_UNKNOWN;
 }

@@ -103,7 +103,7 @@ class InterfacePtrState {
 
   // After this method is called, the object is in an invalid state and
   // shouldn't be reused.
-  InterfaceHandle<Interface> PassInterface() {
+  InterfaceHandle<Interface> PassInterfaceHandle() {
     return InterfaceHandle<Interface>(
         router_ ? router_->PassMessagePipe() : handle_.Pass(), version_);
   }

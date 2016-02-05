@@ -58,7 +58,7 @@ void ApplicationImpl::UnbindConnections(
     InterfaceRequest<Application>* application_request,
     ShellPtr* shell) {
   *application_request = binding_.Unbind();
-  shell->Bind(shell_.PassInterface());
+  shell->Bind(shell_.PassInterfaceHandle());
 }
 
 void ApplicationImpl::Initialize(ShellPtr shell,
