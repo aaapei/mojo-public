@@ -20,19 +20,8 @@ Environment::Environment(const MojoAsyncWaiter* default_async_waiter,
 Environment::~Environment() {}
 
 // static
-const MojoAsyncWaiter* Environment::GetDefaultAsyncWaiter() {
-  return nullptr;
-}
-
-// static
 const MojoLogger* Environment::GetDefaultLogger() {
   return &internal::kDefaultLogger;
 }
-
-// static
-void Environment::InstantiateDefaultRunLoop() {}
-
-// static
-void Environment::DestroyDefaultRunLoop() {}
 
 }  // namespace mojo

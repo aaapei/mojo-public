@@ -41,8 +41,8 @@ mojo_sdk_source_set("standalone") {
   ]
 }
 
-# This is an implementation of Environment, which can be used instead of
-# :standalone, that provides only logging and has no external dependencies.
+# This provides an implementation of only the logging portion of Environment
+# with minimal external dependencies.
 mojo_sdk_source_set("logging_only") {
   sources = [
     "lib/default_logger.cc",
