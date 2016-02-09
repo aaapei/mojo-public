@@ -12,21 +12,13 @@
 // MojoResult MojoMain(MojoHandle application_request) {
 //   ...
 // }
-//
-// TODO(davemoore): Establish this as part of our SDK for third party mojo
-// application writers.
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-#if defined(WIN32)
-__declspec(dllexport) MojoResult
-    __cdecl MojoMain(MojoHandle application_request);
-#else  // !defined(WIN32)
-__attribute__((visibility("default"))) MojoResult
-    MojoMain(MojoHandle service_provider_handle);
-#endif  // defined(WIN32)
+__attribute__((visibility("default"))) MojoResult MojoMain(
+    MojoHandle application_request);
 
 #ifdef __cplusplus
 }  // extern "C"
