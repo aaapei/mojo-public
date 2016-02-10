@@ -262,10 +262,15 @@ struct MojomMethod {
 struct MojomInterface {
   DeclarationData? decl_data;
 
-  // By definition, the name of an interface is the string that would be passed
-  // to the method ServiceProvider.ConnectToService() in order obtain a
-  // connection to the interface.
-  string interface_name;
+  // If the declaration of this interface has been annotated with the
+  // "ServiceName=" attribute then this field contains the value of that
+  // attribute, otherwise this is null. The presence of this field indicates
+  // that this is the top-level interface for the named service: When
+  // the method ConnectToService(service_name) from the ServiceProvider
+  // interface is invoked, an implementation of ServiceProvider will, by
+  // default, return the interface that has been annotated with the
+  // given service_name if there is a unique such interface.
+  string? service_name;
 
   // All the methods in the interface. The keys are the method ordinals.
   map<uint32, MojomMethod> methods;
