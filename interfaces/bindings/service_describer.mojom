@@ -9,10 +9,6 @@ module mojo.bindings.types;
 
 import "mojom_types.mojom";
 
-// The name by which a client requests the ServiceDescriber service from
-// a host.
-const string SERVICE_DESCRIBER_INTERFACE_NAME = "_ServiceDescriber";
-
 // This is a companion interface to ServiceProvider. An implementation of
 // ServiceProvider may optionally offer descriptions of the services it
 // provides by making this interface available. A client obtains access
