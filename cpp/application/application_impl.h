@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_APPLICATION_APPLICATION_IMPL_H_
-#define MOJO_PUBLIC_APPLICATION_APPLICATION_IMPL_H_
+#ifndef MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_IMPL_H_
+#define MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_IMPL_H_
 
 #include <memory>
 #include <string>
@@ -91,12 +91,12 @@ class ApplicationImpl : public Application {
                          ShellPtr* shell);
 
   // |Application| implementation.
-  void Initialize(ShellPtr shell,
+  void Initialize(InterfaceHandle<Shell> shell,
                   Array<String> args,
                   const mojo::String& url) override;
   void AcceptConnection(const String& requestor_url,
                         InterfaceRequest<ServiceProvider> services,
-                        ServiceProviderPtr exposed_services,
+                        InterfaceHandle<ServiceProvider> exposed_services,
                         const String& url) override;
   void RequestQuit() override;
 
@@ -116,4 +116,4 @@ class ApplicationImpl : public Application {
 
 }  // namespace mojo
 
-#endif  // MOJO_PUBLIC_APPLICATION_APPLICATION_IMPL_H_
+#endif  // MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_IMPL_H_

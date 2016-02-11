@@ -28,7 +28,7 @@ class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
   ServiceRegistry(ApplicationImpl* application_impl,
                   const std::string& connection_url,
                   const std::string& remote_url,
-                  ServiceProviderPtr remote_services,
+                  InterfaceHandle<ServiceProvider> remote_services,
                   InterfaceRequest<ServiceProvider> local_services);
   ~ServiceRegistry() override;
 

@@ -4,6 +4,8 @@
 
 #include "mojo/public/cpp/application/application_test_base.h"
 
+#include <utility>
+
 #include "mojo/public/cpp/application/application_impl.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/environment/environment.h"
@@ -50,18 +52,18 @@ class ShellAndArgumentGrabber : public Application {
 
  private:
   // Application implementation.
-  void Initialize(ShellPtr shell,
+  void Initialize(InterfaceHandle<Shell> shell,
                   Array<String> args,
                   const mojo::String& url) override {
     *args_ = args.Pass();
     g_url = url;
     g_application_request = binding_.Unbind();
-    g_shell = shell.Pass();
+    g_shell = ShellPtr::Create(std::move(shell));
   }
 
   void AcceptConnection(const String& requestor_url,
                         InterfaceRequest<ServiceProvider> services,
-                        ServiceProviderPtr exposed_services,
+                        InterfaceHandle<ServiceProvider> exposed_services,
                         const String& url) override {
     MOJO_CHECK(false);
   }

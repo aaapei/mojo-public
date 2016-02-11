@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <utility>
 #include <vector>
+
 #include "mojo/public/cpp/bindings/array.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/lib/array_internal.h"
@@ -1224,7 +1226,9 @@ TEST(UnionTest, InterfaceInUnion) {
   HandleUnionPtr handle(HandleUnion::New());
   handle->set_f_small_cache(ptr.Pass());
 
-  handle->get_f_small_cache()->SetIntValue(10);
+  auto small_cache =
+      SmallCachePtr::Create(std::move(handle->get_f_small_cache()));
+  small_cache->SetIntValue(10);
   run_loop.RunUntilIdle();
   EXPECT_EQ(10, impl.int_value());
 }
@@ -1253,7 +1257,9 @@ TEST(UnionTest, InterfaceInUnionSerialization) {
   HandleUnionPtr handle2(HandleUnion::New());
   Deserialize_(data, handle2.get());
 
-  handle2->get_f_small_cache()->SetIntValue(10);
+  auto small_cache =
+      SmallCachePtr::Create(std::move(handle2->get_f_small_cache()));
+  small_cache->SetIntValue(10);
   run_loop.RunUntilIdle();
   EXPECT_EQ(10, impl.int_value());
 }

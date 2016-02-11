@@ -15,13 +15,14 @@ ServiceRegistry::ServiceRegistry(
     ApplicationImpl* application_impl,
     const std::string& connection_url,
     const std::string& remote_url,
-    ServiceProviderPtr remote_services,
+    InterfaceHandle<ServiceProvider> remote_services,
     InterfaceRequest<ServiceProvider> local_services)
     : application_impl_(application_impl),
       connection_url_(connection_url),
       remote_url_(remote_url),
       local_binding_(this),
-      remote_service_provider_(remote_services.Pass()) {
+      remote_service_provider_(
+          ServiceProviderPtr::Create(std::move(remote_services))) {
   if (local_services.is_pending())
     local_binding_.Bind(local_services.Pass());
 }

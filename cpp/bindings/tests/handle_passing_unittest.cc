@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <utility>
+
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
 #include "mojo/public/cpp/environment/environment.h"
@@ -89,7 +91,8 @@ class SampleFactoryImpl : public sample::Factory {
     callback.Run(response.Pass(), text1);
 
     if (request->obj)
-      request->obj->DoSomething();
+      imported::ImportedInterfacePtr::Create(std::move(request->obj))
+          ->DoSomething();
   }
 
   void DoStuff2(ScopedDataPipeConsumerHandle pipe,
@@ -126,9 +129,9 @@ class SampleFactoryImpl : public sample::Factory {
       const mojo::Callback<void(InterfaceRequest<imported::ImportedInterface>)>&
           callback) override {}
   void TakeImportedInterface(
-      imported::ImportedInterfacePtr imported,
-      const mojo::Callback<void(imported::ImportedInterfacePtr)>& callback)
-      override {}
+      InterfaceHandle<imported::ImportedInterface> imported,
+      const mojo::Callback<void(InterfaceHandle<imported::ImportedInterface>)>&
+          callback) override {}
 
  private:
   ScopedMessagePipeHandle pipe1_;

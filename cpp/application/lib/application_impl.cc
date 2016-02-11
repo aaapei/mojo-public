@@ -37,11 +37,11 @@ ApplicationImpl::CreateApplicationConnector() {
 ApplicationConnection* ApplicationImpl::ConnectToApplication(
     const String& application_url) {
   MOJO_CHECK(shell_);
-  ServiceProviderPtr local_services;
+  InterfaceHandle<ServiceProvider> local_services;
   InterfaceRequest<ServiceProvider> local_request = GetProxy(&local_services);
   ServiceProviderPtr remote_services;
   shell_->ConnectToApplication(application_url, GetProxy(&remote_services),
-                               local_services.Pass());
+                               std::move(local_services));
   internal::ServiceRegistry* registry = new internal::ServiceRegistry(
       this, application_url, application_url, remote_services.Pass(),
       local_request.Pass());
@@ -61,10 +61,10 @@ void ApplicationImpl::UnbindConnections(
   shell->Bind(shell_.PassInterfaceHandle());
 }
 
-void ApplicationImpl::Initialize(ShellPtr shell,
+void ApplicationImpl::Initialize(InterfaceHandle<Shell> shell,
                                  Array<String> args,
                                  const mojo::String& url) {
-  shell_ = shell.Pass();
+  shell_ = ShellPtr::Create(std::move(shell));
   shell_.set_connection_error_handler([this]() {
     delegate_->Quit();
     incoming_service_registries_.clear();
@@ -79,11 +79,12 @@ void ApplicationImpl::Initialize(ShellPtr shell,
 void ApplicationImpl::AcceptConnection(
     const String& requestor_url,
     InterfaceRequest<ServiceProvider> services,
-    ServiceProviderPtr exposed_services,
+    InterfaceHandle<ServiceProvider> exposed_services,
     const String& url) {
   std::unique_ptr<internal::ServiceRegistry> registry(
       new internal::ServiceRegistry(this, url, requestor_url,
-                                    exposed_services.Pass(), services.Pass()));
+                                    std::move(exposed_services),
+                                    services.Pass()));
   if (!delegate_->ConfigureIncomingConnection(registry.get()))
     return;
   incoming_service_registries_.push_back(std::move(registry));

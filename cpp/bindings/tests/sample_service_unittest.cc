@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <ostream>
 #include <string>
+#include <utility>
 
 #include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/macros.h"
@@ -258,7 +259,7 @@ class ServiceImpl : public Service {
  public:
   void Frobinate(FooPtr foo,
                  BazOptions baz,
-                 PortPtr port,
+                 mojo::InterfaceHandle<Port> port,
                  const Service::FrobinateCallback& callback) override {
     // Users code goes here to handle the incoming Frobinate message.
 
@@ -274,7 +275,8 @@ class ServiceImpl : public Service {
       int depth = 1;
       Print(depth, "foo", foo);
       Print(depth, "baz", static_cast<int32_t>(baz));
-      Print(depth, "port", port.get());
+      auto portptr = PortPtr::Create(std::move(port));
+      Print(depth, "port", portptr.get());
     }
     callback.Run(5);
   }
@@ -340,7 +342,7 @@ TEST_F(BindingsSampleTest, Basic) {
   CheckFoo(*foo);
 
   PortPtr port;
-  service->Frobinate(foo.Pass(), Service::BazOptions::EXTRA, port.Pass(),
+  service->Frobinate(foo.Pass(), Service::BazOptions::EXTRA, std::move(port),
                      Service::FrobinateCallback());
 
   delete service;

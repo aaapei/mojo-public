@@ -395,7 +395,7 @@ TEST_F(ArrayTest, Serialization_StructWithArraysOfHandles) {
 
 // Test serializing and deserializing an Array<InterfacePtr>.
 TEST_F(ArrayTest, Serialization_ArrayOfInterfacePtr) {
-  auto iface_array = Array<TestInterfacePtr>::New(1);
+  auto iface_array = Array<mojo::InterfaceHandle<TestInterface>>::New(1);
   size_t size = GetSerializedSize_(iface_array);
   EXPECT_EQ(8U               // array header
                 + (8U * 1),  // Interface_Data * number of elements
@@ -409,28 +409,28 @@ TEST_F(ArrayTest, Serialization_ArrayOfInterfacePtr) {
   EXPECT_EQ(
       mojo::internal::ValidationError::UNEXPECTED_INVALID_HANDLE,
       SerializeArray_(&iface_array, &buf, &output, &validate_non_nullable));
-  EXPECT_FALSE(iface_array[0].is_bound());
+  EXPECT_FALSE(iface_array[0].is_valid());
 
   // 2.  Invalid InterfacePtr should pass if array elements are nullable.
   ArrayValidateParams validate_nullable(1, true, nullptr);
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
             SerializeArray_(&iface_array, &buf, &output, &validate_nullable));
-  EXPECT_FALSE(iface_array[0].is_bound());
+  EXPECT_FALSE(iface_array[0].is_valid());
 
   // 3.  Should serialize successfully if InterfacePtr is valid.
   TestInterfacePtr iface_ptr;
   auto iface_req = GetProxy(&iface_ptr);
 
   iface_array[0] = iface_ptr.Pass();
-  EXPECT_TRUE(iface_array[0].is_bound());
+  EXPECT_TRUE(iface_array[0].is_valid());
 
   EXPECT_EQ(
       mojo::internal::ValidationError::NONE,
       SerializeArray_(&iface_array, &buf, &output, &validate_non_nullable));
-  EXPECT_FALSE(iface_array[0].is_bound());
+  EXPECT_FALSE(iface_array[0].is_valid());
 
   Deserialize_(output, &iface_array);
-  EXPECT_TRUE(iface_array[0].is_bound());
+  EXPECT_TRUE(iface_array[0].is_valid());
 }
 
 // Test serializing and deserializing a struct with an Array<> of another struct
@@ -468,14 +468,14 @@ TEST_F(ArrayTest, Serialization_StructWithArrayOfInterfacePtr) {
   iface_struct->iptr = iface_ptr.Pass();
 
   struct_arr_iface.structs_array[0] = iface_struct.Pass();
-  ASSERT_TRUE(struct_arr_iface.structs_array[0]->iptr.is_bound());
+  ASSERT_TRUE(struct_arr_iface.structs_array[0]->iptr.is_valid());
   EXPECT_EQ(mojo::internal::ValidationError::NONE,
             Serialize_(&struct_arr_iface, &buf, &struct_arr_iface_data));
 
-  EXPECT_FALSE(struct_arr_iface.structs_array[0]->iptr.is_bound());
+  EXPECT_FALSE(struct_arr_iface.structs_array[0]->iptr.is_valid());
 
   Deserialize_(struct_arr_iface_data, &struct_arr_iface);
-  EXPECT_TRUE(struct_arr_iface.structs_array[0]->iptr.is_bound());
+  EXPECT_TRUE(struct_arr_iface.structs_array[0]->iptr.is_valid());
 }
 
 // Test serializing and deserializing a struct with an Array<> of interface

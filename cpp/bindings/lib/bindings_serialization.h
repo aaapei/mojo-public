@@ -13,9 +13,6 @@
 namespace mojo {
 
 template <typename I>
-class InterfacePtr;
-
-template <typename I>
 class InterfaceHandle;
 
 namespace internal {
@@ -77,18 +74,17 @@ inline void Decode(T* obj, std::vector<Handle>* handles) {
 }
 
 template <typename T>
-inline void InterfacePointerToData(InterfacePtr<T> input,
-                                   Interface_Data* output) {
-  InterfaceHandle<T> info = input.PassInterfaceHandle();
-  output->handle = info.PassHandle().release();
-  output->version = info.version();
+inline void InterfaceHandleToData(InterfaceHandle<T> input,
+                                  Interface_Data* output) {
+  output->handle = input.PassHandle().release();
+  output->version = input.version();
 }
 
 template <typename T>
-inline void InterfaceDataToPointer(Interface_Data* input,
-                                   InterfacePtr<T>* output) {
-  output->Bind(InterfaceHandle<T>(
-      MakeScopedHandle(FetchAndReset(&input->handle)), input->version));
+inline void InterfaceDataToHandle(Interface_Data* input,
+                                  InterfaceHandle<T>* output) {
+  *output = InterfaceHandle<T>(MakeScopedHandle(FetchAndReset(&input->handle)),
+                               input->version);
 }
 
 }  // namespace internal

@@ -44,7 +44,7 @@ class ServiceImpl : public sample::Service {
   // sample::Service implementation
   void Frobinate(sample::FooPtr foo,
                  BazOptions options,
-                 sample::PortPtr port,
+                 mojo::InterfaceHandle<sample::Port> port,
                  const FrobinateCallback& callback) override {
     callback.Run(1);
   }
@@ -336,4 +336,4 @@ TEST_F(BindingTest, StrongBindingUnbindCompile) {
 }
 
 }  // namespace
-}  // mojo
+}  // namespace mojo

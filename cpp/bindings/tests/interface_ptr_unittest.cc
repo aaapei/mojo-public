@@ -153,7 +153,7 @@ class ReentrantServiceImpl : public sample::Service {
 
   void Frobinate(sample::FooPtr foo,
                  sample::Service::BazOptions baz,
-                 sample::PortPtr port,
+                 mojo::InterfaceHandle<sample::Port> port,
                  const sample::Service::FrobinateCallback& callback) override {
     max_call_depth_ = std::max(++call_depth_, max_call_depth_);
     if (call_depth_ == 1) {

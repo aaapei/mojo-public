@@ -75,9 +75,25 @@ class StrongBinding {
   // of the parameters. |impl| must outlive the binding. |ptr| only needs to
   // last until the constructor returns. See class comment for definition of
   // |waiter|.
+  // TODO(vardhan): Deprecate this in favor of the |InterfaceHandle<>| overload
+  // below.
   StrongBinding(
       Interface* impl,
       InterfacePtr<Interface>* ptr,
+      const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter())
+      : StrongBinding(impl) {
+    binding_.Bind(ptr, waiter);
+  }
+
+  // Constructs a completed binding of |impl| to a new message pipe, passing the
+  // client end to |ptr|, which takes ownership of it. The caller is expected to
+  // pass |ptr| on to the client of the service. Does not take ownership of any
+  // of the parameters. |impl| must outlive the binding. |ptr| only needs to
+  // last until the constructor returns. See class comment for definition of
+  // |waiter|.
+  StrongBinding(
+      Interface* impl,
+      InterfaceHandle<Interface>* ptr,
       const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter())
       : StrongBinding(impl) {
     binding_.Bind(ptr, waiter);
@@ -115,8 +131,23 @@ class StrongBinding {
   // takes ownership of it. The caller is expected to pass |ptr| on to the
   // eventual client of the service. Does not take ownership of |ptr|. See
   // class comment for definition of |waiter|.
+  // TODO(vardhan): Deprecate this in favor of the |InterfaceHandle<>| overload
+  // below.
   void Bind(
       InterfacePtr<Interface>* ptr,
+      const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
+    assert(!binding_.is_bound());
+    binding_.Bind(ptr, waiter);
+  }
+
+  // Completes a binding that was constructed with only an interface
+  // implementation by creating a new message pipe, binding one end of it to the
+  // previously specified implementation, and passing the other to |ptr|, which
+  // takes ownership of it. The caller is expected to pass |ptr| on to the
+  // eventual client of the service. Does not take ownership of |ptr|. See
+  // class comment for definition of |waiter|.
+  void Bind(
+      InterfaceHandle<Interface>* ptr,
       const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
     assert(!binding_.is_bound());
     binding_.Bind(ptr, waiter);

@@ -18,7 +18,7 @@ template <typename T>
 class Array;
 
 template <typename Interface>
-class InterfacePtr;
+class InterfaceHandle;
 
 template <typename Interface>
 class InterfaceRequest;
@@ -212,7 +212,7 @@ struct WrapperTraits<InterfaceRequest<I>, true, false> {
   using DataType = MessagePipeHandle;
 };
 template <typename Interface>
-struct WrapperTraits<InterfacePtr<Interface>, true, false> {
+struct WrapperTraits<InterfaceHandle<Interface>, true, false> {
   using DataType = Interface_Data;
 };
 // Unions.
@@ -253,12 +253,12 @@ struct ValueTraits<ScopedHandleBase<T>> {
   }
 };
 
-// |InterfacePtr|s hold message pipes uniquely, so they can only be equal if
+// |InterfaceHandle|s hold message pipes uniquely, so they can only be equal if
 // they're the same object or are both "invalid".
 template <typename I>
-struct ValueTraits<InterfacePtr<I>> {
-  static bool Equals(const InterfacePtr<I>& a, const InterfacePtr<I>& b) {
-    return (&a == &b) || (!a.is_bound() && !b.is_bound());
+struct ValueTraits<InterfaceHandle<I>> {
+  static bool Equals(const InterfaceHandle<I>& a, const InterfaceHandle<I>& b) {
+    return (&a == &b) || (!a.is_valid() && !b.is_valid());
   }
 };
 

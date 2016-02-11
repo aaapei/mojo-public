@@ -240,10 +240,11 @@ struct ArraySerializer<InterfaceRequest<I>, MessagePipeHandle, false> {
   }
 };
 
-// Serializes and deserializes arrays of interfaces (interface pointers).
+// Serializes and deserializes arrays of interfaces (interface handles).
 template <typename Interface>
-struct ArraySerializer<InterfacePtr<Interface>, Interface_Data, false> {
-  static size_t GetSerializedSize(const Array<InterfacePtr<Interface>>& input) {
+struct ArraySerializer<InterfaceHandle<Interface>, Interface_Data, false> {
+  static size_t GetSerializedSize(
+      const Array<InterfaceHandle<Interface>>& input) {
     return sizeof(Array_Data<Interface_Data>) +
            Align(input.size() * sizeof(Interface_Data));
   }
@@ -260,7 +261,7 @@ struct ArraySerializer<InterfacePtr<Interface>, Interface_Data, false> {
 
     for (size_t i = 0; i < num_elements; ++i, ++it) {
       // Transfer ownership of the handle.
-      internal::InterfacePointerToData(it->Pass(), &output->at(i));
+      internal::InterfaceHandleToData(it->Pass(), &output->at(i));
       if (!validate_params->element_is_nullable &&
           !output->at(i).handle.is_valid()) {
         MOJO_INTERNAL_DLOG_SERIALIZATION_WARNING(
@@ -276,10 +277,10 @@ struct ArraySerializer<InterfacePtr<Interface>, Interface_Data, false> {
   }
 
   static void DeserializeElements(Array_Data<Interface_Data>* input,
-                                  Array<InterfacePtr<Interface>>* output) {
-    auto result = Array<InterfacePtr<Interface>>::New(input->size());
+                                  Array<InterfaceHandle<Interface>>* output) {
+    auto result = Array<InterfaceHandle<Interface>>::New(input->size());
     for (size_t i = 0; i < input->size(); ++i)
-      internal::InterfaceDataToPointer(&input->at(i), &result.at(i));
+      internal::InterfaceDataToHandle(&input->at(i), &result.at(i));
     output->Swap(&result);
   }
 };

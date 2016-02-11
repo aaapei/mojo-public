@@ -11,6 +11,10 @@
 
 namespace mojo {
 
+// TODO(vardhan): Replaces uses of ConnectToService(.., InterfacePtr<>) with the
+// ConnectToService(.., InterfaceHandle<>) alternative instead, and get
+// rid of following 3 functions.
+
 // Binds |ptr| to a remote implementation of Interface from |service_provider|.
 template <typename Interface>
 inline void ConnectToService(ServiceProvider* service_provider,
@@ -26,8 +30,8 @@ inline void ConnectToService(Shell* shell,
                              const std::string& application_url,
                              InterfacePtr<Interface>* ptr) {
   ServiceProviderPtr service_provider;
-  shell->ConnectToApplication(application_url,
-                              GetProxy(&service_provider), nullptr);
+  shell->ConnectToApplication(application_url, GetProxy(&service_provider),
+                              nullptr);
   ConnectToService(service_provider.get(), ptr);
 }
 
@@ -36,6 +40,37 @@ template <typename Interface>
 inline void ConnectToService(ApplicationConnector* application_connector,
                              const std::string& application_url,
                              InterfacePtr<Interface>* ptr) {
+  ServiceProviderPtr service_provider;
+  application_connector->ConnectToApplication(
+      application_url, GetProxy(&service_provider), nullptr);
+  ConnectToService(service_provider.get(), ptr);
+}
+
+// Binds |ptr| to a remote implementation of Interface from |service_provider|.
+template <typename Interface>
+inline void ConnectToService(ServiceProvider* service_provider,
+                             InterfaceHandle<Interface>* ptr) {
+  MessagePipe pipe;
+  *ptr = InterfaceHandle<Interface>(pipe.handle0.Pass(), 0u);
+  service_provider->ConnectToService(Interface::Name_, pipe.handle1.Pass());
+}
+
+// Binds |ptr| to a remote implementation of Interface from |application_url|.
+template <typename Interface>
+inline void ConnectToService(Shell* shell,
+                             const std::string& application_url,
+                             InterfaceHandle<Interface>* ptr) {
+  ServiceProviderPtr service_provider;
+  shell->ConnectToApplication(application_url, GetProxy(&service_provider),
+                              nullptr);
+  ConnectToService(service_provider.get(), ptr);
+}
+
+// Binds |ptr| to a remote implementation of Interface from |application_url|.
+template <typename Interface>
+inline void ConnectToService(ApplicationConnector* application_connector,
+                             const std::string& application_url,
+                             InterfaceHandle<Interface>* ptr) {
   ServiceProviderPtr service_provider;
   application_connector->ConnectToApplication(
       application_url, GetProxy(&service_provider), nullptr);

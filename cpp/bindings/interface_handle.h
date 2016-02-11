@@ -5,10 +5,15 @@
 #ifndef MOJO_PUBLIC_CPP_BINDINGS_INTERFACE_PTR_INFO_H_
 #define MOJO_PUBLIC_CPP_BINDINGS_INTERFACE_PTR_INFO_H_
 
+#include <cstddef>
+
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
+
+template <typename Interface>
+class InterfacePtr;
 
 // InterfaceHandle stores necessary information to communicate with a remote
 // interface implementation, which could be used to construct an InterfacePtr.
@@ -16,6 +21,7 @@ template <typename Interface>
 class InterfaceHandle {
  public:
   InterfaceHandle() : version_(0u) {}
+  InterfaceHandle(std::nullptr_t) : version_(0u) {}
 
   InterfaceHandle(ScopedMessagePipeHandle handle, uint32_t version)
       : handle_(handle.Pass()), version_(version) {}
@@ -23,6 +29,14 @@ class InterfaceHandle {
   InterfaceHandle(InterfaceHandle&& other)
       : handle_(other.handle_.Pass()), version_(other.version_) {
     other.version_ = 0u;
+  }
+
+  // Making this constructor templated ensures that it is not type-instantiated
+  // unless it is used, making the InterfacePtr<->InterfaceHandle codependency
+  // less fragile.
+  template <typename SameInterfaceAsAbove = Interface>
+  InterfaceHandle(InterfacePtr<SameInterfaceAsAbove>&& ptr) {
+    *this = ptr.PassInterfaceHandle();
   }
 
   ~InterfaceHandle() {}
@@ -37,6 +51,8 @@ class InterfaceHandle {
     return *this;
   }
 
+  // Tests as true if we have a valid handle.
+  explicit operator bool() const { return is_valid(); }
   bool is_valid() const { return handle_.is_valid(); }
 
   ScopedMessagePipeHandle PassHandle() { return handle_.Pass(); }

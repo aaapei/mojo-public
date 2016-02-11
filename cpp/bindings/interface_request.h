@@ -122,6 +122,17 @@ InterfaceRequest<Interface> GetProxy(InterfacePtr<Interface>* ptr) {
   return MakeRequest<Interface>(pipe.handle1.Pass());
 }
 
+// This is an overload of GetProxy() that assumes that the client end of the
+// handle is an InterfaceHandle<>. It creates a new message pipe over which the
+// Interface is to be served. InterfaceHandle<> represents the client's end,
+// and InterfaceRequest<> should be used to bind to an implementation.
+template <typename Interface>
+InterfaceRequest<Interface> GetProxy(InterfaceHandle<Interface>* ptr) {
+  MessagePipe pipe;
+  *ptr = InterfaceHandle<Interface>(pipe.handle0.Pass(), 0u);
+  return MakeRequest<Interface>(pipe.handle1.Pass());
+}
+
 }  // namespace mojo
 
 #endif  // MOJO_PUBLIC_CPP_BINDINGS_INTERFACE_REQUEST_H_
