@@ -29,10 +29,10 @@ namespace dart {
   V(MojoSharedBuffer_Map, 4)         \
   V(MojoDataPipe_Create, 3)          \
   V(MojoDataPipe_WriteData, 4)       \
-  V(MojoDataPipe_BeginWriteData, 3)  \
+  V(MojoDataPipe_BeginWriteData, 2)  \
   V(MojoDataPipe_EndWriteData, 2)    \
   V(MojoDataPipe_ReadData, 4)        \
-  V(MojoDataPipe_BeginReadData, 3)   \
+  V(MojoDataPipe_BeginReadData, 2)   \
   V(MojoDataPipe_EndReadData, 2)     \
   V(MojoMessagePipe_Create, 1)       \
   V(MojoMessagePipe_Write, 5)        \
@@ -405,14 +405,12 @@ void MojoDataPipe_WriteData(Dart_NativeArguments arguments) {
 
 void MojoDataPipe_BeginWriteData(Dart_NativeArguments arguments) {
   int64_t handle = 0;
-  int64_t buffer_bytes = 0;
   int64_t flags = 0;
   CHECK_INTEGER_ARGUMENT(arguments, 0, &handle, Null);
-  CHECK_INTEGER_ARGUMENT(arguments, 1, &buffer_bytes, Null);
-  CHECK_INTEGER_ARGUMENT(arguments, 2, &flags, Null);
+  CHECK_INTEGER_ARGUMENT(arguments, 1, &flags, Null);
 
   void* buffer;
-  uint32_t size = static_cast<uint32_t>(buffer_bytes);
+  uint32_t size;
   MojoResult res = MojoBeginWriteData(
       static_cast<MojoHandle>(handle),
       &buffer,
@@ -487,14 +485,12 @@ void MojoDataPipe_ReadData(Dart_NativeArguments arguments) {
 
 void MojoDataPipe_BeginReadData(Dart_NativeArguments arguments) {
   int64_t handle = 0;
-  int64_t buffer_bytes = 0;
   int64_t flags = 0;
   CHECK_INTEGER_ARGUMENT(arguments, 0, &handle, Null);
-  CHECK_INTEGER_ARGUMENT(arguments, 1, &buffer_bytes, Null);
-  CHECK_INTEGER_ARGUMENT(arguments, 2, &flags, Null);
+  CHECK_INTEGER_ARGUMENT(arguments, 1, &flags, Null);
 
   void* buffer;
-  uint32_t size = static_cast<uint32_t>(buffer_bytes);
+  uint32_t size;
   MojoResult res = MojoBeginReadData(
       static_cast<MojoHandle>(handle),
       const_cast<const void**>(&buffer),
@@ -720,7 +716,7 @@ void MojoMessagePipe_QueryAndRead(Dart_NativeArguments arguments) {
   uint32_t hlen = 0;
   MojoResult res =
       MojoReadMessage(static_cast<MojoHandle>(dart_handle), nullptr, &blen,
-                      nullptr, &hlen, static_cast<MojoReadMessageFlags>(flags));
+                      nullptr, &hlen, MOJO_READ_MESSAGE_FLAG_NONE);
 
   if ((res != MOJO_RESULT_OK) && (res != MOJO_RESULT_RESOURCE_EXHAUSTED)) {
     Dart_ListSetAt(result, 0, Dart_NewInteger(res));
