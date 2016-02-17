@@ -67,6 +67,7 @@ sys.path.insert(0, os.path.join(THIS_DIR, "pylib"))
 
 from mojom.generate.generated import mojom_files_mojom
 from mojom.generate import mojom_translator
+from mojom.parse import parser_runner
 from mojo_bindings import serialization
 
 
@@ -119,10 +120,7 @@ def ReadMojomFileGraphFromFile(fp):
   Returns:
     The mojom_files_mojom.MojomFileGraph that was deserialized from the file.
   """
-  data = bytearray(fp.read())
-  context = serialization.RootDeserializationContext(data, [])
-  return mojom_files_mojom.MojomFileGraph.Deserialize(context)
-
+  return parser_runner.DeserializeMojomFileGraph(fp.read())
 
 def FixModulePath(module, abs_src_root_path):
   """Fix the path attribute of the provided module and its imports.

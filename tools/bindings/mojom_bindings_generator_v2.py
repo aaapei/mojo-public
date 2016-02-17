@@ -8,9 +8,10 @@
 
 import argparse
 import os
-import platform
 import subprocess
 import sys
+
+import mojom.parse.parser_runner
 
 # We assume this script is located in the Mojo SDK in tools/bindings.
 BINDINGS_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -25,35 +26,11 @@ def RunParser(args):
     {str} The serialized mojom_files.MojomFileGraph returned by mojom parser,
     or None if the mojom parser returned a non-zero error code.
   """
-  system_dirs = {
-      ("Linux", "64bit"): "linux64",
-      ("Darwin", "64bit"): "mac64",
-      }
-  system = (platform.system(), platform.architecture()[0])
-  if system not in system_dirs:
-    raise Exception("The mojom parser only supports Linux or Mac 64 bits.")
+  sdk_root = os.path.abspath(
+      os.path.join(BINDINGS_DIR, os.path.pardir, os.path.pardir))
 
-  mojom_parser = os.path.join(BINDINGS_DIR,
-      "mojom_parser", "bin", system_dirs[system], "mojom_parser")
-
-  if args.mojom_parser:
-    mojom_parser = args.mojom_parser
-  if not os.path.exists(mojom_parser):
-    raise Exception(
-        "The mojom parser could not be found at %s. "
-        "You may need to run gclient sync."
-        % mojom_parser)
-
-  cmd = [mojom_parser]
-  if args.import_directories:
-    cmd.extend(["-I", ",".join(args.import_directories)])
-
-  cmd.extend(args.filename)
-
-  try:
-    return subprocess.check_output(cmd)
-  except subprocess.CalledProcessError:
-    return None
+  return mojom.parse.parser_runner.RunParser(sdk_root, args.filename,
+      args.import_directories)
 
 def RunGenerators(serialized_file_graph, args, remaining_args):
   """Runs the code generators.
