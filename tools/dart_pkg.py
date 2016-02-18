@@ -14,15 +14,6 @@ import shutil
 import subprocess
 import sys
 
-# Disable lint check for finding modules:
-# pylint: disable=F0401
-
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                "bindings/pylib"))
-
-from mojom.parse.parser import Parse
-from mojom.parse.translate import Translate
-
 USE_LINKS = sys.platform != "win32"
 
 DART_ANALYZE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -158,17 +149,6 @@ def remove_broken_symlinks(root_dir):
     for filename in child_files:
       path = os.path.join(current_dir, filename)
       remove_broken_symlink(path)
-
-
-def mojom_path(filename):
-  with open(filename) as f:
-    source = f.read()
-  tree = Parse(source, filename)
-  _, name = os.path.split(filename)
-  mojom = Translate(tree, name)
-  elements = mojom['namespace'].split('.')
-  elements.append("%s" % mojom['name'])
-  return os.path.join(*elements)
 
 
 def analyze_entrypoints(dart_sdk, package_root, entrypoints):
