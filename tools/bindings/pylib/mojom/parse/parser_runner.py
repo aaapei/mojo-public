@@ -67,7 +67,7 @@ def RunParser(sdk_root, file_names, import_directories=None,
         "You may need to run gclient sync."
         % mojom_parser)
 
-  cmd = [mojom_parser]
+  cmd = [mojom_parser, "parse"]
   if import_directories:
     cmd.extend(["-I", ",".join(import_directories)])
   if meta_data_only:
