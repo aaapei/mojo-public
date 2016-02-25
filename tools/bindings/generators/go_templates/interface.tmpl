@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 {% import "struct.tmpl" as struct_macros %}
-{% import "mojom_type_macros.tmpl" as mojom_type_macros %}
 
 {%- macro declare_params(struct) %}
 {%- for field in struct.fields -%}
@@ -77,6 +76,7 @@ func (f *{{interface|name}}_ServiceFactory) Name() string {
 }
 {% endif %}
 
+// TODO(rudominer) This should only be defined for top-level interfaces.
 func (f *{{interface|name}}_ServiceFactory) ServiceDescription() {{descpkg}}ServiceDescription {
 	return &{{interface|name}}_ServiceDescription{}
 }
@@ -183,7 +183,6 @@ func New{{interface|name}}Stub(r {{interface|name}}_Request, impl {{interface|na
 	return bindings.NewStub(connector, &{{interface|name(False)}}_Stub{connector, impl})
 }
 
-{{ mojom_type_macros.writeMojomTypeDef(typepkg, interface, pkg, exported) }}
 
 func (f *{{interface|name}}_Request) ServiceDescription() {{descpkg}}ServiceDescription {
 	return &{{interface|name}}_ServiceDescription{}
@@ -192,9 +191,11 @@ func (f *{{interface|name}}_Request) ServiceDescription() {{descpkg}}ServiceDesc
 
 type {{interface|name}}_ServiceDescription struct{}
 
-{% if should_gen_mojom_types -%}
+{% if should_gen_mojom_types and interface.service_name-%}
 func (sd *{{interface|name}}_ServiceDescription) GetTopLevelInterface() (outMojomInterface {{typepkg}}MojomInterface, err error) {
-	return {{interface|mojom_type_identifier}}(), nil
+	interfaceTypeKey := runtimeTypeInfo__.ServicesByName["{{interface.service_name}}"].TopLevelInterface
+	userDefinedType := runtimeTypeInfo__.TypeMap[interfaceTypeKey].(*{{typepkg}}UserDefinedTypeInterfaceType)
+	return userDefinedType.Value, nil
 }
 
 func (sd *{{interface|name}}_ServiceDescription) GetTypeDefinition(inTypeKey string) (outType mojom_types.UserDefinedType, err error) {

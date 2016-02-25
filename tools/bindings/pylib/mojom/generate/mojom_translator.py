@@ -85,6 +85,8 @@ class FileTranslator(object):
         mod.enums = [self.UserDefinedFromTypeKey(key)
             for key in mojom_file.declared_mojom_objects.top_level_enums]
 
+      mod.serialized_runtime_type_info = mojom_file.serialized_runtime_type_info
+
     return mod
 
   def PopulateModuleMetadata(self, mod, mojom_file):
@@ -792,6 +794,8 @@ class FileTranslator(object):
     # type (say, a struct with a field of its own type).
     self._type_cache[type_key] = module_type
     from_mojom(module_type, mojom_type)
+
+    module_type.type_key = type_key
 
     return module_type
 

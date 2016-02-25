@@ -20,61 +20,34 @@ import (
 {% import "interface.tmpl" as interface_macros %}
 {% import "struct.tmpl" as struct_macros %}
 {% import "union.tmpl" as union_macros %}
-{% import "mojom_reference_macros.tmpl" as mojom_reference_macros %}
-
-{#- This init function initializes a mapping between identifiers and their
-    corresponding user-defined type. This could have been a MojomDescriptor,
-    but since it allows Types to be unresolved, it is more complex than is
-    necessary. It's simpler to resolve everything in codegen.
-    It is also difficult to insert changes to the description during the
-    process of generating each type, so this mapping is computed in Python.
-    Note: While we may register items into the map multiple times, this is okay
-    because the keys will match.
--#}
 
 {%- if should_gen_mojom_types -%}
-// These IDs are the Mojom Identifiers / Type Keys.
-// Mojom libraries importing this one will use these identifiers when building
-// TypeReference objects.
-{% for enum in enums %}
-var ID_{{enum|mojom_type_identifier}} string = "{{enum|mojom_type_identifier}}"
-{% endfor %}
-{% for struct in structs %}
-var ID_{{struct|mojom_type_identifier}} string = "{{struct|mojom_type_identifier}}"
-{% endfor %}
-{% for union in unions %}
-var ID_{{union|mojom_type_identifier}} string = "{{union|mojom_type_identifier}}"
-{% endfor %}
-{% for interface in interfaces %}
-var ID_{{interface|mojom_type_identifier}} string = "{{interface|mojom_type_identifier}}"
-{% endfor %}
+// This global variable contains a mojom_types.RuntimeTypeInfo struct
+// describing the types defined in this file and all of its imports as
+// well as the top-level interfaces defined in this file.
+var runtimeTypeInfo__ = {{typepkg}}RuntimeTypeInfo{}
 
-{% set mapping = package|qualified(None, false) ~ 'Desc__' %}
-var {{mapping}} = make(map[string]{{typepkg}}UserDefinedType)
 func init() {
-  {% for enum in enums %}
-  {{mojom_reference_macros.registerType(mapping, typepkg, package, enum)}}
-  {%- endfor %}
-  {% for struct in structs %}
-  {{mojom_reference_macros.registerType(mapping, typepkg, package, struct)}}
-  {%- endfor %}
-  {% for union in unions %}
-  {{mojom_reference_macros.registerType(mapping, typepkg, package, union)}}
-  {%- endfor %}
-  {% for interface in interfaces %}
-  {{mojom_reference_macros.registerType(mapping, typepkg, package, interface)}}
-  {%- endfor %}
+  // serializedRuntimeTypeInfo contains the bytes of the Mojo serialization of
+  // a mojom_types.RuntimeTypeInfo struct describing the Mojom types in this file.
+  serializedRuntimeTypeInfo := []uint8{{serialized_runtime_type_info_literal}}
+
+  // Deserialize RuntimeTypeInfo
+  decoder := bindings.NewDecoder(serializedRuntimeTypeInfo, nil)
+  runtimeTypeInfo__.Decode(decoder)
 
   {% for mi in mojom_imports.values() %}
   {%- if mi ~ '.' != typepkg and mi ~ '.' != descpkg %}
   for s, udt := range {{mi}}.GetAllMojomTypeDefinitions() {
-    {{mapping}}[s] = udt
+    runtimeTypeInfo__.TypeMap[s] = udt
   }
+
+
   {% endif -%}
   {% endfor %}
 }
 func GetAllMojomTypeDefinitions() map[string]{{typepkg}}UserDefinedType {
-  return {{mapping}}
+  return runtimeTypeInfo__.TypeMap
 }
 {% endif %}
 

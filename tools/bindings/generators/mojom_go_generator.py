@@ -193,40 +193,6 @@ def EncodeSuffix(kind):
     return EncodeSuffix(mojom.MSGPIPE)
   return _kind_infos[kind].encode_suffix
 
-# This helper assists in the production of mojom_types.Type for simple kinds.
-# See _kind_infos above.
-def GetMojomTypeValue(kind, typepkg=''):
-  if not kind in _kind_infos:
-    return ''
-
-  nullable = 'true' if mojom.IsNullableKind(kind) else 'false'
-  if kind == mojom.BOOL or kind == mojom.FLOAT or kind == mojom.DOUBLE or \
-    mojom.IsIntegralKind(kind):
-
-    kind_name = UpperCamelCase(_kind_infos[kind].decode_suffix.upper())
-    if kind == mojom.FLOAT:
-      kind_name = "Float"
-    elif kind == mojom.DOUBLE:
-      kind_name = "Double"
-    return '%sTypeSimpleType{%sSimpleType_%s}' % (typepkg, typepkg, kind_name)
-  elif mojom.IsAnyHandleKind(kind):
-    kind_name = 'Unspecified'
-    if kind == mojom.DCPIPE:
-      kind_name = 'DataPipeConsumer'
-    elif kind == mojom.DPPIPE:
-      kind_name = 'DataPipeProducer'
-    elif kind == mojom.MSGPIPE:
-      kind_name = 'MessagePipe'
-    elif kind == mojom.SHAREDBUFFER:
-      kind_name = 'SharedBuffer'
-    return '%sTypeHandleType{%sHandleType{' \
-      'Nullable: %s, Kind: %sHandleType_Kind_%s}}' % \
-      (typepkg, typepkg, nullable, typepkg, kind_name)
-  elif mojom.IsStringKind(kind):
-    return '%sTypeStringType{%sStringType{%s}}' % (typepkg, typepkg, nullable)
-  else:
-    raise Exception('Missing case for kind: %s' % kind)
-
 def GetPackageName(module):
   return module.name.split('.')[0]
 
@@ -234,6 +200,11 @@ def GetPackageNameForElement(element):
   if not hasattr(element, 'imported_from') or not element.imported_from:
     return ''
   return element.imported_from.get('go_name', '')
+
+def GetTypeKeyForElement(element):
+  if not hasattr(element, 'type_key') or not element.type_key:
+    return ''
+  return element.type_key
 
 def GetQualifiedName(name, package=None, exported=True):
   if not package:
@@ -253,6 +224,27 @@ def GetAllEnums(module):
   data = [module] + module.structs + module.interfaces
   enums = [x.enums for x in data]
   return [i for i in chain.from_iterable(enums)]
+
+def GetSerializedRuntimeTypeInfoLiteral(module, enabled):
+  """ Constructs a string that represents a literal definition in Go of
+  an array of bytes corresponding to |module.serialized_runtime_type_info|.
+
+  Args:
+    module: {mojom.Module} the module being processed.
+    enabled: {bool} Is this feature enabled.
+
+  Returns: A string of the form '{b0, b1, b2,...}' where the 'bi' are
+  the decimal representation of the bytes of
+  |module.serialized_runtime_type_info| or the string '{}' if either
+  |enabled| is false or |module.serialized_runtime_type_info| is None.
+  Furthermore the returned string will have embedded newline characters inserted
+  every 1000 characters to make the generated source code more tractable.
+  """
+  if not enabled or not module.serialized_runtime_type_info:
+    return '{}'
+  return '{%s}' % ','.join('%s%d' %
+      ('\n' if index > 0 and index%1000 == 0 else '', b)
+          for index, b in enumerate(module.serialized_runtime_type_info))
 
 def AddImport(imports, mojom_imports, module, element):
   """Adds an import required to use the provided element.
@@ -324,9 +316,7 @@ class Generator(generator.Generator):
     'is_struct': mojom.IsStructKind,
     'is_union': mojom.IsUnionKind,
     'qualified': GetQualifiedName,
-    'fullidentifier': mojom.GetMojomTypeFullIdentifier,
-    'mojom_type': GetMojomTypeValue,
-    'mojom_type_identifier': mojom.GetMojomTypeIdentifier,
+    'mojom_type_key' : GetTypeKeyForElement,
     'name': GetNameForElement,
     'unqualified_name': GetUnqualifiedNameForElement,
     'package': GetPackageNameForElement,
@@ -350,7 +340,10 @@ class Generator(generator.Generator):
         if package != _service_describer_pkg_short else '',
       'typepkg': '%s.' % _mojom_types_pkg_short \
         if package != _mojom_types_pkg_short else '',
-      'unions': self.GetUnions()
+      'unions': self.GetUnions(),
+      'serialized_runtime_type_info_literal' : (
+          GetSerializedRuntimeTypeInfoLiteral(self.module,
+              self.should_gen_mojom_types))
     }
 
   @UseJinja('go_templates/source.tmpl', filters=go_filters)

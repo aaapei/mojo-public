@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-{% import "mojom_type_macros.tmpl" as mojom_type_macros %}
-
 {% macro define(enum, typepkg, package) %}
 type {{enum|name}} int32
 
@@ -18,7 +16,5 @@ const (
 {%   endif %}
 {% endfor %}
 )
-
-{{ mojom_type_macros.writeMojomTypeDef(typepkg, enum, package, exported) }}
 
 {% endmacro %}

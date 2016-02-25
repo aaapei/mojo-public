@@ -215,8 +215,10 @@ class TestUserDefinedFromTypeRef(unittest.TestCase):
     # Check the translation
     if interface_request:
       self.assertEquals('AnInterface', interface.kind.name)
+      self.assertEquals('some_type_key', interface.kind.type_key)
     else:
       self.assertEquals('AnInterface', interface.name)
+      self.assertEquals('some_type_key', interface.type_key)
     self.assertEquals(nullable, interface.is_nullable)
     self.assertEquals(interface_request, isinstance(interface,
         module.InterfaceRequest))
@@ -942,6 +944,7 @@ class TestKindFromMojom(unittest.TestCase):
     self.assertTrue(module.IsStructKind(result))
     self.assertEquals(mojom_struct.decl_data.short_name, result.name)
     self.assertEquals(result, result.fields[0].kind)
+    self.assertEquals(type_key, result.type_key)
 
     # Make sure we create only one module object per type.
     result2 = t.KindFromMojom(mojom_type)

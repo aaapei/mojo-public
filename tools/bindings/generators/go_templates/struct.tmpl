@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 {% import "encoding_macros.tmpl" as encoding_macros %}
-{% import "mojom_type_macros.tmpl" as mojom_type_macros %}
 
 {% macro define(struct, typepkg, package, exported=True) %}
 type {{struct|name(exported)}} struct {
@@ -63,7 +62,5 @@ func (s *{{struct|name(exported)}}) Decode(decoder *bindings.Decoder) error {
 	}
 	return nil
 }
-
-{{ mojom_type_macros.writeMojomTypeDef(typepkg, struct, package, exported) }}
 
 {% endmacro %}

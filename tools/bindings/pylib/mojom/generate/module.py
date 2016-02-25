@@ -215,6 +215,7 @@ class Struct(ReferenceKind):
   ReferenceKind.AddSharedProperty('attributes')
   ReferenceKind.AddSharedProperty('constants')
   ReferenceKind.AddSharedProperty('enums')
+  ReferenceKind.AddSharedProperty('type_key')
 
   def __init__(self, name=None, module=None, attributes=None):
     if name is not None:
@@ -242,6 +243,7 @@ class Union(ReferenceKind):
   ReferenceKind.AddSharedProperty('imported_from')
   ReferenceKind.AddSharedProperty('fields')
   ReferenceKind.AddSharedProperty('attributes')
+  ReferenceKind.AddSharedProperty('type_key')
 
   def __init__(self, name=None, module=None, attributes=None):
     if name is not None:
@@ -374,6 +376,7 @@ class Interface(ReferenceKind):
   ReferenceKind.AddSharedProperty('attributes')
   ReferenceKind.AddSharedProperty('constants')
   ReferenceKind.AddSharedProperty('enums')
+  ReferenceKind.AddSharedProperty('type_key')
 
   def __init__(self, name=None, module=None, attributes=None):
     if name is not None:
@@ -475,6 +478,8 @@ def GetPackageName(kind):
   """Get the package name from the given kind's module."""
   return kind.module.name.split('.')[0]
 
+# TODO(rudominer) Remove this once the switch to the new runtime type
+# discovery mechanism is complete.
 def GetMojomTypeIdentifier(kind):
   """Get the mojom type's unique identifier from the kind's package and name."""
   # Note: InterfaceRequest's should use the Interface inside them.
@@ -490,6 +495,8 @@ def GetMojomTypeIdentifier(kind):
 
 # Returns a string of the form package.path.TypeName - the full identifier
 # for an element.
+# TODO(rudominer) Remove this once the switch to the new runtime type
+# discovery mechanism is complete.
 def GetMojomTypeFullIdentifier(kind, exported=True):
   """Get the Full Identifier for a Mojom Type. Format: package.path.TypeName"""
   return '%s.%s' % (kind.module.namespace, GetMojomTypeName(kind))
