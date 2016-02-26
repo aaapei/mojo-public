@@ -2,5 +2,5 @@
 /tools/prebuilt/
 
 # Download the Mojom parser binary.
-/tools/bindings/mojom_parser/bin/linux64/mojom_parser
-/tools/bindings/mojom_parser/bin/mac64/mojom_parser
+/tools/bindings/mojom_tool/bin/linux64/mojom
+/tools/bindings/mojom_tool/bin/mac64/mojom

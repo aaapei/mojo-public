@@ -33,7 +33,7 @@ def RunParser(sdk_root, file_names, import_directories=None,
   Args:
     sdk_root: {str} Absolute path to the root of the Mojo SDK. The parser
         binary is expected to be found in
-        <sdk_root>/tools/bindings/mojom_parser/bin/<platform>
+        <sdk_root>/tools/bindings/mojom_tool/bin/<platform>
 
     file_names {list of str} Paths to mojom files to be parsed. May be either
         absolute or relative to the current working directory.
@@ -58,16 +58,16 @@ def RunParser(sdk_root, file_names, import_directories=None,
   if system not in system_dirs:
     raise Exception("The mojom parser only supports Linux or Mac 64 bits.")
 
-  mojom_parser = os.path.join(sdk_root, "tools", "bindings", "mojom_parser",
-      "bin", system_dirs[system], "mojom_parser")
+  mojom_tool = os.path.join(sdk_root, "tools", "bindings", "mojom_tool",
+      "bin", system_dirs[system], "mojom")
 
-  if not os.path.exists(mojom_parser):
+  if not os.path.exists(mojom_tool):
     raise Exception(
         "The mojom parser could not be found at %s. "
         "You may need to run gclient sync."
-        % mojom_parser)
+        % mojom_tool)
 
-  cmd = [mojom_parser, "parse"]
+  cmd = [mojom_tool, "parse"]
   if import_directories:
     cmd.extend(["-I", ",".join(import_directories)])
   if meta_data_only:
@@ -102,7 +102,7 @@ def ParseToMojomFileGraph(sdk_root, file_names, import_directories=None,
   Args:
     sdk_root: {str} Absolute path to the root of the Mojo SDK. The parser
         binary is expected to be found in
-        <sdk_root>/tools/bindings/mojom_parser/bin/<platform>
+        <sdk_root>/tools/bindings/mojom_tool/bin/<platform>
 
     file_names {list of str} Paths to mojom files to be parsed. May be either
         absolute or relative to the current working directory.
