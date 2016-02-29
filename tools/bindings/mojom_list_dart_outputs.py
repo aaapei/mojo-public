@@ -12,11 +12,12 @@ import shutil
 import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SDK_DIR = os.path.join(SCRIPT_DIR, os.path.pardir, os.path.pardir)
 sys.path.insert(0, os.path.join(SCRIPT_DIR, 'pylib'))
 
 from mojom.error import Error
-from mojom.parse.parser import Parse
-from mojom.parse.translate import Translate
+from mojom.parse import parser_runner
+from mojom.generate import mojom_translator
 
 def mojom_path(name, namespace, attributes):
   package_name = 'mojom'
@@ -30,27 +31,18 @@ def mojom_path(name, namespace, attributes):
 
 def process_mojom(path_to_mojom):
   filename = os.path.abspath(path_to_mojom)
-  name = os.path.basename(filename)
-
-  # Read in mojom file.
-  try:
-    with open(filename) as f:
-      source = f.read()
-  except IOError:
-    print("Error reading %s" % filename)
-    sys.exit(2)
 
   # Parse
-  try:
-    tree = Parse(source, name)
-  except Error:
+  mojom_file_graph = parser_runner.ParseToMojomFileGraph(SDK_DIR, [filename],
+      meta_data_only=True)
+  if mojom_file_graph is None:
     print("Error parsing %s" % filename)
-    sys.exit(2)
+  mojom_dict = mojom_translator.TranslateFileGraph(mojom_file_graph)
+  mojom = mojom_dict[filename]
 
-  mojom = Translate(tree, name)
   # Output path
-  attributes = mojom.get('attributes')
-  print(mojom_path(mojom['name'], mojom['namespace'], attributes))
+  attributes = mojom.attributes
+  print(mojom_path(mojom.name, mojom.namespace, attributes))
 
 
 def main():
