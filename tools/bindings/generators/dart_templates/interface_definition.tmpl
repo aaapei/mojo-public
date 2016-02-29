@@ -124,9 +124,13 @@ class _{{interface|name}}ProxyImpl extends bindings.Proxy {
 
 
 class _{{interface|name}}ProxyCalls implements {{interface|name}} {
+  {%- if interface.methods %}
   _{{interface|name}}ProxyImpl _proxyImpl;
 
   _{{interface|name}}ProxyCalls(this._proxyImpl);
+  {%- else %}
+  _{{interface|name}}ProxyCalls(_{{interface|name}}ProxyImpl _);
+  {%- endif %}
 
   {%- for method in interface.methods %}
   {%- if method.response_parameters == None %}
@@ -273,8 +277,10 @@ class {{interface|name}}Stub extends bindings.Stub {
 {%- for method in interface.methods %}
 {%- set request_struct = method.param_struct %}
       case _{{interface|name}}_{{method|name}}Name:
+{%- if method.parameters %}
         var params = {{request_struct|name}}.deserialize(
             message.payload);
+{%- endif %}
 {%- if method.response_parameters == None %}
         _impl.{{method|name}}(
           {%- for parameter in method.parameters -%}

@@ -528,6 +528,12 @@ class Generator(generator.Generator):
   def GetParameters(self, args):
     package = self.module.name.split('.')[0]
 
+    # True if handles are used anywhere in the mojom.
+    has_handles = any(not mojom.IsCloneableKind(kind)
+                      for kind in (self.GetStructs() +
+                                   self.GetStructsFromMethods() +
+                                   self.GetUnions()))
+
     parameters = {
       "namespace": self.module.namespace,
       "imports": self.GetImports(args),
@@ -545,6 +551,7 @@ class Generator(generator.Generator):
         (_mojom_types_pkg, _mojom_types_pkg_short),
       "service_describer_import": 'import \'%s\' as %s;' % \
         (_service_describer_pkg, _service_describer_pkg_short),
+      "has_handles": has_handles,
     }
 
     # If this is the mojom types package, clear the import-related params.

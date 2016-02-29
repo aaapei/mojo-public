@@ -25,7 +25,7 @@ class {{enum|name}} extends bindings.MojoEnum {
     switch (v) {
 {%- for field in enum.fields %}
       case {{field.resolved_value}}:
-        return {{field|name}};
+        return {{enum|name}}.{{field|name}};
 {%- endfor %}
       default:
         return null;

@@ -617,26 +617,27 @@ def IsMoveOnlyKind(kind):
       IsAnyHandleKind(kind) or IsInterfaceKind(kind)
 
 
-def IsCloneableKind(kind):
-  def ContainsHandles(kind, visited_kinds):
-    if kind in visited_kinds:
-      # No need to examine the kind again.
-      return False
-    visited_kinds.add(kind)
-    if IsAnyHandleKind(kind) or IsInterfaceKind(kind):
-      return True
-    if IsArrayKind(kind):
-      return ContainsHandles(kind.kind, visited_kinds)
-    if IsStructKind(kind) or IsUnionKind(kind):
-      for field in kind.fields:
-        if ContainsHandles(field.kind, visited_kinds):
-          return True
-    if IsMapKind(kind):
-      # No need to examine the key kind, only primitive kinds and non-nullable
-      # string are allowed to be key kinds.
-      return ContainsHandles(kind.value_kind, visited_kinds)
+def ContainsHandles(kind, visited_kinds):
+  if kind in visited_kinds:
+    # No need to examine the kind again.
     return False
+  visited_kinds.add(kind)
+  if IsAnyHandleKind(kind) or IsInterfaceKind(kind):
+    return True
+  if IsArrayKind(kind):
+    return ContainsHandles(kind.kind, visited_kinds)
+  if IsStructKind(kind) or IsUnionKind(kind):
+    for field in kind.fields:
+      if ContainsHandles(field.kind, visited_kinds):
+        return True
+  if IsMapKind(kind):
+    # No need to examine the key kind, only primitive kinds and non-nullable
+    # string are allowed to be key kinds.
+    return ContainsHandles(kind.value_kind, visited_kinds)
+  return False
 
+
+def IsCloneableKind(kind):
   return not ContainsHandles(kind, set())
 
 

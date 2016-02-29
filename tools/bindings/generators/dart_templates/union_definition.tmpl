@@ -51,7 +51,7 @@ class {{union|name}} extends bindings.Union {
     }
     {{union|name}} result = new {{union|name}}();
 
-    // TODO(azani): Handle unknown union member.
+    {# Unknown union members not handled. #}
     {{union|name}}Tag tag = _int_to_tag[decoder0.decodeUint32(offset + 4)];
     switch (tag) {
 {%-   for field in union.fields %}
@@ -72,7 +72,7 @@ class {{union|name}} extends bindings.Union {
   }
 
   void encode(bindings.Encoder encoder0, int offset) {
-    // TODO(azani): Error when trying to encode an unknown member.
+    {# TODO(azani): Error when trying to encode an unknown member. #}
     encoder0.encodeUint32(16, offset);
     encoder0.encodeUint32(_tag_to_int[_tag], offset + 4);
     switch (_tag) {

@@ -30,7 +30,6 @@ if ({{variable}} == null) {
   encoder{{level}}.encodeNullPointer({{offset}}, {{kind|is_nullable_kind|dart_true_false}});
 } else {
   var encoder{{level + 1}} = encoder{{level}}.encoderForMap({{offset}});
-  int size{{level}} = {{variable}}.length;
   var keys{{level}} = {{variable}}.keys.toList();
   var values{{level}} = {{variable}}.values.toList();
   {{encode('keys'~level, kind.key_kind|array, 'bindings.ArrayDataHeader.kHeaderSize', 0, level+1, False)|indent(2)}}

@@ -23,6 +23,7 @@ mojom("test_interfaces") {
     "serialization_test_structs.mojom",
     "test_arrays.mojom",
     "test_constants.mojom",
+    "test_enums.mojom",
     "test_included_unions.mojom",
     "test_structs.mojom",
     "test_unions.mojom",
