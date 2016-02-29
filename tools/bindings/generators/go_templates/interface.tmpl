@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 {% import "struct.tmpl" as struct_macros %}
+{% import "runtime_type_macros.tmpl" as runtime_type_macros %}
 
 {%- macro declare_params(struct) %}
 {%- for field in struct.fields -%}
@@ -42,6 +43,8 @@ type {{interface|name}} interface {
 {% endfor %}
 }
 
+{{runtime_type_macros.maybeWriteStaticMojomTypeAccessor(typepkg, interface)}}
+
 {% if interface.service_name %}
 var {{interface|name(False)}}_Name = "{{interface.service_name}}"
 {% endif %}
@@ -53,6 +56,9 @@ func (r *{{interface|name}}_Request) Name() string {
 	return {{interface|name(False)}}_Name
 }
 {% endif %}
+
+{%- set type_name = interface|name + '_Request' %}
+{{runtime_type_macros.maybeWriteMojomTypeAccessor(typepkg, interface, type_name)}}
 
 type {{interface|name}}_Pointer bindings.InterfacePointer
 

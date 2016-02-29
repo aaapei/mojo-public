@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+{% import "runtime_type_macros.tmpl" as runtime_type_macros %}
+
 {% macro define(enum, typepkg, package) %}
 type {{enum|name}} int32
 
@@ -16,5 +18,9 @@ const (
 {%   endif %}
 {% endfor %}
 )
+
+{%- set type_name = enum|name(exported) %}
+{{runtime_type_macros.maybeWriteStaticMojomTypeAccessor(typepkg, enum)}}
+{{runtime_type_macros.maybeWriteMojomTypeAccessor(typepkg, enum,type_name)}}
 
 {% endmacro %}

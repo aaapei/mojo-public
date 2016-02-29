@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 {% import "encoding_macros.tmpl" as encoding_macros %}
+{% import "runtime_type_macros.tmpl" as runtime_type_macros %}
 
 {% macro define(union, typepkg, package, exported=True) %}
 type {{union|name(exported)}} interface {
@@ -11,6 +12,8 @@ type {{union|name(exported)}} interface {
 	__Reflect(__{{union|name(exported)}}Reflect)
 	Encode(encoder *bindings.Encoder) error
 }
+
+{{runtime_type_macros.maybeWriteStaticMojomTypeAccessor(typepkg, union)}}
 
 type __{{union|name(exported)}}Reflect struct {
 {%   for field in union.fields %}
@@ -73,6 +76,8 @@ func (u *{{struct_name}}) decodeInternal(decoder *bindings.Decoder) error {
 	{{decode_union_field('u.Value', field.kind)|tab_indent()}}
 	return nil
 }
+
+{{runtime_type_macros.maybeWriteMojomTypeAccessor(typepkg, union, struct_name)}}
 
 {%   endfor %}
 

@@ -10,6 +10,7 @@ import (
 
 	"mojo/public/go/bindings"
 
+	"mojo/public/interfaces/bindings/mojom_types"
 	"mojo/public/interfaces/bindings/service_describer"
 )
 
@@ -100,4 +101,19 @@ func (serviceDescriptionFactory *ServiceDescriptionFactory) Create(request servi
 			}
 		}
 	}()
+}
+
+// ObjectWithMojomTypeSupport is an interface implemented by pointers to
+// Mojo structs, enums, interface requests and union variants, but only if the
+// support of runtime mojom type information was enabled at build time.
+type ObjectWithMojomTypeSupport interface {
+	// MojomType returns the UserDefinedType that describes the Mojom
+	// type of this object. To obtain the UserDefinedType for Mojom types recursively
+	// contained in the returned UserDefinedType, look in the map returned
+	// by the function AllMojomTypes().
+	MojomType() mojom_types.UserDefinedType
+
+	// AllMojomTypes returns a map that contains the UserDefinedType for
+	// all Mojom types in the complete type graph of the Mojom type of this object.
+	AllMojomTypes() map[string]mojom_types.UserDefinedType
 }

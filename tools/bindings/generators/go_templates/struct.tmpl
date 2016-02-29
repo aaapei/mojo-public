@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 {% import "encoding_macros.tmpl" as encoding_macros %}
+{% import "runtime_type_macros.tmpl" as runtime_type_macros %}
 
 {% macro define(struct, typepkg, package, exported=True) %}
 type {{struct|name(exported)}} struct {
@@ -10,6 +11,10 @@ type {{struct|name(exported)}} struct {
 	{{field|name(exported)}} {{field.kind|go_type}}
 {% endfor %}
 }
+
+{%- set type_name = struct|name(exported) %}
+{{runtime_type_macros.maybeWriteStaticMojomTypeAccessor(typepkg, struct)}}
+{{runtime_type_macros.maybeWriteMojomTypeAccessor(typepkg, struct, type_name)}}
 
 func (s *{{struct|name(exported)}}) Encode(encoder *bindings.Encoder) error {
 {% set HEADER_SIZE = 8 %}
