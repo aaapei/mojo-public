@@ -13,12 +13,14 @@ import shutil
 import tempfile
 import zipfile
 
-from jinja2 import contextfilter
-
 import mojom.fileutil as fileutil
 import mojom.generate.generator as generator
 import mojom.generate.module as mojom
 from mojom.generate.template_expander import UseJinja
+
+# Import jinja2 after template_expander because template_expander contains
+# code to ensure that jinja2 is in the path.
+from jinja2 import contextfilter
 
 
 GENERATOR_PREFIX = 'java'
@@ -386,6 +388,7 @@ def TempDir():
     shutil.rmtree(dirname)
 
 def ZipContentInto(root, zip_filename):
+  fileutil.EnsureDirectoryExists(os.path.dirname(zip_filename))
   with zipfile.ZipFile(zip_filename, 'w') as zip_file:
     for dirname, _, files in os.walk(root):
       for filename in files:
@@ -476,7 +479,7 @@ class Generator(generator.Generator):
       self.Write(self.GenerateStructSource(struct),
                  '%s.java' % GetNameForElement(struct))
 
-    for union in self.module.unions:
+    for union in self.GetUnions():
       self.Write(self.GenerateUnionSource(union),
                  '%s.java' % GetNameForElement(union))
 
