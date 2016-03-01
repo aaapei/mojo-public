@@ -29,13 +29,8 @@
 
 typedef uint32_t MojoCreateSharedBufferOptionsFlags;
 
-#ifdef __cplusplus
-const MojoCreateSharedBufferOptionsFlags
-    MOJO_CREATE_SHARED_BUFFER_OPTIONS_FLAG_NONE = 0;
-#else
 #define MOJO_CREATE_SHARED_BUFFER_OPTIONS_FLAG_NONE \
   ((MojoCreateSharedBufferOptionsFlags)0)
-#endif
 
 MOJO_STATIC_ASSERT(MOJO_ALIGNOF(int64_t) == 8, "int64_t has weird alignment");
 struct MOJO_ALIGNAS(8) MojoCreateSharedBufferOptions {
@@ -58,13 +53,8 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateSharedBufferOptions) == 8,
 
 typedef uint32_t MojoDuplicateBufferHandleOptionsFlags;
 
-#ifdef __cplusplus
-const MojoDuplicateBufferHandleOptionsFlags
-    MOJO_DUPLICATE_BUFFER_HANDLE_OPTIONS_FLAG_NONE = 0;
-#else
 #define MOJO_DUPLICATE_BUFFER_HANDLE_OPTIONS_FLAG_NONE \
   ((MojoDuplicateBufferHandleOptionsFlags)0)
-#endif
 
 struct MojoDuplicateBufferHandleOptions {
   uint32_t struct_size;
@@ -78,11 +68,7 @@ MOJO_STATIC_ASSERT(sizeof(MojoDuplicateBufferHandleOptions) == 8,
 
 typedef uint32_t MojoMapBufferFlags;
 
-#ifdef __cplusplus
-const MojoMapBufferFlags MOJO_MAP_BUFFER_FLAG_NONE = 0;
-#else
 #define MOJO_MAP_BUFFER_FLAG_NONE ((MojoMapBufferFlags)0)
-#endif
 
 #ifdef __cplusplus
 extern "C" {

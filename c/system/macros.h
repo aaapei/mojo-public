@@ -33,8 +33,7 @@
 //     mojo_ignore_result(my_var.release());
 //
 template <typename T>
-inline void mojo_ignore_result(const T&) {
-}
+inline void mojo_ignore_result(const T&) {}
 #endif
 
 // Assert things at compile time. (|msg| should be a valid identifier name.)

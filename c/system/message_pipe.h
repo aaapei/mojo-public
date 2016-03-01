@@ -22,13 +22,8 @@
 
 typedef uint32_t MojoCreateMessagePipeOptionsFlags;
 
-#ifdef __cplusplus
-const MojoCreateMessagePipeOptionsFlags
-    MOJO_CREATE_MESSAGE_PIPE_OPTIONS_FLAG_NONE = 0;
-#else
 #define MOJO_CREATE_MESSAGE_PIPE_OPTIONS_FLAG_NONE \
   ((MojoCreateMessagePipeOptionsFlags)0)
-#endif
 
 MOJO_STATIC_ASSERT(MOJO_ALIGNOF(int64_t) == 8, "int64_t has weird alignment");
 struct MOJO_ALIGNAS(8) MojoCreateMessagePipeOptions {
@@ -44,11 +39,7 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateMessagePipeOptions) == 8,
 
 typedef uint32_t MojoWriteMessageFlags;
 
-#ifdef __cplusplus
-const MojoWriteMessageFlags MOJO_WRITE_MESSAGE_FLAG_NONE = 0;
-#else
 #define MOJO_WRITE_MESSAGE_FLAG_NONE ((MojoWriteMessageFlags)0)
-#endif
 
 // |MojoReadMessageFlags|: Used to specify different modes to
 // |MojoReadMessage()|.
@@ -59,13 +50,8 @@ const MojoWriteMessageFlags MOJO_WRITE_MESSAGE_FLAG_NONE = 0;
 
 typedef uint32_t MojoReadMessageFlags;
 
-#ifdef __cplusplus
-const MojoReadMessageFlags MOJO_READ_MESSAGE_FLAG_NONE = 0;
-const MojoReadMessageFlags MOJO_READ_MESSAGE_FLAG_MAY_DISCARD = 1 << 0;
-#else
 #define MOJO_READ_MESSAGE_FLAG_NONE ((MojoReadMessageFlags)0)
 #define MOJO_READ_MESSAGE_FLAG_MAY_DISCARD ((MojoReadMessageFlags)1 << 0)
-#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -30,13 +30,8 @@
 
 typedef uint32_t MojoCreateDataPipeOptionsFlags;
 
-#ifdef __cplusplus
-const MojoCreateDataPipeOptionsFlags MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE =
-    0;
-#else
 #define MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE \
   ((MojoCreateDataPipeOptionsFlags)0)
-#endif
 
 MOJO_STATIC_ASSERT(MOJO_ALIGNOF(int64_t) == 8, "int64_t has weird alignment");
 struct MOJO_ALIGNAS(8) MojoCreateDataPipeOptions {
@@ -56,13 +51,8 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateDataPipeOptions) == 16,
 
 typedef uint32_t MojoWriteDataFlags;
 
-#ifdef __cplusplus
-const MojoWriteDataFlags MOJO_WRITE_DATA_FLAG_NONE = 0;
-const MojoWriteDataFlags MOJO_WRITE_DATA_FLAG_ALL_OR_NONE = 1 << 0;
-#else
 #define MOJO_WRITE_DATA_FLAG_NONE ((MojoWriteDataFlags)0)
 #define MOJO_WRITE_DATA_FLAG_ALL_OR_NONE ((MojoWriteDataFlags)1 << 0)
-#endif
 
 // |MojoReadDataFlags|: Used to specify different modes to |MojoReadData()| and
 // |MojoBeginReadData()|.
@@ -81,19 +71,11 @@ const MojoWriteDataFlags MOJO_WRITE_DATA_FLAG_ALL_OR_NONE = 1 << 0;
 
 typedef uint32_t MojoReadDataFlags;
 
-#ifdef __cplusplus
-const MojoReadDataFlags MOJO_READ_DATA_FLAG_NONE = 0;
-const MojoReadDataFlags MOJO_READ_DATA_FLAG_ALL_OR_NONE = 1 << 0;
-const MojoReadDataFlags MOJO_READ_DATA_FLAG_DISCARD = 1 << 1;
-const MojoReadDataFlags MOJO_READ_DATA_FLAG_QUERY = 1 << 2;
-const MojoReadDataFlags MOJO_READ_DATA_FLAG_PEEK = 1 << 3;
-#else
 #define MOJO_READ_DATA_FLAG_NONE ((MojoReadDataFlags)0)
 #define MOJO_READ_DATA_FLAG_ALL_OR_NONE ((MojoReadDataFlags)1 << 0)
 #define MOJO_READ_DATA_FLAG_DISCARD ((MojoReadDataFlags)1 << 1)
 #define MOJO_READ_DATA_FLAG_QUERY ((MojoReadDataFlags)1 << 2)
 #define MOJO_READ_DATA_FLAG_PEEK ((MojoReadDataFlags)1 << 3)
-#endif
 
 #ifdef __cplusplus
 extern "C" {

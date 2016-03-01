@@ -27,11 +27,7 @@ typedef int64_t MojoTimeTicks;
 
 typedef uint32_t MojoHandle;
 
-#ifdef __cplusplus
-const MojoHandle MOJO_HANDLE_INVALID = 0;
-#else
 #define MOJO_HANDLE_INVALID ((MojoHandle)0)
-#endif
 
 // |MojoResult|: Result codes for Mojo operations. The only success code is zero
 // (|MOJO_RESULT_OK|); all non-zero values should be considered as error/failure
@@ -89,26 +85,6 @@ const MojoHandle MOJO_HANDLE_INVALID = 0;
 
 typedef uint32_t MojoResult;
 
-#ifdef __cplusplus
-const MojoResult MOJO_RESULT_OK = 0;
-const MojoResult MOJO_RESULT_CANCELLED = 1;
-const MojoResult MOJO_RESULT_UNKNOWN = 2;
-const MojoResult MOJO_RESULT_INVALID_ARGUMENT = 3;
-const MojoResult MOJO_RESULT_DEADLINE_EXCEEDED = 4;
-const MojoResult MOJO_RESULT_NOT_FOUND = 5;
-const MojoResult MOJO_RESULT_ALREADY_EXISTS = 6;
-const MojoResult MOJO_RESULT_PERMISSION_DENIED = 7;
-const MojoResult MOJO_RESULT_RESOURCE_EXHAUSTED = 8;
-const MojoResult MOJO_RESULT_FAILED_PRECONDITION = 9;
-const MojoResult MOJO_RESULT_ABORTED = 10;
-const MojoResult MOJO_RESULT_OUT_OF_RANGE = 11;
-const MojoResult MOJO_RESULT_UNIMPLEMENTED = 12;
-const MojoResult MOJO_RESULT_INTERNAL = 13;
-const MojoResult MOJO_RESULT_UNAVAILABLE = 14;
-const MojoResult MOJO_RESULT_DATA_LOSS = 15;
-const MojoResult MOJO_RESULT_BUSY = 16;
-const MojoResult MOJO_RESULT_SHOULD_WAIT = 17;
-#else
 #define MOJO_RESULT_OK ((MojoResult)0)
 #define MOJO_RESULT_CANCELLED ((MojoResult)1)
 #define MOJO_RESULT_UNKNOWN ((MojoResult)2)
@@ -127,7 +103,6 @@ const MojoResult MOJO_RESULT_SHOULD_WAIT = 17;
 #define MOJO_RESULT_DATA_LOSS ((MojoResult)15)
 #define MOJO_RESULT_BUSY ((MojoResult)16)
 #define MOJO_RESULT_SHOULD_WAIT ((MojoResult)17)
-#endif
 
 // |MojoDeadline|: Used to specify deadlines (timeouts), in microseconds (except
 // for |MOJO_DEADLINE_INDEFINITE|).
@@ -135,11 +110,7 @@ const MojoResult MOJO_RESULT_SHOULD_WAIT = 17;
 
 typedef uint64_t MojoDeadline;
 
-#ifdef __cplusplus
-const MojoDeadline MOJO_DEADLINE_INDEFINITE = static_cast<MojoDeadline>(-1);
-#else
-#define MOJO_DEADLINE_INDEFINITE ((MojoDeadline) - 1)
-#endif
+#define MOJO_DEADLINE_INDEFINITE ((MojoDeadline)-1)
 
 // |MojoHandleSignals|: Used to specify signals that can be waited on for a
 // handle (and which can be triggered), e.g., the ability to read or write to
@@ -152,17 +123,10 @@ const MojoDeadline MOJO_DEADLINE_INDEFINITE = static_cast<MojoDeadline>(-1);
 
 typedef uint32_t MojoHandleSignals;
 
-#ifdef __cplusplus
-const MojoHandleSignals MOJO_HANDLE_SIGNAL_NONE = 0;
-const MojoHandleSignals MOJO_HANDLE_SIGNAL_READABLE = 1 << 0;
-const MojoHandleSignals MOJO_HANDLE_SIGNAL_WRITABLE = 1 << 1;
-const MojoHandleSignals MOJO_HANDLE_SIGNAL_PEER_CLOSED = 1 << 2;
-#else
 #define MOJO_HANDLE_SIGNAL_NONE ((MojoHandleSignals)0)
 #define MOJO_HANDLE_SIGNAL_READABLE ((MojoHandleSignals)1 << 0)
 #define MOJO_HANDLE_SIGNAL_WRITABLE ((MojoHandleSignals)1 << 1)
 #define MOJO_HANDLE_SIGNAL_PEER_CLOSED ((MojoHandleSignals)1 << 2)
-#endif
 
 // |MojoHandleSignalsState|: Returned by wait functions to indicate the
 // signaling state of handles. Members are as follows:
