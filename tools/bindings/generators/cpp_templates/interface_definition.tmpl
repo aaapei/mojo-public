@@ -31,16 +31,16 @@ p_{{param.name}}
 
 {#--- Begin #}
 {%- if interface.service_name %}
-MOJO_STATIC_CONST_MEMBER_DEFINITION const char {{class_name}}::Name_[] = "{{interface.service_name}}";
+const char {{class_name}}::Name_[] = "{{interface.service_name}}";
 {%- endif %}
-MOJO_STATIC_CONST_MEMBER_DEFINITION const uint32_t {{class_name}}::Version_;
+const uint32_t {{class_name}}::Version_;
 
 {#--- Constants #}
 {%-  for constant in interface.constants %}
 {%-   if constant.kind|is_integral_kind %}
-MOJO_STATIC_CONST_MEMBER_DEFINITION const {{constant.kind|cpp_pod_type}} {{interface.name}}::{{constant.name}};
+const {{constant.kind|cpp_pod_type}} {{interface.name}}::{{constant.name}};
 {%-   else %}
-MOJO_STATIC_CONST_MEMBER_DEFINITION const {{constant.kind|cpp_pod_type}} {{interface.name}}::{{constant.name}} = {{constant|constant_value}};
+const {{constant.kind|cpp_pod_type}} {{interface.name}}::{{constant.name}} = {{constant|constant_value}};
 {%-   endif %}
 {%- endfor %}
 

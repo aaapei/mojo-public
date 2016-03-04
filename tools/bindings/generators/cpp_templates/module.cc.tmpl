@@ -79,9 +79,9 @@ namespace internal {
 {%- for struct in structs %}
 {%-   for constant in struct.constants %}
 {%-     if constant.kind|is_integral_kind %}
-MOJO_STATIC_CONST_MEMBER_DEFINITION const {{constant.kind|cpp_pod_type}} {{struct.name}}::{{constant.name}};
+const {{constant.kind|cpp_pod_type}} {{struct.name}}::{{constant.name}};
 {%-     else %}
-MOJO_STATIC_CONST_MEMBER_DEFINITION const {{constant.kind|cpp_pod_type}} {{struct.name}}::{{constant.name}} = {{constant|constant_value}};
+const {{constant.kind|cpp_pod_type}} {{struct.name}}::{{constant.name}} = {{constant|constant_value}};
 {%-     endif %}
 {%-   endfor %}
 {%- endfor %}
