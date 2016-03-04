@@ -123,30 +123,6 @@ _kind_to_dart_decl_type = {
   mojom.NULLABLE_STRING:       "String"
 }
 
-_kind_to_mojom_type = {
-  mojom.BOOL:                  "bool",
-  mojom.INT8:                  "int8",
-  mojom.UINT8:                 "uint8",
-  mojom.INT16:                 "int16",
-  mojom.UINT16:                "uint16",
-  mojom.INT32:                 "int32",
-  mojom.UINT32:                "uint32",
-  mojom.FLOAT:                 "float",
-  mojom.HANDLE:                "unspecified",
-  mojom.DCPIPE:                "dataPipeConsumer",
-  mojom.DPPIPE:                "dataPipeProducer",
-  mojom.MSGPIPE:               "messagePipe",
-  mojom.SHAREDBUFFER:          "sharedBuffer",
-  mojom.NULLABLE_HANDLE:       "unspecified",
-  mojom.NULLABLE_DCPIPE:       "dataPipeConsumer",
-  mojom.NULLABLE_DPPIPE:       "dataPipeProducer",
-  mojom.NULLABLE_MSGPIPE:      "messagePipe",
-  mojom.NULLABLE_SHAREDBUFFER: "sharedBuffer",
-  mojom.INT64:                 "int64",
-  mojom.UINT64:                "uint64",
-  mojom.DOUBLE:                "double"
-}
-
 _spec_to_decode_method = {
   mojom.BOOL.spec:                  'decodeBool',
   mojom.DCPIPE.spec:                'decodeConsumerHandle',
@@ -258,9 +234,6 @@ def DartDeclType(kind):
     return "Object"
   if mojom.IsEnumKind(kind):
     return GetDartType(kind)
-
-def GetSimpleMojomTypeName(kind):
-  return _kind_to_mojom_type[kind]
 
 def NameToComponent(name):
   # insert '_' between anything and a Title name (e.g, HTTPEntry2FooBar ->
@@ -485,6 +458,27 @@ def GetImportUri(module):
 def RaiseHelper(msg):
     raise Exception(msg)
 
+def GetSerializedRuntimeTypeInfoLiteral(module, enabled):
+  """ Constructs a string that represents a literal definition in Dart of
+  an array of bytes corresponding to |module.serialized_runtime_type_info|.
+
+  Args:
+    module: {mojom.Module} the module being processed.
+    enabled: {bool} Is this feature enabled.
+
+  Returns: A string of the form 'b0, b1, b2,...' where the 'bi' are
+  the decimal representation of the bytes of
+  |module.serialized_runtime_type_info| or the empty string if either
+  |enabled| is false or |module.serialized_runtime_type_info| is None.
+  Furthermore the returned string will have embedded newline characters inserted
+  every 1000 characters to make the generated source code more tractable.
+  """
+  if not enabled or not module.serialized_runtime_type_info:
+    return ''
+  return '%s' % ','.join('%s%d' %
+      ('\n' if index > 0 and index%1000 == 0 else '', b)
+          for index, b in enumerate(module.serialized_runtime_type_info))
+
 class Generator(generator.Generator):
 
   dart_filters = {
@@ -493,10 +487,6 @@ class Generator(generator.Generator):
     'decode_method': DecodeMethod,
     'default_value': DartDefaultValue,
     'encode_method': EncodeMethod,
-    'fullidentifier': mojom.GetMojomTypeFullIdentifier,
-    'simple_mojom_type_name': GetSimpleMojomTypeName,
-    'mojom_type_name': mojom.GetMojomTypeName,
-    'mojom_type_identifier': mojom.GetMojomTypeIdentifier,
     'is_imported_kind': IsImportedKind,
     'is_array_kind': mojom.IsArrayKind,
     'is_map_kind': mojom.IsMapKind,
@@ -545,6 +535,9 @@ class Generator(generator.Generator):
       "interfaces": self.GetInterfaces(),
       "imported_interfaces": self.GetImportedInterfaces(),
       "imported_from": self.ImportedFrom(),
+      "serialized_runtime_type_info_literal" : (
+          GetSerializedRuntimeTypeInfoLiteral(self.module,
+              self.should_gen_mojom_types)),
       "typepkg": '%s.' % _mojom_types_pkg_short,
       "descpkg": '%s.' % _service_describer_pkg_short,
       "mojom_types_import": 'import \'%s\' as %s;' % \

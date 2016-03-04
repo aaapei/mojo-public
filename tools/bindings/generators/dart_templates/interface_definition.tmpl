@@ -8,14 +8,13 @@ const int _{{interface|name}}_{{method|name}}Name = {{method.ordinal}};
   {{ enum_def(enum, typepkg, package) }}
 {%-  endfor %}
 
-{% if should_gen_mojom_types -%}
-{{ mojom_type_macros.writeMojomTypeDef(interface, typepkg, package) }}
-{%- endif %}
-
 class _{{interface|name}}ServiceDescription implements {{descpkg}}ServiceDescription {
-{%- if should_gen_mojom_types %}
-  dynamic getTopLevelInterface([Function responseFactory]) =>
-    responseFactory(_{{interface|mojom_type_identifier|lower_camel}}());
+{%- if should_gen_mojom_types and interface.service_name %}
+  dynamic getTopLevelInterface([Function responseFactory]){
+    var interfaceTypeKey = getRuntimeTypeInfo().servicesByName["{{interface.service_name}}"].topLevelInterface;
+    var userDefinedType = getAllMojomTypeDefinitions()[interfaceTypeKey];
+    return responseFactory(userDefinedType.interfaceType);
+  }
 
   dynamic getTypeDefinition(String typeKey, [Function responseFactory]) =>
     responseFactory(getAllMojomTypeDefinitions()[typeKey]);

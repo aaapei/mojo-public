@@ -9,9 +9,10 @@ import 'dart:async';
 {%- endif %}
 {%- if should_gen_mojom_types %}
 import 'dart:collection';
+import 'dart:typed_data';
 {%- endif %}
 
-{%- if module.structs or module.unions or module.interfaces or module.enums %}
+{%- if module.structs or module.unions or module.interfaces or module.enums or should_gen_mojom_types%}
 import 'package:mojo/bindings.dart' as bindings;
 {%- endif %}
 {%- if module.interfaces or has_handles %}

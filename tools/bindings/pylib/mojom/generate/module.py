@@ -463,44 +463,9 @@ class Module(object):
     self.unions.append(union)
     return union
 
-def GetMojomTypeName(kind):
-  """Get the mojom type's name from its kind."""
-  # Note: InterfaceRequest's should use the Interface inside them.
-  if IsInterfaceRequestKind(kind):
-    return kind.kind.name
-  elif hasattr(kind, 'name'):
-    return kind.name
-  else:
-    # These kinds (e.g., simple kinds, maps, and arrays) lack names.
-    raise Exception('Unexpected kind: %s' % kind)
-
 def GetPackageName(kind):
   """Get the package name from the given kind's module."""
   return kind.module.name.split('.')[0]
-
-# TODO(rudominer) Remove this once the switch to the new runtime type
-# discovery mechanism is complete.
-def GetMojomTypeIdentifier(kind):
-  """Get the mojom type's unique identifier from the kind's package and name."""
-  # Note: InterfaceRequest's should use the Interface inside them.
-  if hasattr(kind, 'module'):
-    package = GetPackageName(kind)
-  elif IsInterfaceRequestKind(kind):
-    package = GetPackageName(kind.kind)
-  else:
-    # These kinds (e.g., simple kinds and fields) lack identifiers.
-    raise Exception('Unexpected kind: %s' % kind)
-  return "%s_%s__" % (package, GetMojomTypeName(kind))
-
-
-# Returns a string of the form package.path.TypeName - the full identifier
-# for an element.
-# TODO(rudominer) Remove this once the switch to the new runtime type
-# discovery mechanism is complete.
-def GetMojomTypeFullIdentifier(kind, exported=True):
-  """Get the Full Identifier for a Mojom Type. Format: package.path.TypeName"""
-  return '%s.%s' % (kind.module.namespace, GetMojomTypeName(kind))
-
 
 def IsBoolKind(kind):
   return kind.spec == BOOL.spec

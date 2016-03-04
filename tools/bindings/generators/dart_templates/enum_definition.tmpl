@@ -1,5 +1,3 @@
-{% import "mojom_type_macros.tmpl" as mojom_type_macros %}
-
 {%- macro enum_def(enum, typepkg, package) %}
 class {{enum|name}} extends bindings.MojoEnum {
 {%- for field in enum.fields %}
@@ -56,7 +54,4 @@ class {{enum|name}} extends bindings.MojoEnum {
   int toJson() => mojoEnumValue;
 }
 
-{% if should_gen_mojom_types -%}
-{{ mojom_type_macros.writeMojomTypeDef(enum, typepkg, package) }}
-{%- endif -%}
 {%- endmacro %}
