@@ -68,7 +68,6 @@ class RunLoop {
 
  private:
   struct RunState;
-  struct WaitState;
 
   // Contains the data needed to track a request to AddHandler().
   struct HandlerData {
@@ -114,8 +113,8 @@ class RunLoop {
   // Returns true if a RunLoopHandler was notified.
   bool NotifyHandlers(MojoResult error, CheckDeadline check);
 
-  // Returns the state needed to pass to WaitMany().
-  WaitState GetWaitState(bool non_blocking) const;
+  // Sets up the state needed to pass to WaitMany().
+  void SetUpWaitState(bool non_blocking);
 
   HandleToHandlerData handler_data_;
 
@@ -142,7 +141,7 @@ class RunLoop {
     MojoTimeTicks run_time;
     uint64_t sequence_number;
   };
-  // An ever increasing sequence number attached to each pending task in order
+  // An ever-increasing sequence number attached to each pending task in order
   // to preserve relative order of tasks posted at the 'same' time.
   uint64_t next_sequence_number_;
   typedef std::priority_queue<PendingTask> DelayedTaskQueue;

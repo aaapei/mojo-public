@@ -19,21 +19,18 @@ internal::ThreadLocalPointer<RunLoop> current_run_loop;
 
 const MojoTimeTicks kInvalidTimeTicks = static_cast<MojoTimeTicks>(0);
 
-}  // namespace
-
 // State needed for one iteration of WaitMany().
-struct RunLoop::WaitState {
-  WaitState() : deadline(MOJO_DEADLINE_INDEFINITE) {}
-
+struct WaitState {
   std::vector<Handle> handles;
   std::vector<MojoHandleSignals> handle_signals;
-  MojoDeadline deadline;
+  MojoDeadline deadline = MOJO_DEADLINE_INDEFINITE;
 };
 
-struct RunLoop::RunState {
-  RunState() : should_quit(false) {}
+}  // namespace
 
-  bool should_quit;
+struct RunLoop::RunState {
+  bool should_quit = false;
+  WaitState wait_state;
 };
 
 RunLoop::RunLoop()
@@ -143,7 +140,9 @@ void RunLoop::PostDelayedTask(const Closure& task, MojoTimeTicks delay) {
 }
 
 bool RunLoop::Wait(bool non_blocking) {
-  const WaitState wait_state = GetWaitState(non_blocking);
+  SetUpWaitState(non_blocking);
+  WaitState& wait_state = run_state_->wait_state;
+
   if (wait_state.handles.empty()) {
     if (delayed_tasks_.empty())
       Quit();
@@ -212,17 +211,20 @@ bool RunLoop::NotifyHandlers(MojoResult error, CheckDeadline check) {
   return notified;
 }
 
-RunLoop::WaitState RunLoop::GetWaitState(bool non_blocking) const {
-  WaitState wait_state;
+void RunLoop::SetUpWaitState(bool non_blocking) {
+  WaitState& wait_state = run_state_->wait_state;
+
   MojoTimeTicks min_time = kInvalidTimeTicks;
-  for (HandleToHandlerData::const_iterator i = handler_data_.begin();
-       i != handler_data_.end();
-       ++i) {
-    wait_state.handles.push_back(i->first);
-    wait_state.handle_signals.push_back(i->second.handle_signals);
-    if (!non_blocking && i->second.deadline != kInvalidTimeTicks &&
-        (min_time == kInvalidTimeTicks || i->second.deadline < min_time)) {
-      min_time = i->second.deadline;
+  wait_state.handles.resize(handler_data_.size());
+  wait_state.handle_signals.resize(handler_data_.size());
+  size_t i = 0;
+  for (HandleToHandlerData::const_iterator it = handler_data_.begin();
+       it != handler_data_.end(); ++it, i++) {
+    wait_state.handles[i] = it->first;
+    wait_state.handle_signals[i] = it->second.handle_signals;
+    if (!non_blocking && it->second.deadline != kInvalidTimeTicks &&
+        (min_time == kInvalidTimeTicks || it->second.deadline < min_time)) {
+      min_time = it->second.deadline;
     }
   }
   if (!delayed_tasks_.empty()) {
@@ -241,7 +243,6 @@ RunLoop::WaitState RunLoop::GetWaitState(bool non_blocking) const {
     else
       wait_state.deadline = static_cast<MojoDeadline>(min_time - now);
   }
-  return wait_state;
 }
 
 RunLoop::PendingTask::PendingTask(const Closure& task,
