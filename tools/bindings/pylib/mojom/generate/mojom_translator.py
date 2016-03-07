@@ -190,7 +190,11 @@ class FileTranslator(object):
     assert mojom_type.tag == mojom_types_mojom.UserDefinedType.Tags.struct_type
     mojom_struct = mojom_type.struct_type
     self.PopulateUserDefinedType(struct, mojom_struct)
-    struct.fields = [self.StructFieldFromMojom(f) for f in mojom_struct.fields]
+    # mojom_struct.fields is indexed by the field ordinals. We want
+    # to capture these ordinals but sort struct.fields by declaration_order.
+    struct.fields = [self.StructFieldFromMojom(ordinal, f) for (ordinal, f) in
+        enumerate(mojom_struct.fields)]
+    struct.fields.sort(key=lambda field: field.declaration_order)
     self.PopulateContainedDeclarationsFromMojom(
         struct, mojom_struct.decl_data.contained_declarations)
 
@@ -208,10 +212,13 @@ class FileTranslator(object):
     union_field.ordinal = self.OrdinalFromMojom(mojom_field)
     return union_field
 
-  def StructFieldFromMojom(self, mojom_field):
+  def StructFieldFromMojom(self, ordinal, mojom_field):
     """Translates a mojom_types_mojom.StructField to a module.StructField.
 
     Args:
+      ordinal: {int} The 0-based ordinal position of the field within the
+               struct. Note that this is not necessarily the same as the lexical
+               order or the packing order.
       mojom_field: {mojom_types_mojom.StructField} to be translated.
 
     Returns:
@@ -219,7 +226,13 @@ class FileTranslator(object):
     """
     struct_field = module.StructField()
     self.PopulateCommonFieldValues(struct_field, mojom_field)
+    # Note that the |ordinal| attribute of |struct_field| records only the
+    # *declared* ordinal and as such is not defined for every field whereas
+    # the |computed_ordinal| attribute is defined for every field. If
+    # |ordinal| is defined then it is equal to |computed_ordinal|.
     struct_field.ordinal = self.OrdinalFromMojom(mojom_field)
+    struct_field.computed_ordinal = ordinal
+    struct_field.declaration_order = mojom_field.decl_data.declaration_order
     if mojom_field.default_value:
       if (mojom_field.default_value.tag ==
           mojom_types_mojom.DefaultFieldValue.Tags.default_keyword):

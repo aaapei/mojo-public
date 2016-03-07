@@ -243,21 +243,32 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
     mojom_struct = mojom_types_mojom.MojomStruct(
         decl_data=mojom_types_mojom.DeclarationData(short_name='FirstStruct'))
     mojom_struct.fields = [
-        mojom_types_mojom.StructField(
+       mojom_types_mojom.StructField(
           decl_data=mojom_types_mojom.DeclarationData(
-            short_name='field01',
-            declared_ordinal=5),
+            short_name='field03',
+            declaration_order=2),
           type=mojom_types_mojom.Type(
             simple_type=mojom_types_mojom.SimpleType.BOOL)),
         mojom_types_mojom.StructField(
           decl_data=mojom_types_mojom.DeclarationData(
-            short_name='field02'),
+            short_name='field01',
+            declared_ordinal=1,
+            declaration_order=0),
+          type=mojom_types_mojom.Type(
+            simple_type=mojom_types_mojom.SimpleType.BOOL)),
+        mojom_types_mojom.StructField(
+          decl_data=mojom_types_mojom.DeclarationData(
+            short_name='field02',
+            declaration_order=1),
           type=mojom_types_mojom.Type(
             simple_type=mojom_types_mojom.SimpleType.DOUBLE),
           default_value=mojom_types_mojom.DefaultFieldValue(
             value=mojom_types_mojom.Value(
               literal_value=mojom_types_mojom.LiteralValue(double_value=15)))),
         ]
+    # mojom_fields_declaration_order lists, in declaration order, the indices
+    # of the fields in mojom_types_mojom.StructField.
+    mojom_fields_declaration_order = [1, 2, 0]
     mojom_struct.decl_data.source_file_info = mojom_types_mojom.SourceFileInfo(
         file_name=mojom_file.file_name)
 
@@ -270,14 +281,19 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
     self.assertEquals(translator._module, struct.module)
 
     self.assertEquals(len(mojom_struct.fields), len(struct.fields))
-    for gold, f in zip(mojom_struct.fields, struct.fields):
+    for index, gold_index in enumerate(mojom_fields_declaration_order):
+      gold = mojom_struct.fields[gold_index]
+      f = struct.fields[index]
       self.assertEquals(f.name, gold.decl_data.short_name)
+      if gold.decl_data.declared_ordinal >= 0:
+        self.assertEquals(gold.decl_data.declared_ordinal, f.ordinal)
+      else:
+        self.assertEquals(None, f.ordinal)
+      self.assertEquals(gold_index, f.computed_ordinal)
 
     self.assertEquals(module.BOOL, struct.fields[0].kind)
-    self.assertEquals(5, struct.fields[0].ordinal)
-
     self.assertEquals(module.DOUBLE, struct.fields[1].kind)
-    self.assertEquals(None, struct.fields[1].ordinal)
+
     self.assertEquals('15.0', struct.fields[1].default)
 
   def test_constant(self):
