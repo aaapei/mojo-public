@@ -31,8 +31,8 @@ MojoResult MojoCreateSharedBuffer(
     uint64_t num_bytes,
     MojoHandle* shared_buffer_handle) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoCreateSharedBuffer(options, num_bytes,
                                           shared_buffer_handle);
 }
@@ -42,8 +42,8 @@ MojoResult MojoDuplicateBufferHandle(
     const struct MojoDuplicateBufferHandleOptions* options,
     MojoHandle* new_buffer_handle) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoDuplicateBufferHandle(buffer_handle, options,
                                              new_buffer_handle);
 }
@@ -54,16 +54,16 @@ MojoResult MojoMapBuffer(MojoHandle buffer_handle,
                          void** buffer,
                          MojoMapBufferFlags flags) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoMapBuffer(buffer_handle, offset, num_bytes, buffer,
                                  flags);
 }
 
 MojoResult MojoUnmapBuffer(void* buffer) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoUnmapBuffer(buffer);
 }
 
@@ -71,8 +71,8 @@ MojoResult MojoCreateDataPipe(const struct MojoCreateDataPipeOptions* options,
                               MojoHandle* data_pipe_producer_handle,
                               MojoHandle* data_pipe_consumer_handle) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoCreateDataPipe(options, data_pipe_producer_handle,
                                       data_pipe_consumer_handle);
 }
@@ -82,8 +82,8 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,
                          uint32_t* num_bytes,
                          MojoWriteDataFlags flags) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoWriteData(data_pipe_producer_handle, elements, num_bytes,
                                  flags);
 }
@@ -93,8 +93,8 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,
                               uint32_t* buffer_num_bytes,
                               MojoWriteDataFlags flags) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoBeginWriteData(data_pipe_producer_handle, buffer,
                                       buffer_num_bytes, flags);
 }
@@ -102,8 +102,8 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,
 MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,
                             uint32_t num_bytes_written) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoEndWriteData(data_pipe_producer_handle,
                                     num_bytes_written);
 }
@@ -113,8 +113,8 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,
                         uint32_t* num_bytes,
                         MojoReadDataFlags flags) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoReadData(data_pipe_consumer_handle, elements, num_bytes,
                                 flags);
 }
@@ -124,8 +124,8 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,
                              uint32_t* buffer_num_bytes,
                              MojoReadDataFlags flags) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoBeginReadData(data_pipe_consumer_handle, buffer,
                                      buffer_num_bytes, flags);
 }
@@ -133,22 +133,22 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,
 MojoResult MojoEndReadData(MojoHandle data_pipe_consumer_handle,
                            uint32_t num_bytes_read) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoEndReadData(data_pipe_consumer_handle, num_bytes_read);
 }
 
 MojoTimeTicks MojoGetTimeTicksNow() {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
+  if (!irt_mojo)
     abort();
   return irt_mojo->MojoGetTimeTicksNow();
 }
 
 MojoResult MojoClose(MojoHandle handle) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoClose(handle);
 }
 
@@ -157,8 +157,8 @@ MojoResult MojoWait(MojoHandle handle,
                     MojoDeadline deadline,
                     struct MojoHandleSignalsState* signals_state) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoWait(handle, signals, deadline, signals_state);
 }
 
@@ -169,8 +169,8 @@ MojoResult MojoWaitMany(const MojoHandle* handles,
                         uint32_t* result_index,
                         struct MojoHandleSignalsState* signals_states) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoWaitMany(handles, signals, num_handles, deadline,
                                 result_index, signals_states);
 }
@@ -180,8 +180,8 @@ MojoResult MojoCreateMessagePipe(
     MojoHandle* message_pipe_handle0,
     MojoHandle* message_pipe_handle1) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoCreateMessagePipe(options, message_pipe_handle0,
                                          message_pipe_handle1);
 }
@@ -193,8 +193,8 @@ MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,
                             uint32_t num_handles,
                             MojoWriteMessageFlags flags) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoWriteMessage(message_pipe_handle, bytes, num_bytes,
                                     handles, num_handles, flags);
 }
@@ -206,16 +206,16 @@ MojoResult MojoReadMessage(MojoHandle message_pipe_handle,
                            uint32_t* num_handles,
                            MojoReadMessageFlags flags) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->MojoReadMessage(message_pipe_handle, bytes, num_bytes,
                                    handles, num_handles, flags);
 }
 
 MojoResult _MojoGetInitialHandle(MojoHandle* handle) {
   struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
-  if (irt_mojo == NULL)
-    return MOJO_RESULT_INTERNAL;
+  if (!irt_mojo)
+    abort();
   return irt_mojo->_MojoGetInitialHandle(handle);
 }
 
