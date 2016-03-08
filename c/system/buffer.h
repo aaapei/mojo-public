@@ -41,7 +41,7 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateSharedBufferOptions) == 8,
                    "MojoCreateSharedBufferOptions has wrong size");
 
 // |MojoDuplicateBufferHandleOptions|: Used to specify parameters in duplicating
-// access to a shared buffer to |MojoDuplicateBufferHandle()|.
+// access to a buffer to |MojoDuplicateBufferHandle()|.
 //   |uint32_t struct_size|: Set to the size of the
 //       |MojoDuplicateBufferHandleOptions| struct. (Used to allow for future
 //       extensions.)
@@ -56,12 +56,33 @@ typedef uint32_t MojoDuplicateBufferHandleOptionsFlags;
 #define MOJO_DUPLICATE_BUFFER_HANDLE_OPTIONS_FLAG_NONE \
   ((MojoDuplicateBufferHandleOptionsFlags)0)
 
-struct MojoDuplicateBufferHandleOptions {
+struct MOJO_ALIGNAS(8) MojoDuplicateBufferHandleOptions {
   uint32_t struct_size;
   MojoDuplicateBufferHandleOptionsFlags flags;
 };
 MOJO_STATIC_ASSERT(sizeof(MojoDuplicateBufferHandleOptions) == 8,
                    "MojoDuplicateBufferHandleOptions has wrong size");
+
+// |MojoBufferInformation|: Used to provide information about a buffer (see
+// |MojoGetBufferInformation()|.
+//   |uint32_t struct_size|: Set to the size of the |MojoBufferInformation|
+//       struct. (Used to allow for future extensions.)
+//   |MojoBufferInformationFlags flags|: Reserved for future use.
+//   |uint64_t num_bytes|: Size of the buffer.
+//
+// TODO(vtl): Add flags to indicate writability, etc.? Also, type of buffer?
+
+typedef uint32_t MojoBufferInformationFlags;
+
+#define MOJO_BUFFER_INFORMATION_FLAG_NONE ((MojoBufferInformationFlags)0)
+
+struct MOJO_ALIGNAS(8) MojoBufferInformation {
+  uint32_t struct_size;
+  MojoBufferInformationFlags flags;
+  uint64_t num_bytes;
+};
+MOJO_STATIC_ASSERT(sizeof(MojoBufferInformation) == 16,
+                   "MojoBufferInformation has wrong size");
 
 // |MojoMapBufferFlags|: Used to specify different modes to |MojoMapBuffer()|.
 //   |MOJO_MAP_BUFFER_FLAG_NONE| - No flags; default mode.
@@ -124,6 +145,26 @@ MojoResult MojoDuplicateBufferHandle(
     MojoHandle buffer_handle,
     const struct MojoDuplicateBufferHandleOptions* options,  // Optional.
     MojoHandle* new_buffer_handle);                          // Out.
+
+// Gets information about the buffer with handle |buffer_handle|. |info| should
+// be non-null and point to a buffer of size |info_num_bytes|; |info_num_bytes|
+// should be at least 16 (the size of the first, and currently only, version of
+// |struct MojoBufferInformation|).
+//
+// On success, |*info| will be filled with information about the given buffer.
+// Note that if additional (larger) versions of |struct MojoBufferInformation|
+// are defined, the largest version permitted by |info_num_bytes| that is
+// supported by the implementation will be filled. Callers expecting more than
+// the first 16-byte version must check the resulting |info->struct_size|.
+//
+// Returns:
+//   |MOJO_RESULT_OK| on success.
+//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//       |buffer_handle| is not a valid buffer handle, |*info| is null, or
+//       |info_num_bytes| is too small).
+MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,
+                                    struct MojoBufferInformation* info,  // Out.
+                                    uint32_t info_num_bytes);            // In.
 
 // Maps the part (at offset |offset| of length |num_bytes|) of the buffer given
 // by |buffer_handle| into memory, with options specified by |flags|. |offset +
