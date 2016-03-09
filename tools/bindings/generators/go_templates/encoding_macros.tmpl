@@ -50,9 +50,20 @@ encoder.StartMap()
 {
 	var keys{{level}} {{kind.key_kind|array|go_type}}
 	var values{{level}} {{kind.value_kind|array|go_type}}
-	for key{{level}}, value{{level}} := range {{value}} {
+	if encoder.Deterministic() {
+	  for key{{level}}, _ := range {{value}} {
+		keys{{level}} = append(keys{{level}}, key{{level}})
+	  }
+	  bindings.SortMapKeys(&keys{{level}})
+	  values{{level}} = make({{kind.value_kind|array|go_type}}, len(keys{{level}}))
+	  for i, key := range keys{{level}} {
+	    values{{level}}[i] = {{value}}[key]
+	  }
+	} else {
+	  for key{{level}}, value{{level}} := range {{value}} {
 		keys{{level}} = append(keys{{level}}, key{{level}})
 		values{{level}} = append(values{{level}}, value{{level}})
+	  }
 	}
 	{{encode('keys'~level, kind.key_kind|array, level+1)|tab_indent()}}
 	{{encode('values'~level, kind.value_kind|array, level+1)|tab_indent()}}

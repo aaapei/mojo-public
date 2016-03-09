@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"sort"
 
 	"mojo/public/go/system"
 )
@@ -68,6 +69,12 @@ type Encoder struct {
 	// A stack of encoder states matching current one-level value stack
 	// of the encoding data structure.
 	stateStack []encodingState
+
+	// By default encoding is non-deterministic because the encoding of
+	// a mojom map does not specify the order of the keys and values.
+	// If |deterministic| is true then keys and values will be sorted
+	// in ascending key order.
+	deterministic bool
 }
 
 func ensureElementBitSizeAndCapacity(state *encodingState, bitSize uint32) error {
@@ -132,6 +139,20 @@ func (e *Encoder) state() *encodingState {
 // NewEncoder returns a new instance of encoder.
 func NewEncoder() *Encoder {
 	return &Encoder{}
+}
+
+// SetDeterministic sets whether or not this encoder is deterministic.
+// By default encoding is non-deterministic because the encoding of
+// a mojom map does not specify the order of the keys and values.
+// If SetDeterministic(true) is invoked then this encoder will, from then on,
+// have the property that keys and values will be sorted in ascending key order.
+// Warning: This causes encoding to be more expensive.
+func (e *Encoder) SetDeterministic(deterministic bool) {
+	e.deterministic = deterministic
+}
+
+func (e *Encoder) Deterministic() bool {
+	return e.deterministic
 }
 
 // StartArray starts encoding an array and writes its data header.
@@ -382,4 +403,192 @@ func (e *Encoder) WriteInterface(handle system.Handle) error {
 	e.state().elementsProcessed--
 	// Set the version field to 0 for now.
 	return e.WriteUint32(0)
+}
+
+// SortMapKeys will sort the slice pointed to by |slicePointer|
+// if |slicePointer| is a pointer to a slice of a type that
+// may be the key of a Mojo map. Otherwise SortMapKeys will do nothing.
+func SortMapKeys(slicePointer interface{}) {
+	switch slicePointer := slicePointer.(type) {
+	case *[]bool:
+		sort.Sort(boolSlice(*slicePointer))
+	case *[]float32:
+		sort.Sort(float32Slice(*slicePointer))
+	case *[]float64:
+		sort.Float64s(*slicePointer)
+	case *[]int:
+		sort.Ints(*slicePointer)
+	case *[]int8:
+		sort.Sort(int8Slice(*slicePointer))
+	case *[]int16:
+		sort.Sort(int16Slice(*slicePointer))
+	case *[]int32:
+		sort.Sort(int32Slice(*slicePointer))
+	case *[]int64:
+		sort.Sort(int64Slice(*slicePointer))
+	case *[]string:
+		sort.Strings(*slicePointer)
+	case *[]uint8:
+		sort.Sort(uint8Slice(*slicePointer))
+	case *[]uint16:
+		sort.Sort(uint16Slice(*slicePointer))
+	case *[]uint32:
+		sort.Sort(uint32Slice(*slicePointer))
+	case *[]uint64:
+		sort.Sort(uint64Slice(*slicePointer))
+	default:
+		// Note(rudominer) Currently enums may not be used as map keys but
+		// that may change in the future in which case we should handle them
+		// here.
+	}
+}
+
+// boolSlice
+type boolSlice []bool
+
+func (s boolSlice) Len() int {
+	return len(s)
+}
+
+func (s boolSlice) Less(i, j int) bool {
+	return s[i] && !s[j]
+}
+
+func (s boolSlice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// float32Slice
+type float32Slice []float32
+
+func (s float32Slice) Len() int {
+	return len(s)
+}
+
+func (s float32Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s float32Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// int8Slice
+type int8Slice []int8
+
+func (s int8Slice) Len() int {
+	return len(s)
+}
+
+func (s int8Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s int8Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// int16Slice
+type int16Slice []int16
+
+func (s int16Slice) Len() int {
+	return len(s)
+}
+
+func (s int16Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s int16Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// int32Slice
+type int32Slice []int32
+
+func (s int32Slice) Len() int {
+	return len(s)
+}
+
+func (s int32Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s int32Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// int64Slice
+type int64Slice []int64
+
+func (s int64Slice) Len() int {
+	return len(s)
+}
+
+func (s int64Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s int64Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// uint8Slice
+type uint8Slice []uint8
+
+func (s uint8Slice) Len() int {
+	return len(s)
+}
+
+func (s uint8Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s uint8Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// uint16Slice
+type uint16Slice []uint16
+
+func (s uint16Slice) Len() int {
+	return len(s)
+}
+
+func (s uint16Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s uint16Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// uint32Slice
+type uint32Slice []uint32
+
+func (s uint32Slice) Len() int {
+	return len(s)
+}
+
+func (s uint32Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s uint32Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+// uint64Slice
+type uint64Slice []uint64
+
+func (s uint64Slice) Len() int {
+	return len(s)
+}
+
+func (s uint64Slice) Less(i, j int) bool {
+	return s[i] < s[j]
+}
+
+func (s uint64Slice) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
