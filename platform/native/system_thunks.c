@@ -143,6 +143,13 @@ MojoResult MojoDuplicateBufferHandle(
                                         new_buffer_handle);
 }
 
+MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,
+                                    struct MojoBufferInformation* info,
+                                    uint32_t info_num_bytes) {
+  assert(g_thunks.GetBufferInformation);
+  return g_thunks.GetBufferInformation(buffer_handle, info, info_num_bytes);
+}
+
 MojoResult MojoMapBuffer(MojoHandle buffer_handle,
                          uint64_t offset,
                          uint64_t num_bytes,

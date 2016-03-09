@@ -100,6 +100,10 @@ struct MojoSystemImplThunksPrivate {
       MojoHandle buffer_handle,
       const struct MojoDuplicateBufferHandleOptions* options,
       MojoHandle* new_buffer_handle);
+  MojoResult (*GetBufferInformation)(MojoSystemImpl system,
+                                     MojoHandle buffer_handle,
+                                     struct MojoBufferInformation* info,
+                                     uint32_t info_num_bytes);
   MojoResult (*MapBuffer)(MojoSystemImpl system,
                           MojoHandle buffer_handle,
                           uint64_t offset,
@@ -140,6 +144,7 @@ inline MojoSystemImplThunksPrivate MojoMakeSystemImplThunksPrivate() {
       MojoSystemImplEndReadData,
       MojoSystemImplCreateSharedBuffer,
       MojoSystemImplDuplicateBufferHandle,
+      MojoSystemImplGetBufferInformation,
       MojoSystemImplMapBuffer,
       MojoSystemImplUnmapBuffer};
   return system_thunks;

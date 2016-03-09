@@ -29,7 +29,6 @@ TEST(CoreTest, GetTimeTicksNow) {
 // The only handle that's guaranteed to be invalid is |MOJO_HANDLE_INVALID|.
 // Tests that everything that takes a handle properly recognizes it.
 TEST(CoreTest, InvalidHandle) {
-  MojoHandle h0, h1;
   MojoHandleSignals sig;
   char buffer[10] = {0};
   uint32_t buffer_size;
@@ -41,48 +40,62 @@ TEST(CoreTest, InvalidHandle) {
 
   // Wait:
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoWait(MOJO_HANDLE_INVALID, ~MOJO_HANDLE_SIGNAL_NONE, 1000000,
+            MojoWait(MOJO_HANDLE_INVALID, ~MOJO_HANDLE_SIGNAL_NONE, 1000000u,
                      nullptr));
 
-  h0 = MOJO_HANDLE_INVALID;
+  const MojoHandle h = MOJO_HANDLE_INVALID;
   sig = ~MOJO_HANDLE_SIGNAL_NONE;
   EXPECT_EQ(
       MOJO_RESULT_INVALID_ARGUMENT,
-      MojoWaitMany(&h0, &sig, 1, MOJO_DEADLINE_INDEFINITE, nullptr, nullptr));
+      MojoWaitMany(&h, &sig, 1u, MOJO_DEADLINE_INDEFINITE, nullptr, nullptr));
 
   // Message pipe:
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoWriteMessage(h0, buffer, 3, nullptr, 0,
+            MojoWriteMessage(MOJO_HANDLE_INVALID, buffer, 0u, nullptr, 0u,
                              MOJO_WRITE_MESSAGE_FLAG_NONE));
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoReadMessage(h0, buffer, &buffer_size, nullptr, nullptr,
-                            MOJO_READ_MESSAGE_FLAG_NONE));
+            MojoReadMessage(MOJO_HANDLE_INVALID, buffer, &buffer_size, nullptr,
+                            nullptr, MOJO_READ_MESSAGE_FLAG_NONE));
 
   // Data pipe:
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoWriteData(h0, buffer, &buffer_size, MOJO_WRITE_DATA_FLAG_NONE));
+            MojoWriteData(MOJO_HANDLE_INVALID, buffer, &buffer_size,
+                          MOJO_WRITE_DATA_FLAG_NONE));
   write_pointer = nullptr;
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoBeginWriteData(h0, &write_pointer, &buffer_size,
-                               MOJO_WRITE_DATA_FLAG_NONE));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoEndWriteData(h0, 1));
+            MojoBeginWriteData(MOJO_HANDLE_INVALID, &write_pointer,
+                               &buffer_size, MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoEndWriteData(MOJO_HANDLE_INVALID, 1u));
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoReadData(h0, buffer, &buffer_size, MOJO_READ_DATA_FLAG_NONE));
+            MojoReadData(MOJO_HANDLE_INVALID, buffer, &buffer_size,
+                         MOJO_READ_DATA_FLAG_NONE));
   read_pointer = nullptr;
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoBeginReadData(h0, &read_pointer, &buffer_size,
+            MojoBeginReadData(MOJO_HANDLE_INVALID, &read_pointer, &buffer_size,
                               MOJO_READ_DATA_FLAG_NONE));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoEndReadData(h0, 1));
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoEndReadData(MOJO_HANDLE_INVALID, 1u));
 
   // Shared buffer:
-  h1 = MOJO_HANDLE_INVALID;
+  MojoHandle out_handle = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(
+      MOJO_RESULT_INVALID_ARGUMENT,
+      MojoDuplicateBufferHandle(MOJO_HANDLE_INVALID, nullptr, &out_handle));
+  MojoBufferInformation buffer_info = {};
+  EXPECT_EQ(
+      MOJO_RESULT_INVALID_ARGUMENT,
+      MojoGetBufferInformation(MOJO_HANDLE_INVALID, &buffer_info,
+                               static_cast<uint32_t>(sizeof(buffer_info))));
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoDuplicateBufferHandle(h0, nullptr, &h1));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoMapBuffer(h0, 0, 1, &write_pointer, MOJO_MAP_BUFFER_FLAG_NONE));
+            MojoMapBuffer(MOJO_HANDLE_INVALID, 0u, 1u, &write_pointer,
+                          MOJO_MAP_BUFFER_FLAG_NONE));
+  // This isn't an "invalid handle" test, but we'll throw it in here anyway
+  // (since it involves a look-up).
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoUnmapBuffer(nullptr));
 }
 
 TEST(CoreTest, BasicMessagePipe) {

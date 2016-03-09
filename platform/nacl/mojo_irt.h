@@ -16,44 +16,7 @@
 #define NACL_IRT_MOJO_v0_1 "nacl-irt-mojo-0.1"
 
 struct nacl_irt_mojo {
-  MojoResult (*MojoCreateSharedBuffer)(
-      const struct MojoCreateSharedBufferOptions* options,
-      uint64_t num_bytes,
-      MojoHandle* shared_buffer_handle);
-  MojoResult (*MojoDuplicateBufferHandle)(
-      MojoHandle buffer_handle,
-      const struct MojoDuplicateBufferHandleOptions* options,
-      MojoHandle* new_buffer_handle);
-  MojoResult (*MojoMapBuffer)(MojoHandle buffer_handle,
-                              uint64_t offset,
-                              uint64_t num_bytes,
-                              void** buffer,
-                              MojoMapBufferFlags flags);
-  MojoResult (*MojoUnmapBuffer)(void* buffer);
-  MojoResult (*MojoCreateDataPipe)(
-      const struct MojoCreateDataPipeOptions* options,
-      MojoHandle* data_pipe_producer_handle,
-      MojoHandle* data_pipe_consumer_handle);
-  MojoResult (*MojoWriteData)(MojoHandle data_pipe_producer_handle,
-                              const void* elements,
-                              uint32_t* num_bytes,
-                              MojoWriteDataFlags flags);
-  MojoResult (*MojoBeginWriteData)(MojoHandle data_pipe_producer_handle,
-                                   void** buffer,
-                                   uint32_t* buffer_num_bytes,
-                                   MojoWriteDataFlags flags);
-  MojoResult (*MojoEndWriteData)(MojoHandle data_pipe_producer_handle,
-                                 uint32_t num_bytes_written);
-  MojoResult (*MojoReadData)(MojoHandle data_pipe_consumer_handle,
-                             void* elements,
-                             uint32_t* num_bytes,
-                             MojoReadDataFlags flags);
-  MojoResult (*MojoBeginReadData)(MojoHandle data_pipe_consumer_handle,
-                                  const void** buffer,
-                                  uint32_t* buffer_num_bytes,
-                                  MojoReadDataFlags flags);
-  MojoResult (*MojoEndReadData)(MojoHandle data_pipe_consumer_handle,
-                                uint32_t num_bytes_read);
+  MojoResult (*_MojoGetInitialHandle)(MojoHandle* handle);
   MojoTimeTicks (*MojoGetTimeTicksNow)();
   MojoResult (*MojoClose)(MojoHandle handle);
   MojoResult (*MojoWait)(MojoHandle handle,
@@ -82,7 +45,47 @@ struct nacl_irt_mojo {
                                 MojoHandle* handles,
                                 uint32_t* num_handles,
                                 MojoReadMessageFlags flags);
-  MojoResult (*_MojoGetInitialHandle)(MojoHandle* handle);
+  MojoResult (*MojoCreateDataPipe)(
+      const struct MojoCreateDataPipeOptions* options,
+      MojoHandle* data_pipe_producer_handle,
+      MojoHandle* data_pipe_consumer_handle);
+  MojoResult (*MojoWriteData)(MojoHandle data_pipe_producer_handle,
+                              const void* elements,
+                              uint32_t* num_bytes,
+                              MojoWriteDataFlags flags);
+  MojoResult (*MojoBeginWriteData)(MojoHandle data_pipe_producer_handle,
+                                   void** buffer,
+                                   uint32_t* buffer_num_bytes,
+                                   MojoWriteDataFlags flags);
+  MojoResult (*MojoEndWriteData)(MojoHandle data_pipe_producer_handle,
+                                 uint32_t num_bytes_written);
+  MojoResult (*MojoReadData)(MojoHandle data_pipe_consumer_handle,
+                             void* elements,
+                             uint32_t* num_bytes,
+                             MojoReadDataFlags flags);
+  MojoResult (*MojoBeginReadData)(MojoHandle data_pipe_consumer_handle,
+                                  const void** buffer,
+                                  uint32_t* buffer_num_bytes,
+                                  MojoReadDataFlags flags);
+  MojoResult (*MojoEndReadData)(MojoHandle data_pipe_consumer_handle,
+                                uint32_t num_bytes_read);
+  MojoResult (*MojoCreateSharedBuffer)(
+      const struct MojoCreateSharedBufferOptions* options,
+      uint64_t num_bytes,
+      MojoHandle* shared_buffer_handle);
+  MojoResult (*MojoDuplicateBufferHandle)(
+      MojoHandle buffer_handle,
+      const struct MojoDuplicateBufferHandleOptions* options,
+      MojoHandle* new_buffer_handle);
+  MojoResult (*MojoGetBufferInformation)(MojoHandle buffer_handle,
+                                         struct MojoBufferInformation* info,
+                                         uint32_t info_num_bytes);
+  MojoResult (*MojoMapBuffer)(MojoHandle buffer_handle,
+                              uint64_t offset,
+                              uint64_t num_bytes,
+                              void** buffer,
+                              MojoMapBufferFlags flags);
+  MojoResult (*MojoUnmapBuffer)(void* buffer);
 };
 
 #ifdef __cplusplus

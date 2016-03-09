@@ -186,6 +186,16 @@ MojoResult MojoSystemImplDuplicateBufferHandle(
                                                     options, new_buffer_handle);
 }
 
+MojoResult MojoSystemImplGetBufferInformation(
+    MojoSystemImpl system,
+    MojoHandle buffer_handle,
+    struct MojoBufferInformation* info,
+    uint32_t info_num_bytes) {
+  assert(g_system_impl_thunks.GetBufferInformation);
+  return g_system_impl_thunks.GetBufferInformation(system, buffer_handle, info,
+                                                   info_num_bytes);
+}
+
 MojoResult MojoSystemImplMapBuffer(MojoSystemImpl system,
                                    MojoHandle buffer_handle,
                                    uint64_t offset,

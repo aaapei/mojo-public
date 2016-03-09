@@ -262,6 +262,8 @@ TEST(SystemImplTest, BasicDataPipe) {
 }
 
 TEST(SystemImplTest, BasicSharedBuffer) {
+  const uint64_t kSize = 100u;
+
   MojoSystemImpl sys0 = MojoSystemImplCreateImpl();
   MojoSystemImpl sys1 = MojoSystemImplCreateImpl();
   EXPECT_NE(sys0, sys1);
@@ -272,15 +274,26 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   // Create a shared buffer (|h0|).
   h0 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK,
-            MojoSystemImplCreateSharedBuffer(sys0, nullptr, 100, &h0));
+            MojoSystemImplCreateSharedBuffer(sys0, nullptr, kSize, &h0));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
+
+  // Check the buffer information.
+  {
+    MojoBufferInformation info = {};
+    EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetBufferInformation(
+                                  sys0, h0, &info, sizeof(info)));
+    EXPECT_EQ(sizeof(info), info.struct_size);
+    EXPECT_EQ(MOJO_BUFFER_INFORMATION_FLAG_NONE, info.flags);
+    EXPECT_EQ(kSize, info.num_bytes);
+  }
 
   // Map everything.
   pointer = nullptr;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplMapBuffer(sys0, h0, 0, 100, &pointer,
-                                                    MOJO_MAP_BUFFER_FLAG_NONE));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplMapBuffer(sys0, h0, 0u, kSize, &pointer,
+                                    MOJO_MAP_BUFFER_FLAG_NONE));
   ASSERT_TRUE(pointer);
-  static_cast<char*>(pointer)[50] = 'x';
+  static_cast<char*>(pointer)[kSize / 2] = 'x';
 
   // Duplicate |h0| to |h1|.
   h1 = MOJO_HANDLE_INVALID;
@@ -296,15 +309,26 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys0, h0));
 
   // The mapping should still be good.
-  static_cast<char*>(pointer)[51] = 'y';
+  static_cast<char*>(pointer)[kSize / 2 + 1] = 'y';
 
   // Unmap it.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplUnmapBuffer(sys0, pointer));
 
+  // Check the buffer information on |h1|.
+  {
+    MojoBufferInformation info = {};
+    EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetBufferInformation(
+                                  sys1, h1, &info, sizeof(info)));
+    EXPECT_EQ(sizeof(info), info.struct_size);
+    EXPECT_EQ(MOJO_BUFFER_INFORMATION_FLAG_NONE, info.flags);
+    EXPECT_EQ(kSize, info.num_bytes);
+  }
+
   // Map half of |h1|.
   pointer = nullptr;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplMapBuffer(sys1, h1, 50, 50, &pointer,
-                                                    MOJO_MAP_BUFFER_FLAG_NONE));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplMapBuffer(sys1, h1, kSize / 2, kSize / 2, &pointer,
+                                    MOJO_MAP_BUFFER_FLAG_NONE));
   ASSERT_TRUE(pointer);
 
   // It should have what we wrote.

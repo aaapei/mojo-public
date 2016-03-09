@@ -101,6 +101,11 @@ struct MojoSystemThunks {
                           void** buffer,
                           MojoMapBufferFlags flags);
   MojoResult (*UnmapBuffer)(void* buffer);
+  // TODO(vtl): The next time an ABI-breaking change is made, re-order the
+  // following elements (to match the order in |Core|).
+  MojoResult (*GetBufferInformation)(MojoHandle buffer_handle,
+                                     struct MojoBufferInformation* info,
+                                     uint32_t info_num_bytes);
 };
 #pragma pack(pop)
 
@@ -109,25 +114,28 @@ struct MojoSystemThunks {
 // Intended to be called from the embedder. Returns a |MojoCore| initialized
 // to contain pointers to each of the embedder's MojoCore functions.
 inline MojoSystemThunks MojoMakeSystemThunks() {
-  MojoSystemThunks system_thunks = {sizeof(MojoSystemThunks),
-                                    MojoGetTimeTicksNow,
-                                    MojoClose,
-                                    MojoWait,
-                                    MojoWaitMany,
-                                    MojoCreateMessagePipe,
-                                    MojoWriteMessage,
-                                    MojoReadMessage,
-                                    MojoCreateDataPipe,
-                                    MojoWriteData,
-                                    MojoBeginWriteData,
-                                    MojoEndWriteData,
-                                    MojoReadData,
-                                    MojoBeginReadData,
-                                    MojoEndReadData,
-                                    MojoCreateSharedBuffer,
-                                    MojoDuplicateBufferHandle,
-                                    MojoMapBuffer,
-                                    MojoUnmapBuffer};
+  MojoSystemThunks system_thunks = {
+      sizeof(MojoSystemThunks),
+      MojoGetTimeTicksNow,
+      MojoClose,
+      MojoWait,
+      MojoWaitMany,
+      MojoCreateMessagePipe,
+      MojoWriteMessage,
+      MojoReadMessage,
+      MojoCreateDataPipe,
+      MojoWriteData,
+      MojoBeginWriteData,
+      MojoEndWriteData,
+      MojoReadData,
+      MojoBeginReadData,
+      MojoEndReadData,
+      MojoCreateSharedBuffer,
+      MojoDuplicateBufferHandle,
+      MojoMapBuffer,
+      MojoUnmapBuffer,
+      MojoGetBufferInformation,
+  };
   return system_thunks;
 }
 #endif

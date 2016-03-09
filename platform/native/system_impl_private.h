@@ -119,6 +119,11 @@ MojoResult MojoSystemImplDuplicateBufferHandle(
     MojoHandle buffer_handle,
     const struct MojoDuplicateBufferHandleOptions* options,
     MojoHandle* new_buffer_handle);
+MojoResult MojoSystemImplGetBufferInformation(
+    MojoSystemImpl system,
+    MojoHandle buffer_handle,
+    struct MojoBufferInformation* info,
+    uint32_t info_num_bytes);
 MojoResult MojoSystemImplMapBuffer(MojoSystemImpl system,
                                    MojoHandle buffer_handle,
                                    uint64_t offset,
