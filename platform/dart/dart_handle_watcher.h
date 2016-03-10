@@ -11,7 +11,7 @@
 
 #include "dart/runtime/include/dart_api.h"
 
-#include "mojo/public/c/system/core.h"
+#include "mojo/public/c/system/types.h"
 #include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/system/macros.h"
 

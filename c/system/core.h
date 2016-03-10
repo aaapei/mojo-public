@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// DEPRECATED -- do not use: include individual header files instead.
+//
+// TODO(vtl): Delete this header file.
+//
 // This is a catch-all header that includes everything.
 //
 // Note: This header should be compilable as C.

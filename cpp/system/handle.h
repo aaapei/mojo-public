@@ -47,8 +47,8 @@ namespace mojo {
 //
 // Wrapper functions:
 //
-// We provide simple wrappers for the |Mojo...()| functions (in
-// mojo/public/c/system/core.h -- see that file for details on individual
+// We provide simple wrappers for the |Mojo...()| functions (declared in various
+// mojo/public/c/system/*.h -- see those file for details on individual
 // functions).
 //
 // The general guideline is functions that imply ownership transfer of a handle

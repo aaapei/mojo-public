@@ -7,7 +7,10 @@
 #ifndef MOJO_PUBLIC_PLATFORM_NATIVE_SYSTEM_IMPL_PRIVATE_THUNKS_H_
 #define MOJO_PUBLIC_PLATFORM_NATIVE_SYSTEM_IMPL_PRIVATE_THUNKS_H_
 
-#include "mojo/public/c/system/core.h"
+#include "mojo/public/c/system/buffer.h"
+#include "mojo/public/c/system/data_pipe.h"
+#include "mojo/public/c/system/message_pipe.h"
+#include "mojo/public/c/system/types.h"
 #include "mojo/public/platform/native/system_impl_private.h"
 
 // Structure used to bind the basic Mojo Core functions of a DSO to those of
@@ -17,8 +20,8 @@
 #pragma pack(push, 8)
 struct MojoSystemImplControlThunksPrivate {
   size_t size;  // Should be set to sizeof(MojoSystemImplThunks).
-  MojoSystemImpl (*GetDefaultSystemImpl)();
-  MojoSystemImpl (*CreateSystemImpl)();
+  MojoSystemImpl (*GetDefaultSystemImpl)(void);
+  MojoSystemImpl (*CreateSystemImpl)(void);
   MojoResult (*TransferHandle)(MojoSystemImpl from_system,
                                MojoHandle handle,
                                MojoSystemImpl to_system,
@@ -149,7 +152,6 @@ inline MojoSystemImplThunksPrivate MojoMakeSystemImplThunksPrivate() {
       MojoSystemImplUnmapBuffer};
   return system_thunks;
 }
-
 #endif
 
 #endif  // MOJO_PUBLIC_PLATFORM_NATIVE_SYSTEM_IMPL_PRIVATE_THUNKS_H_

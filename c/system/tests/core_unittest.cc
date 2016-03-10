@@ -4,10 +4,13 @@
 
 // This file tests the C API.
 
-#include "mojo/public/c/system/core.h"
-
 #include <string.h>
 
+#include "mojo/public/c/system/buffer.h"
+#include "mojo/public/c/system/data_pipe.h"
+#include "mojo/public/c/system/functions.h"
+#include "mojo/public/c/system/message_pipe.h"
+#include "mojo/public/c/system/types.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {

@@ -4,7 +4,12 @@
 
 package native_cgo
 
-//#include "mojo/public/c/system/core.h"
+//#include "mojo/public/c/system/buffer.h"
+//#include "mojo/public/c/system/data_pipe.h"
+//#include "mojo/public/c/system/functions.h"
+//#include "mojo/public/c/system/message_pipe.h"
+//#include "mojo/public/c/system/types.h"
+//
 // // These functions are used to 8-byte align C structs.
 // MojoResult CreateSharedBuffer(struct MojoCreateSharedBufferOptions* options,
 //     uint64_t num_bytes, MojoHandle* handle) {

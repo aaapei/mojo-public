@@ -7,7 +7,7 @@
 from libc.stdint cimport intptr_t, uint32_t, uint64_t
 
 
-cdef extern from "mojo/public/c/system/core.h" nogil:
+cdef extern from "mojo/public/c/system/types.h" nogil:
   ctypedef uint32_t MojoHandle
   ctypedef uint64_t MojoDeadline
   ctypedef uint32_t MojoHandleSignals

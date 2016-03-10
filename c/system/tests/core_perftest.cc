@@ -4,8 +4,6 @@
 
 // This tests the performance of the C API.
 
-#include "mojo/public/c/system/core.h"
-
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,7 +12,9 @@
 #include <functional>
 #include <thread>
 
-#include "mojo/public/cpp/system/functions.h"
+#include "mojo/public/c/system/functions.h"
+#include "mojo/public/c/system/message_pipe.h"
+#include "mojo/public/c/system/types.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/test_support/test_support.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -30,7 +30,7 @@ void IterateAndReportPerf(const char* test_name,
   static const size_t kGranularity = 100u;
   static const MojoTimeTicks kPerftestTimeMicroseconds = 3 * 1000000;
 
-  const MojoTimeTicks start_time = mojo::GetTimeTicksNow();
+  const MojoTimeTicks start_time = MojoGetTimeTicksNow();
   MojoTimeTicks end_time;
   size_t iterations = 0u;
   do {
@@ -38,7 +38,7 @@ void IterateAndReportPerf(const char* test_name,
       single_iteration();
     iterations += kGranularity;
 
-    end_time = mojo::GetTimeTicksNow();
+    end_time = MojoGetTimeTicksNow();
   } while (end_time - start_time < kPerftestTimeMicroseconds);
 
   mojo::test::LogPerfResult(test_name, sub_test_name,

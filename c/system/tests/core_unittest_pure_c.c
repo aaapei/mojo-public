@@ -12,8 +12,10 @@
 // Include all the header files that are meant to be compilable as C. Start with
 // core.h, since it's the most important one.
 #include "mojo/public/c/environment/async_waiter.h"
-#include "mojo/public/c/system/core.h"
+#include "mojo/public/c/system/functions.h"
 #include "mojo/public/c/system/macros.h"
+#include "mojo/public/c/system/message_pipe.h"
+#include "mojo/public/c/system/types.h"
 
 // The joys of the C preprocessor....
 #define STRINGIFY(x) #x
@@ -76,7 +78,7 @@ const char* MinimalCTest(void) {
 
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoWriteMessage(handle0, kHello, (uint32_t)sizeof(kHello), NULL,
-                             0u, MOJO_WRITE_DATA_FLAG_NONE));
+                             0u, MOJO_WRITE_MESSAGE_FLAG_NONE));
 
   struct MojoHandleSignalsState state;
   EXPECT_EQ(MOJO_RESULT_OK, MojoWait(handle1, MOJO_HANDLE_SIGNAL_READABLE,

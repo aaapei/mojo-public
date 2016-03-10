@@ -13,8 +13,7 @@ from cpython.buffer cimport PyObject_GetBuffer
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t, uintptr_t
 
-cdef extern from "mojo/public/c/system/core.h" nogil:
-  # types.h
+cdef extern from "mojo/public/c/system/types.h" nogil:
   ctypedef int64_t MojoTimeTicks
 
   ctypedef uint32_t MojoHandle
@@ -53,7 +52,7 @@ cdef extern from "mojo/public/c/system/core.h" nogil:
     MojoHandleSignals satisfied_signals
     MojoHandleSignals satisfiable_signals
 
-  # functions.h
+cdef extern from "mojo/public/c/system/functions.h" nogil:
   MojoTimeTicks MojoGetTimeTicksNow()
   MojoResult MojoClose(MojoHandle handle)
   MojoResult MojoWait "MojoWait"(MojoHandle handle,
@@ -67,7 +66,7 @@ cdef extern from "mojo/public/c/system/core.h" nogil:
                                          uint32_t* result_index,
                                          MojoHandleSignalsState* signals_states)
 
-  # message_pipe.h
+cdef extern from "mojo/public/c/system/message_pipe.h" nogil:
   ctypedef uint32_t MojoCreateMessagePipeOptionsFlags
   const MojoCreateMessagePipeOptionsFlags MOJO_CREATE_MESSAGE_PIPE_OPTIONS_FLAG_NONE
 
@@ -103,7 +102,7 @@ cdef extern from "mojo/public/c/system/core.h" nogil:
       uint32_t* num_handles,
       MojoReadMessageFlags flags)
 
-  # data_pipe.h
+cdef extern from "mojo/public/c/system/data_pipe.h" nogil:
   ctypedef uint32_t MojoCreateDataPipeOptionsFlags
   const MojoCreateDataPipeOptionsFlags MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE
 
@@ -163,7 +162,7 @@ cdef extern from "mojo/public/c/system/core.h" nogil:
       MojoHandle data_pipe_consumer_handle,
       uint32_t num_bytes_read)
 
-  # buffer.h
+cdef extern from "mojo/public/c/system/buffer.h" nogil:
   ctypedef uint32_t MojoCreateSharedBufferOptionsFlags
   const MojoCreateSharedBufferOptionsFlags MOJO_CREATE_SHARED_BUFFER_OPTIONS_FLAG_NONE
 

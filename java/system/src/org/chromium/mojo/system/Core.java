@@ -7,8 +7,8 @@ package org.chromium.mojo.system;
 import java.util.List;
 
 /**
- * Core mojo interface giving access to the base operations. See |src/mojo/public/c/system/core.h|
- * for the underlying api.
+ * Core mojo interface giving access to the base operations. See |mojo/public/c/system/*.h| for the
+ * underlying API.
  */
 public interface Core {
 

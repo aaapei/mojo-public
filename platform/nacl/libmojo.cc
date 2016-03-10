@@ -7,7 +7,11 @@
 
 #include <stdlib.h>
 
-#include "mojo/public/c/system/core.h"
+#include "mojo/public/c/system/buffer.h"
+#include "mojo/public/c/system/data_pipe.h"
+#include "mojo/public/c/system/functions.h"
+#include "mojo/public/c/system/message_pipe.h"
+#include "mojo/public/c/system/types.h"
 #include "mojo/public/platform/nacl/mojo_irt.h"
 #include "native_client/src/untrusted/irt/irt.h"
 

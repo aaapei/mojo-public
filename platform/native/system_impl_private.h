@@ -7,6 +7,9 @@
 #ifndef MOJO_PUBLIC_PLATFORM_NATIVE_SYSTEM_IMPL_PRIVATE_H_
 #define MOJO_PUBLIC_PLATFORM_NATIVE_SYSTEM_IMPL_PRIVATE_H_
 
+#include "mojo/public/c/system/buffer.h"
+#include "mojo/public/c/system/data_pipe.h"
+#include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/types.h"
 
 // This interface provides the Mojo system API, but with the ability to confine
