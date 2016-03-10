@@ -30,10 +30,33 @@ var runtimeTypeInfo__ = {{typepkg}}RuntimeTypeInfo{}
 func init() {
   // serializedRuntimeTypeInfo contains the bytes of the Mojo serialization of
   // a mojom_types.RuntimeTypeInfo struct describing the Mojom types in this file.
-  serializedRuntimeTypeInfo := []uint8{{serialized_runtime_type_info_literal}}
+  // The string contains the base64 encoding of the gzip-compressed bytes.
+  serializedRuntimeTypeInfo := "{{module.serialized_runtime_type_info}}"
 
   // Deserialize RuntimeTypeInfo
-  decoder := bindings.NewDecoder(serializedRuntimeTypeInfo, nil)
+  compressedBytes, err := base64.StdEncoding.DecodeString(serializedRuntimeTypeInfo)
+  if err != nil {
+    {# TODO(rudominer) Move this out of init() and do it lazily. Then
+    we should panic here. #}
+    return
+  }
+
+  reader, err2 := gzip.NewReader(bytes.NewBuffer(compressedBytes))
+  if err2 != nil {
+    panic(fmt.Sprintf("Error while decompressing runtimeTypeInfo: %s", err.Error()))
+  }
+  uncompressedBytes, err3 := ioutil.ReadAll(reader)
+  if err3 != nil {
+    {# TODO(rudominer) Move this out of init() and do it lazily. Then
+    we should panic here. #}
+    return
+  }
+  if err = reader.Close(); err != nil {
+    {# TODO(rudominer) Move this out of init() and do it lazily. Then
+    we should panic here. #}
+    return
+  }
+  decoder := bindings.NewDecoder(uncompressedBytes, nil)
   runtimeTypeInfo__.Decode(decoder)
 
   {% for mi in mojom_imports.values() %}

@@ -458,27 +458,6 @@ def GetImportUri(module):
 def RaiseHelper(msg):
     raise Exception(msg)
 
-def GetSerializedRuntimeTypeInfoLiteral(module, enabled):
-  """ Constructs a string that represents a literal definition in Dart of
-  an array of bytes corresponding to |module.serialized_runtime_type_info|.
-
-  Args:
-    module: {mojom.Module} the module being processed.
-    enabled: {bool} Is this feature enabled.
-
-  Returns: A string of the form 'b0, b1, b2,...' where the 'bi' are
-  the decimal representation of the bytes of
-  |module.serialized_runtime_type_info| or the empty string if either
-  |enabled| is false or |module.serialized_runtime_type_info| is None.
-  Furthermore the returned string will have embedded newline characters inserted
-  every 1000 characters to make the generated source code more tractable.
-  """
-  if not enabled or not module.serialized_runtime_type_info:
-    return ''
-  return '%s' % ','.join('%s%d' %
-      ('\n' if index > 0 and index%1000 == 0 else '', b)
-          for index, b in enumerate(module.serialized_runtime_type_info))
-
 class Generator(generator.Generator):
 
   dart_filters = {
@@ -535,9 +514,6 @@ class Generator(generator.Generator):
       "interfaces": self.GetInterfaces(),
       "imported_interfaces": self.GetImportedInterfaces(),
       "imported_from": self.ImportedFrom(),
-      "serialized_runtime_type_info_literal" : (
-          GetSerializedRuntimeTypeInfoLiteral(self.module,
-              self.should_gen_mojom_types)),
       "typepkg": '%s.' % _mojom_types_pkg_short,
       "descpkg": '%s.' % _service_describer_pkg_short,
       "mojom_types_import": 'import \'%s\' as %s;' % \

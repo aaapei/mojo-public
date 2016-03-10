@@ -38,12 +38,14 @@ var _runtimeTypeInfo;
 {{typepkg}}RuntimeTypeInfo  _initRuntimeTypeInfo() {
   // serializedRuntimeTypeInfo contains the bytes of the Mojo serialization of
   // a mojom_types.RuntimeTypeInfo struct describing the Mojom types in this
-  // file.
-  var serializedRuntimeTypeInfo = new Uint8List.fromList(const [{{serialized_runtime_type_info_literal}}]);
+  // file. The string contains the base64 encoding of the gzip-compressed bytes.
+  var serializedRuntimeTypeInfo = "{{module.serialized_runtime_type_info}}";
 
   // Deserialize RuntimeTypeInfo
-  var bdata = new ByteData.view(serializedRuntimeTypeInfo.buffer);
-  var message = new bindings.Message(bdata, null, serializedRuntimeTypeInfo.length, 0);
+  var bytes = BASE64.decode(serializedRuntimeTypeInfo);
+  var unzippedBytes = new ZLibDecoder().convert(bytes);
+  var bdata = new ByteData.view(unzippedBytes.buffer);
+  var message = new bindings.Message(bdata, null, unzippedBytes.length, 0);
   _runtimeTypeInfo = {{typepkg}}RuntimeTypeInfo.deserialize(message);
   return _runtimeTypeInfo;
 }

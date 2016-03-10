@@ -70,8 +70,9 @@ struct MojomFile {
 
   // The bytes encoding a |RuntimeTypeInfo| struct for this Mojom file,
   // using Mojo message serialization. Some implementations may not include
-  // this.
-  array<uint8>? serialized_runtime_type_info;
+  // this. This string contains the base64 encoding of the gzip-compressed
+  // bytes.
+  string? serialized_runtime_type_info;
 };
 
 // Represents a directed acyclic graph of MojomFiles.

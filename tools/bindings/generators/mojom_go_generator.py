@@ -225,27 +225,6 @@ def GetAllEnums(module):
   enums = [x.enums for x in data]
   return [i for i in chain.from_iterable(enums)]
 
-def GetSerializedRuntimeTypeInfoLiteral(module, enabled):
-  """ Constructs a string that represents a literal definition in Go of
-  an array of bytes corresponding to |module.serialized_runtime_type_info|.
-
-  Args:
-    module: {mojom.Module} the module being processed.
-    enabled: {bool} Is this feature enabled.
-
-  Returns: A string of the form '{b0, b1, b2,...}' where the 'bi' are
-  the decimal representation of the bytes of
-  |module.serialized_runtime_type_info| or the string '{}' if either
-  |enabled| is false or |module.serialized_runtime_type_info| is None.
-  Furthermore the returned string will have embedded newline characters inserted
-  every 1000 characters to make the generated source code more tractable.
-  """
-  if not enabled or not module.serialized_runtime_type_info:
-    return '{}'
-  return '{%s}' % ','.join('%s%d' %
-      ('\n' if index > 0 and index%1000 == 0 else '', b)
-          for index, b in enumerate(module.serialized_runtime_type_info))
-
 def AddImport(imports, mojom_imports, module, element):
   """Adds an import required to use the provided element.
 
@@ -341,9 +320,6 @@ class Generator(generator.Generator):
       'typepkg': '%s.' % _mojom_types_pkg_short \
         if package != _mojom_types_pkg_short else '',
       'unions': self.GetUnions(),
-      'serialized_runtime_type_info_literal' : (
-          GetSerializedRuntimeTypeInfoLiteral(self.module,
-              self.should_gen_mojom_types))
     }
 
   @UseJinja('go_templates/source.tmpl', filters=go_filters)
@@ -420,6 +396,12 @@ class Generator(generator.Generator):
     defInterface = len(self.module.interfaces) > 0
     defOtherType = len(self.module.unions) + len(all_structs) + \
       len(GetAllEnums(self.module)) > 0
+
+    if self.should_gen_mojom_types:
+      imports['bytes'] = 'bytes'
+      imports['compress/gzip'] = 'gzip'
+      imports['encoding/base64'] = 'base64'
+      imports['io/ioutil'] = 'ioutil'
 
     if GetPackageName(self.module) != _mojom_types_pkg_short:
       if defInterface:
