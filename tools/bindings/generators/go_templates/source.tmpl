@@ -27,7 +27,14 @@ import (
 // well as the top-level interfaces defined in this file.
 var runtimeTypeInfo__ = {{typepkg}}RuntimeTypeInfo{}
 
-func init() {
+func getRuntimeTypeInfo() {{typepkg}}RuntimeTypeInfo {
+  if runtimeTypeInfo__.TypeMap == nil {
+    initRuntimeTypeInfo()
+  }
+  return runtimeTypeInfo__
+}
+
+func initRuntimeTypeInfo() {
   // serializedRuntimeTypeInfo contains the bytes of the Mojo serialization of
   // a mojom_types.RuntimeTypeInfo struct describing the Mojom types in this file.
   // The string contains the base64 encoding of the gzip-compressed bytes.
@@ -36,25 +43,18 @@ func init() {
   // Deserialize RuntimeTypeInfo
   compressedBytes, err := base64.StdEncoding.DecodeString(serializedRuntimeTypeInfo)
   if err != nil {
-    {# TODO(rudominer) Move this out of init() and do it lazily. Then
-    we should panic here. #}
-    return
+    panic(fmt.Sprintf("Error while base64Decoding runtimeTypeInfo: %s", err.Error()))
   }
-
-  reader, err2 := gzip.NewReader(bytes.NewBuffer(compressedBytes))
-  if err2 != nil {
+  reader, err := gzip.NewReader(bytes.NewBuffer(compressedBytes))
+  if err != nil {
     panic(fmt.Sprintf("Error while decompressing runtimeTypeInfo: %s", err.Error()))
   }
-  uncompressedBytes, err3 := ioutil.ReadAll(reader)
-  if err3 != nil {
-    {# TODO(rudominer) Move this out of init() and do it lazily. Then
-    we should panic here. #}
-    return
+  uncompressedBytes, err := ioutil.ReadAll(reader)
+  if err != nil {
+     panic(fmt.Sprintf("Error while decompressing runtimeTypeInfo: %s", err.Error()))
   }
   if err = reader.Close(); err != nil {
-    {# TODO(rudominer) Move this out of init() and do it lazily. Then
-    we should panic here. #}
-    return
+    panic(fmt.Sprintf("Error while decompressing runtimeTypeInfo: %s", err.Error()))
   }
   decoder := bindings.NewDecoder(uncompressedBytes, nil)
   runtimeTypeInfo__.Decode(decoder)
@@ -70,7 +70,7 @@ func init() {
   {% endfor %}
 }
 func GetAllMojomTypeDefinitions() map[string]{{typepkg}}UserDefinedType {
-  return runtimeTypeInfo__.TypeMap
+  return getRuntimeTypeInfo().TypeMap
 }
 {% endif %}
 
