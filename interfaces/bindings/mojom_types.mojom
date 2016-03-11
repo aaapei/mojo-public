@@ -463,6 +463,9 @@ struct ServiceTypeInfo {
   // All of the type_keys of the types in the complete type set of the serive.
   // Note that this set is not restricted to the types from a single .mojom
   // file.
+  // Note(rudominer) Currently this array is not being populated by the Mojom
+  // parser because it is expensive to do so and the value is not being used.
+  // This field is deprecated and may be removed in the future.
   array<string> complete_type_set;
 };
 
