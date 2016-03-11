@@ -82,9 +82,6 @@ typedef uint32_t MojoReadDataFlags;
 extern "C" {
 #endif
 
-// Note: See the comment in functions.h about the meaning of the "optional"
-// label for pointer parameters.
-
 // Creates a data pipe, which is a unidirectional communication channel for
 // unframed data, with the given options. Data is unframed, but must come as
 // (multiples of) discrete elements, of the size given in |options|. See

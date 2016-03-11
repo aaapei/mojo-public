@@ -96,9 +96,6 @@ typedef uint32_t MojoMapBufferFlags;
 extern "C" {
 #endif
 
-// Note: See the comment in functions.h about the meaning of the "optional"
-// label for pointer parameters.
-
 // Creates a buffer of size |num_bytes| bytes that can be shared between
 // applications (by duplicating the handle -- see |MojoDuplicateBufferHandle()|
 // -- and passing it over a message pipe). To access the buffer, one must call

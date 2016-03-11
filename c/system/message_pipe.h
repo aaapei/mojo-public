@@ -58,9 +58,6 @@ typedef uint32_t MojoReadMessageFlags;
 extern "C" {
 #endif
 
-// Note: See the comment in functions.h about the meaning of the "optional"
-// label for pointer parameters.
-
 // Creates a message pipe, which is a bidirectional communication channel for
 // framed data (i.e., messages). Messages can contain plain data and/or Mojo
 // handles.
