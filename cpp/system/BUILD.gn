@@ -9,10 +9,10 @@ mojo_sdk_source_set("system") {
     "buffer.h",
     "core.h",
     "data_pipe.h",
-    "functions.h",
     "handle.h",
     "macros.h",
     "message_pipe.h",
+    "time.h",
   ]
 
   mojo_sdk_public_deps = [ "mojo/public/c/system" ]
