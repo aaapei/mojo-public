@@ -5,7 +5,8 @@
 #ifndef MOJO_PUBLIC_PLATFORM_NATIVE_PLATFORM_HANDLE_PRIVATE_H_
 #define MOJO_PUBLIC_PLATFORM_NATIVE_PLATFORM_HANDLE_PRIVATE_H_
 
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/handle.h"
+#include "mojo/public/c/system/result.h"
 
 typedef int MojoPlatformHandle;  // Unix file descriptor
 

@@ -12,8 +12,9 @@
 #ifndef MOJO_PUBLIC_C_SYSTEM_BUFFER_H_
 #define MOJO_PUBLIC_C_SYSTEM_BUFFER_H_
 
+#include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/macros.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/result.h"
 
 // |MojoCreateSharedBufferOptions|: Used to specify creation parameters for a
 // shared buffer to |MojoCreateSharedBuffer()|.

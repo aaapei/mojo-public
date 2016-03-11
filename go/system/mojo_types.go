@@ -7,9 +7,6 @@ package system
 import "math"
 
 // Go equivalent definitions of the various system types defined in Mojo.
-// mojo/public/c/system/types.h
-// mojo/public/c/system/data_pipe.h
-// mojo/public/c/system/message_pipe.h
 //
 type MojoTimeTicks int64
 type MojoHandle uint32

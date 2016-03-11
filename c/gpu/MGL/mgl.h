@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 #include "mojo/public/c/gpu/MGL/mgl_types.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/handle.h"
 
 #ifdef __cplusplus
 extern "C" {

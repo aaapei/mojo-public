@@ -13,8 +13,10 @@ mojo_sdk_source_set("system") {
     "core.h",
     "data_pipe.h",
     "functions.h",
+    "handle.h",
     "macros.h",
     "message_pipe.h",
+    "result.h",
     "types.h",
   ]
 }
