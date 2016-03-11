@@ -47,6 +47,13 @@ var _runtimeTypeInfo;
   var bdata = new ByteData.view(unzippedBytes.buffer);
   var message = new bindings.Message(bdata, null, unzippedBytes.length, 0);
   _runtimeTypeInfo = {{typepkg}}RuntimeTypeInfo.deserialize(message);
+
+{%- for import in imports %}
+  {{import.unique_name}}.getAllMojomTypeDefinitions()
+      .forEach((String s, {{typepkg}}UserDefinedType udt) {
+          _runtimeTypeInfo.typeMap[s] = udt;
+      });
+{% endfor %}
   return _runtimeTypeInfo;
 }
 
