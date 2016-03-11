@@ -12,12 +12,12 @@
 // Include all the header files that are meant to be compilable as C. Start with
 // core.h, since it's the most important one.
 #include "mojo/public/c/environment/async_waiter.h"
-#include "mojo/public/c/system/functions.h"
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/macros.h"
 #include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
+#include "mojo/public/c/system/wait.h"
 
 // The joys of the C preprocessor....
 #define STRINGIFY(x) #x

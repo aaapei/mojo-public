@@ -75,7 +75,7 @@ _WAITMANY_NO_SIGNAL_STATE_ERRORS = [RESULT_INVALID_ARGUMENT,
 def GetTimeTicksNow():
   """Monotonically increasing tick count representing "right now."
 
-  See mojo/public/c/system/functions.h
+  See mojo/public/c/system/time.h
   """
   return c_core.MojoGetTimeTicksNow()
 
@@ -203,7 +203,7 @@ def WaitMany(handles_and_signals, deadline):
   Args:
     handles_and_signals: list of tuples of handle and signal.
 
-  See mojo/public/c/system/functions.h
+  See mojo/public/c/system/wait.h
   """
   cdef uint32_t length = len(handles_and_signals)
   cdef uint32_t result_index = <uint32_t>(-1)
@@ -343,7 +343,7 @@ cdef class Handle(object):
   def Close(self):
     """Closes this handle.
 
-    See mojo/public/c/system/functions.h
+    See mojo/public/c/system/handle.h
     """
     cdef c_core.MojoResult result = c_core.MOJO_RESULT_OK
     if self.IsValid():
@@ -357,7 +357,7 @@ cdef class Handle(object):
   def Wait(self, signals, deadline):
     """Waits on the given handle.
 
-    See mojo/public/c/system/functions.h
+    See mojo/public/c/system/wait.h
     """
     cdef c_core.MojoHandle handle = self._mojo_handle
     cdef c_core.MojoHandleSignals csignals = signals

@@ -8,10 +8,10 @@
 #include <assert.h>
 #include <limits>
 
-#include "mojo/public/c/system/functions.h"
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
+#include "mojo/public/c/system/wait.h"
 #include "mojo/public/cpp/system/macros.h"
 
 namespace mojo {

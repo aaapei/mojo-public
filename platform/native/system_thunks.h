@@ -11,11 +11,11 @@
 
 #include "mojo/public/c/system/buffer.h"
 #include "mojo/public/c/system/data_pipe.h"
-#include "mojo/public/c/system/functions.h"
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
+#include "mojo/public/c/system/wait.h"
 
 // The embedder needs to bind the basic Mojo Core functions of a DSO to those of
 // the embedder when loading a DSO that is dependent on mojo_system.

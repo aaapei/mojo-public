@@ -17,6 +17,8 @@ mojo_sdk_source_set("system") {
     "macros.h",
     "message_pipe.h",
     "result.h",
+    "time.h",
     "types.h",
+    "wait.h",
   ]
 }

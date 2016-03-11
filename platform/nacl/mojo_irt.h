@@ -13,7 +13,7 @@
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
 
 #define NACL_IRT_MOJO_v0_1 "nacl-irt-mojo-0.1"
 

@@ -12,7 +12,7 @@
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
 #include "mojo/public/platform/native/system_impl_private.h"
 
 // Structure used to bind the basic Mojo Core functions of a DSO to those of

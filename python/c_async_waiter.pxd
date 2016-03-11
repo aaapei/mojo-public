@@ -12,7 +12,7 @@ cdef extern from "mojo/public/c/system/handle.h" nogil:
   ctypedef uint32_t MojoHandleSignals
 
 
-cdef extern from "mojo/public/c/system/types.h" nogil:
+cdef extern from "mojo/public/c/system/time.h" nogil:
   ctypedef uint64_t MojoDeadline
 
 

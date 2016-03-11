@@ -12,7 +12,7 @@
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
 
 // This interface provides the Mojo system API, but with the ability to confine
 // calls to a specific handle namespace. Handles in one namespace are unrelated

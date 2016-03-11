@@ -11,7 +11,7 @@
 #ifndef MOJO_PUBLIC_CPP_SYSTEM_FUNCTIONS_H_
 #define MOJO_PUBLIC_CPP_SYSTEM_FUNCTIONS_H_
 
-#include "mojo/public/c/system/functions.h"
+#include "mojo/public/c/system/time.h"
 
 namespace mojo {
 

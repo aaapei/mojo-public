@@ -13,20 +13,6 @@ from cpython.buffer cimport PyObject_GetBuffer
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t, uintptr_t
 
-cdef extern from "mojo/public/c/system/handle.h" nogil:
-  ctypedef uint32_t MojoHandle
-  const MojoHandle MOJO_HANDLE_INVALID
-
-  ctypedef uint32_t MojoHandleSignals
-  const MojoHandleSignals MOJO_HANDLE_SIGNAL_NONE
-  const MojoHandleSignals MOJO_HANDLE_SIGNAL_READABLE
-  const MojoHandleSignals MOJO_HANDLE_SIGNAL_WRITABLE
-  const MojoHandleSignals MOJO_HANDLE_SIGNAL_PEER_CLOSED
-
-  cdef struct MojoHandleSignalsState:
-    MojoHandleSignals satisfied_signals
-    MojoHandleSignals satisfiable_signals
-
 cdef extern from "mojo/public/c/system/result.h" nogil:
   ctypedef int32_t MojoResult
   const MojoResult MOJO_RESULT_OK
@@ -48,15 +34,31 @@ cdef extern from "mojo/public/c/system/result.h" nogil:
   const MojoResult MOJO_RESULT_BUSY
   const MojoResult MOJO_RESULT_SHOULD_WAIT
 
-cdef extern from "mojo/public/c/system/types.h" nogil:
+cdef extern from "mojo/public/c/system/handle.h" nogil:
+  ctypedef uint32_t MojoHandle
+  const MojoHandle MOJO_HANDLE_INVALID
+
+  ctypedef uint32_t MojoHandleSignals
+  const MojoHandleSignals MOJO_HANDLE_SIGNAL_NONE
+  const MojoHandleSignals MOJO_HANDLE_SIGNAL_READABLE
+  const MojoHandleSignals MOJO_HANDLE_SIGNAL_WRITABLE
+  const MojoHandleSignals MOJO_HANDLE_SIGNAL_PEER_CLOSED
+
+  cdef struct MojoHandleSignalsState:
+    MojoHandleSignals satisfied_signals
+    MojoHandleSignals satisfiable_signals
+
+  MojoResult MojoClose(MojoHandle handle)
+
+cdef extern from "mojo/public/c/system/time.h" nogil:
   ctypedef int64_t MojoTimeTicks
 
   ctypedef uint64_t MojoDeadline
   const MojoDeadline MOJO_DEADLINE_INDEFINITE
 
-cdef extern from "mojo/public/c/system/functions.h" nogil:
   MojoTimeTicks MojoGetTimeTicksNow()
-  MojoResult MojoClose(MojoHandle handle)
+
+cdef extern from "mojo/public/c/system/wait.h" nogil:
   MojoResult MojoWait "MojoWait"(MojoHandle handle,
                                  MojoHandleSignals signals,
                                  MojoDeadline deadline,

@@ -7,7 +7,7 @@
 
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
 
 typedef uintptr_t MojoAsyncWaitID;
 

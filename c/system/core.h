@@ -6,8 +6,6 @@
 //
 // TODO(vtl): Delete this header file.
 //
-// This is a catch-all header that includes everything.
-//
 // Note: This header should be compilable as C.
 
 #ifndef MOJO_PUBLIC_C_SYSTEM_CORE_H_
@@ -15,12 +13,12 @@
 
 #include "mojo/public/c/system/buffer.h"
 #include "mojo/public/c/system/data_pipe.h"
-#include "mojo/public/c/system/functions.h"
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/macros.h"
 #include "mojo/public/c/system/main.h"
 #include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/types.h"
+#include "mojo/public/c/system/time.h"
+#include "mojo/public/c/system/wait.h"
 
 #endif  // MOJO_PUBLIC_C_SYSTEM_CORE_H_
