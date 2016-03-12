@@ -113,7 +113,7 @@ def IsPointer(kind):
 def NameToComponent(name):
   # insert '_' between anything and a Title name (e.g, HTTPEntry2FooBar ->
   # HTTP_Entry2_FooBar)
-  name = re.sub('([^_])([A-Z][^A-Z_]+)', r'\1_\2', name)
+  name = re.sub('([^_])([A-Z][^A-Z0-9_]+)', r'\1_\2', name)
   # insert '_' between non upper and start of upper blocks (e.g.,
   # HTTP_Entry2_FooBar -> HTTP_Entry2_Foo_Bar)
   name = re.sub('([^A-Z_])([A-Z])', r'\1_\2', name)
