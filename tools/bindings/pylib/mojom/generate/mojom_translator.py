@@ -178,6 +178,9 @@ class FileTranslator(object):
     mojom_union = mojom_type.union_type
     self.PopulateUserDefinedType(union, mojom_union)
     union.fields = [self.UnionFieldFromMojom(f) for f in mojom_union.fields]
+    # mojom_union.fields is indexed by the field tags. We want
+    # to capture these tags but sort union.fields by declaration_order.
+    union.fields.sort(key=lambda field: field.declaration_order)
 
   def StructFromMojom(self, struct, mojom_type):
     """Populates a module.Struct based on a MojomStruct.
@@ -209,7 +212,14 @@ class FileTranslator(object):
     """
     union_field = module.UnionField()
     self.PopulateCommonFieldValues(union_field, mojom_field)
+    # Note that the |ordinal| attribute of |union_field| records only the
+    # *declared* ordinal (which should really be called 'tag' for union fields)
+    # and as such is not defined for every field whereas
+    # the |computed_tag| attribute is defined for every field. If
+    # |ordinal| is defined then it is equal to |computed_tag|.
     union_field.ordinal = self.OrdinalFromMojom(mojom_field)
+    union_field.computed_tag = mojom_field.tag
+    union_field.declaration_order = mojom_field.decl_data.declaration_order
     return union_field
 
   def StructFieldFromMojom(self, ordinal, mojom_field):

@@ -403,15 +403,28 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         source_file_info=mojom_types_mojom.SourceFileInfo(file_name=file_name))
 
     field1 = mojom_types_mojom.UnionField(
-        decl_data=mojom_types_mojom.DeclarationData(short_name='field1'),
+        decl_data=mojom_types_mojom.DeclarationData(short_name='field1',
+            declaration_order=0, declared_ordinal=7),
         type=mojom_types_mojom.Type(
-          simple_type=mojom_types_mojom.SimpleType.BOOL))
+          simple_type=mojom_types_mojom.SimpleType.BOOL),
+        tag=7)
     field2 = mojom_types_mojom.UnionField(
         decl_data=mojom_types_mojom.DeclarationData(
-            short_name='field2', declared_ordinal=5),
+            short_name='field2', declaration_order=1),
         type=mojom_types_mojom.Type(
-          simple_type=mojom_types_mojom.SimpleType.DOUBLE))
-    mojom_union.fields = [field1, field2]
+          simple_type=mojom_types_mojom.SimpleType.DOUBLE),
+        tag=8)
+    field3 = mojom_types_mojom.UnionField(
+        decl_data=mojom_types_mojom.DeclarationData(short_name='field3',
+            declaration_order=2, declared_ordinal=0),
+        type=mojom_types_mojom.Type(
+          simple_type=mojom_types_mojom.SimpleType.INT32),
+        tag=0)
+
+    mojom_union.fields = [field3, field1, field2]
+    # mojom_fields_declaration_order lists, in declaration order, the indices
+    # of the fields in mojom_union.fields
+    mojom_fields_declaration_order = [1, 2, 0]
 
     graph = mojom_files_mojom.MojomFileGraph()
     union = module.Union()
@@ -423,13 +436,19 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
     self.assertEquals('AUnion', union.name)
     self.assertEquals(len(mojom_union.fields), len(union.fields))
 
-    for gold, f in zip(mojom_union.fields, union.fields):
-      self.assertEquals(gold.decl_data.short_name, f.name)
+    for index, gold_index in enumerate(mojom_fields_declaration_order):
+        gold = mojom_union.fields[gold_index]
+        f = union.fields[index]
+        self.assertEquals(gold.decl_data.short_name, f.name)
+        if gold.decl_data.declared_ordinal >= 0:
+          self.assertEquals(gold.decl_data.declared_ordinal, f.ordinal)
+        else:
+          self.assertEquals(None, f.ordinal)
+        self.assertEquals(gold.tag, f.computed_tag)
 
     self.assertEquals(module.BOOL, union.fields[0].kind)
-    self.assertEquals(None, union.fields[0].ordinal)
     self.assertEquals(module.DOUBLE, union.fields[1].kind)
-    self.assertEquals(5, union.fields[1].ordinal)
+    self.assertEquals(module.INT32, union.fields[2].kind)
 
   def literal_value(self, x):
     """Creates a typed literal value containing the value |x|.
