@@ -5,6 +5,7 @@
 #include "mojo/public/cpp/bindings/lib/connector.h"
 
 #include "mojo/public/cpp/environment/logging.h"
+#include "mojo/public/cpp/system/wait.h"
 
 namespace mojo {
 namespace internal {

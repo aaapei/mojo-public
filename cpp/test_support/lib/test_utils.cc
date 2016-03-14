@@ -6,6 +6,7 @@
 
 #include "mojo/public/cpp/system/handle.h"
 #include "mojo/public/cpp/system/message_pipe.h"
+#include "mojo/public/cpp/system/wait.h"
 
 namespace mojo {
 namespace test {

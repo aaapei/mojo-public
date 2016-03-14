@@ -18,6 +18,7 @@
 #include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/system/core.h"
 #include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/cpp/system/wait.h"
 #include "mojo/public/platform/dart/dart_handle_watcher.h"
 
 namespace mojo {

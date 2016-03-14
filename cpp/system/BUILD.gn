@@ -13,6 +13,7 @@ mojo_sdk_source_set("system") {
     "macros.h",
     "message_pipe.h",
     "time.h",
+    "wait.h",
   ]
 
   mojo_sdk_public_deps = [ "mojo/public/c/system" ]

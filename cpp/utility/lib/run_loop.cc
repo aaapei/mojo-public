@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "mojo/public/cpp/system/wait.h"
 #include "mojo/public/cpp/utility/lib/thread_local.h"
 #include "mojo/public/cpp/utility/run_loop_handler.h"
 
