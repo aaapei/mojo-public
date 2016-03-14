@@ -22,7 +22,6 @@ def TestMojom(testname, args):
 
 def main(args):
   errors = 0
-  errors += TestMojom('data_tests.py', ['--test'])
   errors += TestMojom('module_tests.py', ['--test'])
   errors += TestMojom('pack_tests.py', ['--test'])
 
