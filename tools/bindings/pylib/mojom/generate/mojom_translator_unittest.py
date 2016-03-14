@@ -441,10 +441,10 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         f = union.fields[index]
         self.assertEquals(gold.decl_data.short_name, f.name)
         if gold.decl_data.declared_ordinal >= 0:
-          self.assertEquals(gold.decl_data.declared_ordinal, f.ordinal)
+          self.assertEquals(gold.decl_data.declared_ordinal, f.declared_tag)
         else:
-          self.assertEquals(None, f.ordinal)
-        self.assertEquals(gold.tag, f.computed_tag)
+          self.assertEquals(None, f.declared_tag)
+        self.assertEquals(gold.tag, f.ordinal)
 
     self.assertEquals(module.BOOL, union.fields[0].kind)
     self.assertEquals(module.DOUBLE, union.fields[1].kind)

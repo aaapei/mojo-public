@@ -212,13 +212,16 @@ class FileTranslator(object):
     """
     union_field = module.UnionField()
     self.PopulateCommonFieldValues(union_field, mojom_field)
-    # Note that the |ordinal| attribute of |union_field| records only the
-    # *declared* ordinal (which should really be called 'tag' for union fields)
-    # and as such is not defined for every field whereas
-    # the |computed_tag| attribute is defined for every field. If
-    # |ordinal| is defined then it is equal to |computed_tag|.
-    union_field.ordinal = self.OrdinalFromMojom(mojom_field)
-    union_field.computed_tag = mojom_field.tag
+    # The |ordinal| attribute of |union_field| contains the field's tag
+    # as computed by the Mojom front-end.
+    union_field.ordinal = mojom_field.tag
+    # The |declared_tag| field is populated only if the user explicitly
+    # specified a tag for the field in the .mojom file and as such is not
+    # defined for every field. If defined it is equal to the |ordinal|
+    # attribute. Currently no code generators are consuming this data.
+    union_field.declared_tag = self.OrdinalFromMojom(mojom_field)
+    # The declaration_order field preserves the index of the field in
+    # declaration order in the .mojom file.
     union_field.declaration_order = mojom_field.decl_data.declaration_order
     return union_field
 

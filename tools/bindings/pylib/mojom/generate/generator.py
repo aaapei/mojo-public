@@ -57,7 +57,7 @@ class Generator(object):
     return map(partial(self._AddStructComputedData, True), self.module.structs)
 
   def GetUnions(self):
-    return map(self._AddUnionComputedData, self.module.unions)
+    return self.module.unions
 
   def GetInterfaces(self):
     return map(self._AddInterfaceComputedData, self.module.interfaces)
@@ -93,17 +93,6 @@ class Generator(object):
     struct.versions = pack.GetVersionInfo(struct.packed)
     struct.exported = exported
     return struct
-
-  def _AddUnionComputedData(self, union):
-    """Adds computed data to the given union. The data is computed once and
-    used repeatedly in the generation process."""
-    ordinal = 0
-    for field in union.fields:
-      if field.ordinal is not None:
-        ordinal = field.ordinal
-      field.ordinal = ordinal
-      ordinal += 1
-    return union
 
   def _AddInterfaceComputedData(self, interface):
     """Adds computed data to the given interface. The data is computed once and
