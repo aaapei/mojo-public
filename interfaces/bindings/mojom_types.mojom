@@ -172,6 +172,15 @@ struct StructField {
   // located but not which bit corresponds to the field.
   // A negative value means unset.
   int32 offset;
+
+  // In the case of a boolean field, this value gives the zero-based
+  // index of the bit within the field's byte within the serialized struct.
+  // Otherwise this value is -1.
+  int8 bit;
+
+  // The minimum version of the containing struct that includes this field.
+  // The earliest version is version 0.
+  uint32 min_version;
 };
 
 union DefaultFieldValue {
@@ -185,7 +194,13 @@ struct DefaultKeyword{};
 
 struct StructVersion {
   uint32 version_number;
+
+  // The number of fields included in this version of the struct. The fields
+  // will be an initial segment of those in the |fields| field of MojomStruct.
   uint32 num_fields;
+
+  // The total payload size for this version of the struct, including
+  // the eight-byte header.
   uint32 num_bytes;
 };
 
@@ -200,7 +215,8 @@ struct MojomStruct {
   // Versions are implicitly declared in a .mojom file by use of the
   // "MinVersion" attribute on the fields. If |version_info| is not null then
   // it contains at least one element for version 0 and its elements are
-  // in increasing |version_number| order.
+  // in increasing |version_number| order. Note that version numbers may
+  // not be consecutive.
   array<StructVersion>? version_info;
 };
 

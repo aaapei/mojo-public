@@ -96,6 +96,8 @@ class StructField(object):
       _descriptor.SingleFieldGroup('type', _descriptor.UnionType(lambda: Type), 1, 0),
       _descriptor.SingleFieldGroup('default_value', _descriptor.UnionType(lambda: DefaultFieldValue, nullable=True), 2, 0),
       _descriptor.SingleFieldGroup('offset', _descriptor.TYPE_INT32, 3, 0),
+      _descriptor.SingleFieldGroup('bit', _descriptor.TYPE_INT8, 4, 0),
+      _descriptor.SingleFieldGroup('min_version', _descriptor.TYPE_UINT32, 5, 0),
     ],
   }
 
