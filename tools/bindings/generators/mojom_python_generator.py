@@ -8,7 +8,6 @@ import re
 
 import mojom.generate.constant_resolver as resolver
 import mojom.generate.generator as generator
-import mojom.generate.data as data
 import mojom.generate.module as mojom
 from mojom.generate.template_expander import UseJinja
 
