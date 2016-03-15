@@ -55,9 +55,7 @@ struct MOJO_ALIGNAS(4) MojoHandleSignalsState {
 MOJO_STATIC_ASSERT(sizeof(MojoHandleSignalsState) == 8,
                    "MojoHandleSignalsState has wrong size");
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 // Closes the given |handle|.
 //
@@ -71,8 +69,6 @@ extern "C" {
 // fail with |MOJO_RESULT_INVALID_ARGUMENT| if they happen after.
 MojoResult MojoClose(MojoHandle handle);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_SYSTEM_HANDLE_H_

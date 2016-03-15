@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 
+#include "mojo/public/c/system/macros.h"
+
 // |MojoTimeTicks|: A time delta, in microseconds, the meaning of which is
 // source-dependent.
 
@@ -24,9 +26,7 @@ typedef uint64_t MojoDeadline;
 
 #define MOJO_DEADLINE_INDEFINITE ((MojoDeadline)-1)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 // Note: Pointer parameters that are labelled "optional" may be null (at least
 // under some circumstances). Non-const pointer parameters are also labeled
@@ -43,8 +43,6 @@ extern "C" {
 // is typically in the range of ~1-15 ms.
 MojoTimeTicks MojoGetTimeTicksNow(void);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_SYSTEM_TIME_H_

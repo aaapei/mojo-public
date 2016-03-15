@@ -54,9 +54,7 @@ typedef uint32_t MojoReadMessageFlags;
 #define MOJO_READ_MESSAGE_FLAG_NONE ((MojoReadMessageFlags)0)
 #define MOJO_READ_MESSAGE_FLAG_MAY_DISCARD ((MojoReadMessageFlags)1 << 0)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 // Creates a message pipe, which is a bidirectional communication channel for
 // framed data (i.e., messages). Messages can contain plain data and/or Mojo
@@ -151,8 +149,6 @@ MojoResult MojoReadMessage(MojoHandle message_pipe_handle,
                            uint32_t* num_handles,  // Optional in/out.
                            MojoReadMessageFlags flags);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_SYSTEM_MESSAGE_PIPE_H_

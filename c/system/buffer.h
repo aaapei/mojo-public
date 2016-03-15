@@ -92,9 +92,7 @@ typedef uint32_t MojoMapBufferFlags;
 
 #define MOJO_MAP_BUFFER_FLAG_NONE ((MojoMapBufferFlags)0)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 // Creates a buffer of size |num_bytes| bytes that can be shared between
 // applications (by duplicating the handle -- see |MojoDuplicateBufferHandle()|
@@ -203,8 +201,6 @@ MojoResult MojoMapBuffer(MojoHandle buffer_handle,
 //       result of |MojoMapBuffer()| or has already been unmapped).
 MojoResult MojoUnmapBuffer(void* buffer);  // In.
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_SYSTEM_BUFFER_H_

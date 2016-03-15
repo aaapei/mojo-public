@@ -78,9 +78,7 @@ typedef uint32_t MojoReadDataFlags;
 #define MOJO_READ_DATA_FLAG_QUERY ((MojoReadDataFlags)1 << 2)
 #define MOJO_READ_DATA_FLAG_PEEK ((MojoReadDataFlags)1 << 3)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 // Creates a data pipe, which is a unidirectional communication channel for
 // unframed data, with the given options. Data is unframed, but must come as
@@ -301,8 +299,6 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,
 MojoResult MojoEndReadData(MojoHandle data_pipe_consumer_handle,
                            uint32_t num_bytes_read);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_SYSTEM_DATA_PIPE_H_

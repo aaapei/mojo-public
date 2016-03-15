@@ -10,12 +10,11 @@
 #define MOJO_PUBLIC_C_SYSTEM_WAIT_H_
 
 #include "mojo/public/c/system/handle.h"
+#include "mojo/public/c/system/macros.h"
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 // Waits on the given handle until one of the following happens:
 //   - A signal indicated by |signals| is satisfied.
@@ -101,8 +100,6 @@ MojoResult MojoWaitMany(
     uint32_t* result_index,                          // Optional out
     struct MojoHandleSignalsState* signals_states);  // Optional out
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_SYSTEM_WAIT_H_

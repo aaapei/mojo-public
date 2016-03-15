@@ -62,4 +62,14 @@
 #error "Please define MOJO_ALIGNAS() for your compiler."
 #endif
 
+// Use these to declare functions in C header files so that they'll be usable
+// from C++.
+#if defined(__cplusplus)
+#define MOJO_BEGIN_EXTERN_C extern "C" {
+#define MOJO_END_EXTERN_C }
+#else
+#define MOJO_BEGIN_EXTERN_C
+#define MOJO_END_EXTERN_C
+#endif
+
 #endif  // MOJO_PUBLIC_C_SYSTEM_MACROS_H_
