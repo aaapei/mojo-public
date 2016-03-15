@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "mojo/public/c/system/macros.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "mojo/public/cpp/bindings/lib/connector.h"
@@ -19,7 +18,8 @@
 #include "mojo/public/cpp/bindings/message.h"
 #include "mojo/public/cpp/bindings/tests/validation_test_input_parser.h"
 #include "mojo/public/cpp/environment/environment.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/cpp/system/message_pipe.h"
 #include "mojo/public/cpp/test_support/test_support.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "mojo/public/interfaces/bindings/tests/validation_test_interfaces.mojom.h"
@@ -176,7 +176,7 @@ void RunValidationTests(const std::string& prefix,
     std::string actual;
     auto result = RunValidatorsOnMessage(validators, &message, nullptr);
     if (result == ValidationError::NONE) {
-      mojo_ignore_result(test_message_receiver->Accept(&message));
+      ignore_result(test_message_receiver->Accept(&message));
       actual = "PASS";
     } else {
       actual = ValidationErrorToString(result);

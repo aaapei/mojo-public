@@ -5,6 +5,7 @@
 #include "mojo/public/cpp/bindings/lib/connector.h"
 
 #include "mojo/public/cpp/environment/logging.h"
+#include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/system/wait.h"
 
 namespace mojo {
@@ -56,7 +57,7 @@ bool Connector::WaitForIncomingMessage(MojoDeadline deadline) {
     NotifyError();
     return false;
   }
-  mojo_ignore_result(ReadSingleMessage(&rv));
+  ignore_result(ReadSingleMessage(&rv));
   return (rv == MOJO_RESULT_OK);
 }
 
