@@ -50,6 +50,7 @@ template("mojom") {
 
   cpp_sources_suffix = "cpp_sources"
   cpp_sources_target_name = "${target_name}_${cpp_sources_suffix}"
+  cpp_sync_sources_target_name = "${target_name}_${cpp_sources_suffix}_sync"
   if (defined(invoker.sources)) {
     generator_root = rebase_path("mojo/public/tools/bindings", ".", mojo_root)
     generator_script = "$generator_root/mojom_bindings_generator.py"
@@ -64,7 +65,11 @@ template("mojom") {
       "$generator_root/generators/cpp_templates/interface_request_validator_declaration.tmpl",
       "$generator_root/generators/cpp_templates/interface_response_validator_declaration.tmpl",
       "$generator_root/generators/cpp_templates/interface_stub_declaration.tmpl",
+      "$generator_root/generators/cpp_templates/module-common.cc.tmpl",
+      "$generator_root/generators/cpp_templates/module-common.h.tmpl",
       "$generator_root/generators/cpp_templates/module-internal.h.tmpl",
+      "$generator_root/generators/cpp_templates/module-sync.cc.tmpl",
+      "$generator_root/generators/cpp_templates/module-sync.h.tmpl",
       "$generator_root/generators/cpp_templates/module.cc.tmpl",
       "$generator_root/generators/cpp_templates/module.h.tmpl",
       "$generator_root/generators/cpp_templates/struct_declaration.tmpl",
@@ -134,9 +139,13 @@ template("mojom") {
       "$generator_root/pylib/mojom/parse/parser_runner.py",
     ]
     generator_cpp_outputs = [
-      "{{source_gen_dir}}/{{source_name_part}}.mojom.cc",
-      "{{source_gen_dir}}/{{source_name_part}}.mojom.h",
+      "{{source_gen_dir}}/{{source_name_part}}.mojom-common.cc",
+      "{{source_gen_dir}}/{{source_name_part}}.mojom-common.h",
       "{{source_gen_dir}}/{{source_name_part}}.mojom-internal.h",
+      "{{source_gen_dir}}/{{source_name_part}}.mojom-sync.cc",
+      "{{source_gen_dir}}/{{source_name_part}}.mojom-sync.h",
+      "{{source_gen_dir}}/{{source_name_part}}.mojom.h",
+      "{{source_gen_dir}}/{{source_name_part}}.mojom.cc",
     ]
     generator_js_outputs =
         [ "{{source_gen_dir}}/{{source_name_part}}.mojom.js" ]
@@ -213,11 +222,7 @@ template("mojom") {
   }
 
   # Some re-usable variables for the C++ source sets:
-  cpp_public_deps = []
-  if (defined(invoker.sources)) {
-    cpp_public_deps += [ ":${cpp_sources_target_name}" ]
-  }
-  cpp_public_deps += rebased_mojo_sdk_public_deps
+  cpp_public_deps = rebased_mojo_sdk_public_deps
   if (defined(invoker.public_deps)) {
     cpp_public_deps += invoker.public_deps
   }
@@ -243,8 +248,26 @@ template("mojom") {
     if (defined(invoker.testonly)) {
       testonly = invoker.testonly
     }
+
+    public_configs =
+        rebase_path([ "mojo/public/build/config:mojo_sdk" ], ".", mojo_root)
+
+    public_deps = rebase_path([ "mojo/public/cpp/bindings" ], ".", mojo_root)
+    public_deps += cpp_public_deps
     if (defined(invoker.sources)) {
+      public_deps += [ ":${cpp_sources_target_name}" ]
       data = process_file_template(invoker.sources, generator_js_outputs)
+    }
+
+    deps = cpp_deps
+  }
+
+  source_set("${target_name}_sync") {
+    if (defined(invoker.visibility)) {
+      visibility = invoker.visibility
+    }
+    if (defined(invoker.testonly)) {
+      testonly = invoker.testonly
     }
 
     public_configs =
@@ -252,6 +275,10 @@ template("mojom") {
 
     public_deps = rebase_path([ "mojo/public/cpp/bindings" ], ".", mojo_root)
     public_deps += cpp_public_deps
+    if (defined(invoker.sources)) {
+      public_deps += [ ":${cpp_sync_sources_target_name}" ]
+      data = process_file_template(invoker.sources, generator_js_outputs)
+    }
 
     deps = cpp_deps
   }
@@ -263,9 +290,6 @@ template("mojom") {
     if (defined(invoker.testonly)) {
       testonly = invoker.testonly
     }
-    if (defined(invoker.sources)) {
-      data = process_file_template(invoker.sources, generator_js_outputs)
-    }
 
     public_configs =
         rebase_path([ "mojo/public/build/config:mojo_sdk" ], ".", mojo_root)
@@ -274,6 +298,10 @@ template("mojom") {
                               ".",
                               mojo_root)
     public_deps += cpp_public_deps
+    if (defined(invoker.sources)) {
+      public_deps += [ ":${cpp_sources_target_name}" ]
+      data = process_file_template(invoker.sources, generator_js_outputs)
+    }
     deps = cpp_deps
   }
 
@@ -349,15 +377,78 @@ template("mojom") {
     # on mojo/public/cpp/bindings. No external targets should depend directly on
     # this target *except* mojo/public/cpp/bindings and other *_cpp_sources
     # targets.
-    source_set(cpp_sources_target_name) {
+
+    source_set(cpp_sources_target_name + "__common") {
       if (defined(invoker.testonly)) {
         testonly = invoker.testonly
       }
-      sources = process_file_template(invoker.sources, generator_cpp_outputs)
+      sources = process_file_template(
+              invoker.sources,
+              [
+                "{{source_gen_dir}}/{{source_name_part}}.mojom-common.cc",
+                "{{source_gen_dir}}/{{source_name_part}}.mojom-common.h",
+                "{{source_gen_dir}}/{{source_name_part}}.mojom-internal.h",
+              ])
       public_configs =
           rebase_path([ "mojo/public/build/config:mojo_sdk" ], ".", mojo_root)
       deps = [
         ":$generator_target_name",
+        rebase_path("mojo/public/interfaces/bindings:bindings__generator",
+                    ".",
+                    mojo_root),
+      ]
+      foreach(d, all_deps) {
+        # Resolve the name, so that a target //mojo/something becomes
+        # //mojo/something:something and we can append cpp_sources_suffix to
+        # get the cpp dependency name.
+        full_name = get_label_info(d, "label_no_toolchain")
+        deps += [ "${full_name}_${cpp_sources_suffix}" ]
+      }
+    }
+
+    source_set(cpp_sources_target_name) {
+      if (defined(invoker.testonly)) {
+        testonly = invoker.testonly
+      }
+      sources = process_file_template(
+              invoker.sources,
+              [
+                "{{source_gen_dir}}/{{source_name_part}}.mojom.h",
+                "{{source_gen_dir}}/{{source_name_part}}.mojom.cc",
+              ])
+      public_configs =
+          rebase_path([ "mojo/public/build/config:mojo_sdk" ], ".", mojo_root)
+      deps = [
+        ":$generator_target_name",
+        ":${cpp_sources_target_name}__common",
+        rebase_path("mojo/public/interfaces/bindings:bindings__generator",
+                    ".",
+                    mojo_root),
+      ]
+      foreach(d, all_deps) {
+        # Resolve the name, so that a target //mojo/something becomes
+        # //mojo/something:something and we can append cpp_sources_suffix to
+        # get the cpp dependency name.
+        full_name = get_label_info(d, "label_no_toolchain")
+        deps += [ "${full_name}_${cpp_sources_suffix}" ]
+      }
+    }
+
+    source_set(cpp_sync_sources_target_name) {
+      if (defined(invoker.testonly)) {
+        testonly = invoker.testonly
+      }
+      sources = process_file_template(
+              invoker.sources,
+              [
+                "{{source_gen_dir}}/{{source_name_part}}.mojom-sync.cc",
+                "{{source_gen_dir}}/{{source_name_part}}.mojom-sync.h",
+              ])
+      public_configs =
+          rebase_path([ "mojo/public/build/config:mojo_sdk" ], ".", mojo_root)
+      deps = [
+        ":$generator_target_name",
+        ":${cpp_sources_target_name}__common",
         rebase_path("mojo/public/interfaces/bindings:bindings__generator",
                     ".",
                     mojo_root),

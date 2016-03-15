@@ -36,6 +36,8 @@ mojo_sdk_source_set("tests") {
     "serialization_warning_unittest.cc",
     "string_unittest.cc",
     "struct_unittest.cc",
+    "synchronous_connector_unittest.cc",
+    "synchronous_interface_ptr_unittest.cc",
     "type_conversion_unittest.cc",
     "union_unittest.cc",
     "validation_unittest.cc",
@@ -55,6 +57,7 @@ mojo_sdk_source_set("tests") {
     "mojo/public/cpp/test_support:test_utils",
     "mojo/public/cpp/utility",
     "mojo/public/interfaces/bindings/tests:test_interfaces",
+    "mojo/public/interfaces/bindings/tests:test_interfaces_sync",
   ]
 }
 

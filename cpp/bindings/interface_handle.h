@@ -15,6 +15,9 @@ namespace mojo {
 template <typename Interface>
 class InterfacePtr;
 
+template <typename Interface>
+class SynchronousInterfacePtr;
+
 // InterfaceHandle stores necessary information to communicate with a remote
 // interface implementation, which could be used to construct an InterfacePtr.
 template <typename Interface>
@@ -36,6 +39,14 @@ class InterfaceHandle {
   // less fragile.
   template <typename SameInterfaceAsAbove = Interface>
   InterfaceHandle(InterfacePtr<SameInterfaceAsAbove>&& ptr) {
+    *this = ptr.PassInterfaceHandle();
+  }
+
+  // Making this constructor templated ensures that it is not type-instantiated
+  // unless it is used, making the SynchronousInterfacePtr<->InterfaceHandle
+  // codependency less fragile.
+  template <typename SameInterfaceAsAbove = Interface>
+  InterfaceHandle(SynchronousInterfacePtr<SameInterfaceAsAbove>&& ptr) {
     *this = ptr.PassInterfaceHandle();
   }
 

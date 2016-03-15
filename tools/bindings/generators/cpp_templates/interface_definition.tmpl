@@ -3,8 +3,9 @@
 {%- from "enum_macros.tmpl" import is_valid_enum_def %}
 {%- from "enum_macros.tmpl" import global_enum_operators_def %}
 
-{%- set class_name = interface.name %}
-{%- set proxy_name = interface.name ~ "Proxy" %}
+{%- set class_name = interface.name -%}
+{%- set base_name = "internal::%s_Base"|format(interface.name) -%}
+{%- set proxy_name = interface.name ~ "Proxy" -%}
 
 {%- macro alloc_params(struct) %}
 {%-   for param in struct.packed.packed_fields_in_ordinal_order %}
@@ -28,27 +29,6 @@ p_{{param.name}}
   {{struct_macros.serialize(struct, struct_display_name, "in_%s", "params", "builder.buffer()", false)}}
   params->EncodePointersAndHandles(builder.message()->mutable_handles());
 {%- endmacro %}
-
-{#--- Begin #}
-{%- if interface.service_name %}
-const char {{class_name}}::Name_[] = "{{interface.service_name}}";
-{%- endif %}
-const uint32_t {{class_name}}::Version_;
-
-{#--- Constants #}
-{%-  for constant in interface.constants %}
-{%-   if constant.kind|is_integral_kind %}
-const {{constant.kind|cpp_pod_type}} {{interface.name}}::{{constant.name}};
-{%-   else %}
-const {{constant.kind|cpp_pod_type}} {{interface.name}}::{{constant.name}} = {{constant|constant_value}};
-{%-   endif %}
-{%- endfor %}
-
-{#--- Enums #}
-{%- for enum in interface.enums %}
-  {{is_valid_enum_def(enum, class_name=interface.name)}}
-  {{global_enum_operators_def(enum, class_name=interface.name)}}
-{%- endfor %}
 
 {#--- ForwardToCallback definition #}
 {%- for method in interface.methods -%}
@@ -87,7 +67,7 @@ bool {{class_name}}_{{method.name}}_ForwardToCallback::Accept(
 
 {%- for method in interface.methods %}
 {%-   set message_name =
-          "%s::MessageOrdinals::%s"|format(interface.name, method.name) %}
+          "%s::MessageOrdinals::%s"|format(base_name, method.name) %}
 {%-   set params_struct = method.param_struct %}
 {%-   set params_description =
           "%s.%s request"|format(interface.name, method.name) %}
@@ -123,7 +103,7 @@ void {{proxy_name}}::{{method.name}}(
 {%- for method in interface.methods -%}
 {%-   if method.response_parameters != None %}
 {%-     set message_name =
-            "%s::MessageOrdinals::%s"|format(interface.name, method.name) %}
+            "%s::MessageOrdinals::%s"|format(base_name, method.name) %}
 {%-     set response_params_struct = method.response_param_struct %}
 {%-     set params_description =
             "%s.%s response"|format(interface.name, method.name) %}
@@ -190,11 +170,11 @@ bool {{class_name}}Stub::Accept(mojo::Message* message) {
   if (mojo::internal::ControlMessageHandler::IsControlMessage(message))
     return control_message_handler_.Accept(message);
 {%- if interface.methods %}
-  {{interface.name}}::MessageOrdinals method_ordinal =
-      static_cast<{{interface.name}}::MessageOrdinals>(message->header()->name);
+  {{base_name}}::MessageOrdinals method_ordinal =
+      static_cast<{{base_name}}::MessageOrdinals>(message->header()->name);
   switch (method_ordinal) {
 {%-   for method in interface.methods %}
-    case {{interface.name}}::MessageOrdinals::{{method.name}}: {
+    case {{base_name}}::MessageOrdinals::{{method.name}}: {
 {%-     if method.response_parameters == None %}
       internal::{{class_name}}_{{method.name}}_Params_Data* params =
           reinterpret_cast<internal::{{class_name}}_{{method.name}}_Params_Data*>(
@@ -221,11 +201,11 @@ bool {{class_name}}Stub::AcceptWithResponder(
   if (mojo::internal::ControlMessageHandler::IsControlMessage(message))
     return control_message_handler_.AcceptWithResponder(message, responder);
 {%- if interface.methods %}
-  {{interface.name}}::MessageOrdinals method_ordinal =
-      static_cast<{{interface.name}}::MessageOrdinals>(message->header()->name);
+  {{base_name}}::MessageOrdinals method_ordinal =
+      static_cast<{{base_name}}::MessageOrdinals>(message->header()->name);
   switch (method_ordinal) {
 {%-   for method in interface.methods %}
-    case {{interface.name}}::MessageOrdinals::{{method.name}}: {
+    case {{base_name}}::MessageOrdinals::{{method.name}}: {
 {%-     if method.response_parameters != None %}
       internal::{{class_name}}_{{method.name}}_Params_Data* params =
           reinterpret_cast<internal::{{class_name}}_{{method.name}}_Params_Data*>(
@@ -251,142 +231,3 @@ bool {{class_name}}Stub::AcceptWithResponder(
 {%- endif %}
   return false;
 }
-
-{#--- Request validator definitions #}
-
-mojo::internal::ValidationError {{class_name}}RequestValidator::Validate(
-    const mojo::Message* message,
-    std::string* err) {
-  mojo::internal::ValidationError retval;
-  if (mojo::internal::ControlMessageHandler::IsControlMessage(message)) {
-    retval = mojo::internal::ValidateControlRequest(message, err);
-    if (retval != mojo::internal::ValidationError::NONE) {
-      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
-        << "request validation error for interface '{{interface.name}}', "
-           "message name '" << message->header()->name << "': " <<
-           (err ? *err : "");
-      ReportValidationError(retval, err);
-      return retval;
-    }
-    return mojo::internal::ValidationError::NONE;
-  }
-
-  {{interface.name}}::MessageOrdinals method_ordinal =
-      static_cast<{{interface.name}}::MessageOrdinals>(message->header()->name);
-  switch (method_ordinal) {
-{%-   for method in interface.methods %}
-    case {{interface.name}}::MessageOrdinals::{{method.name}}: {
-{%-   if method.response_parameters != None %}
-      retval =
-          mojo::internal::ValidateMessageIsRequestExpectingResponse(message,
-                                                                    err);
-      if (retval != mojo::internal::ValidationError::NONE) {
-        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
-          << "request validation error for interface '{{interface.name}}', "
-             "message name '" << message->header()->name << "': " <<
-             (err ? *err : "");
-        ReportValidationError(retval, err);
-        return retval;
-      }
-{%-   else %}
-      retval = mojo::internal::ValidateMessageIsRequestWithoutResponse(message,
-                                                                       err);
-      if (retval != mojo::internal::ValidationError::NONE) {
-        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
-          << "request validation error for interface '{{interface.name}}', "
-             "message name '" << message->header()->name << "': " <<
-             (err ? *err : "");
-        ReportValidationError(retval, err);
-        return retval;
-      }
-{%-   endif %}
-      retval = mojo::internal::ValidateMessagePayload<
-                 internal::{{class_name}}_{{method.name}}_Params_Data>(message,
-                                                                       err); 
-      if (retval != mojo::internal::ValidationError::NONE) {
-         MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
-            << "request validation error for interface '{{interface.name}}', "
-               "message name '" << message->header()->name << "': " <<
-               (err ? *err : "");
-        ReportValidationError(retval, err);
-        return retval;
-      }
-      return mojo::internal::ValidationError::NONE;
-    }
-{%- endfor %}
-    default:
-      break;
-  }
-
-  // Unrecognized message.
-  MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "unknown request message name '"
-                                         << message->header()->name
-                                         << "' for interface "
-                                            "'{{interface.name}}'";
-  ReportValidationError(
-      mojo::internal::ValidationError::MESSAGE_HEADER_UNKNOWN_METHOD, err);
-  return mojo::internal::ValidationError::MESSAGE_HEADER_UNKNOWN_METHOD;
-}
-
-{#--- Response validator definitions #}
-{% if interface|has_callbacks %}
-mojo::internal::ValidationError {{class_name}}ResponseValidator::Validate(
-    const mojo::Message* message,
-    std::string* err) {
-  mojo::internal::ValidationError retval;
-  if (mojo::internal::ControlMessageHandler::IsControlMessage(message)) {
-    retval = mojo::internal::ValidateControlResponse(message, err);
-    if (retval != mojo::internal::ValidationError::NONE) {
-      MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
-        << "response validation error for interface '{{interface.name}}',"
-           " message name '" << message->header()->name << "': " <<
-           (err ? *err : "");
-      ReportValidationError(retval, err);
-      return retval;
-    }
-    return mojo::internal::ValidationError::NONE;
-  }
-
-  retval = mojo::internal::ValidateMessageIsResponse(message, err);
-  if (retval != mojo::internal::ValidationError::NONE) {
-    MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
-            << "response validation error for interface '{{interface.name}}',"
-               " message name '" << message->header()->name << "': " <<
-               (err ? *err : "");
-    ReportValidationError(retval, err);
-    return retval;
-  }
-
-  {{class_name}}::MessageOrdinals method_ordinal =
-      static_cast<{{class_name}}::MessageOrdinals>(message->header()->name);
-  switch (method_ordinal) {
-{%- for method in interface.methods if method.response_parameters != None %}
-    case {{class_name}}::MessageOrdinals::{{method.name}}: {
-      retval = mojo::internal::ValidateMessagePayload<
-                  internal::{{class_name}}_{{method.name}}_ResponseParams_Data>(
-                      message, err);
-      if (retval != mojo::internal::ValidationError::NONE) {
-        MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err)
-            << "response validation error for interface '{{interface.name}}',"
-               " message name '" << message->header()->name << "': " <<
-               (err ? *err : "");
-        ReportValidationError(retval, err);
-        return retval;
-      }
-      return mojo::internal::ValidationError::NONE;
-    }
-{%- endfor %}
-    default:
-      break;
-  }
-
-  // Unrecognized message.
-  MOJO_INTERNAL_DEBUG_SET_ERROR_MSG(err) << "unknown response message name '"
-                                          << message->header()->name
-                                          << "' for interface "
-                                             "'{{interface.name}}'";
-  ReportValidationError(
-      mojo::internal::ValidationError::MESSAGE_HEADER_UNKNOWN_METHOD, err);
-  return mojo::internal::ValidationError::MESSAGE_HEADER_UNKNOWN_METHOD;
-}
-{%- endif -%}

@@ -143,13 +143,26 @@ class MessageReceiverWithResponderStatus : public MessageReceiver {
       MOJO_WARN_UNUSED_RESULT = 0;
 };
 
-// Read a single message from the pipe and dispatch to the given receiver.  The
-// receiver may be null, in which case the message is simply discarded.
-// Returns MOJO_RESULT_SHOULD_WAIT if the caller should wait on the handle to
-// become readable. Returns MOJO_RESULT_OK if a message was dispatched and
-// otherwise returns an error code if something went wrong.
+// Read a single message from the pipe into the supplied |message|. |handle|
+// must be valid. |message| must be non-null and empty (i.e., clear of any data
+// and handles).
 //
-// NOTE: The message hasn't been validated and may be malformed!
+// This method calls into |MojoReadMessage()| and propagates any errors it
+// produces. See mojo/public/c/system/message_pipe.h for a description of its
+// possible return values.
+//
+// NOTE: The message isn't validated and may be malformed!
+MojoResult ReadMessage(MessagePipeHandle handle, Message* message);
+
+// Read a single message from the pipe and dispatch to the given receiver.
+// |handle| must be valid. |receiver| may be null, in which case the read
+// message is simply discarded. If |receiver| is not null, then
+// |receiver_result| should be non-null, and will be set the receiver's return
+// value.
+//
+// This method calls into |MojoReadMessage()| and propagates any errors it
+// produces. See mojo/public/c/system/message_pipe.h for a description of its
+// possible return values.
 MojoResult ReadAndDispatchMessage(MessagePipeHandle handle,
                                   MessageReceiver* receiver,
                                   bool* receiver_result);

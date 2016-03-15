@@ -439,6 +439,22 @@ class Generator(generator.Generator):
   def GenerateModuleInternalHeader(self):
     return self.GetJinjaExports()
 
+  @UseJinja("cpp_templates/module-common.h.tmpl", filters=cpp_filters)
+  def GenerateModuleCommonHeader(self):
+    return self.GetJinjaExports()
+
+  @UseJinja("cpp_templates/module-common.cc.tmpl", filters=cpp_filters)
+  def GenerateModuleCommonSource(self):
+    return self.GetJinjaExports()
+
+  @UseJinja("cpp_templates/module-sync.h.tmpl", filters=cpp_filters)
+  def GenerateModuleSynchronousHeader(self):
+    return self.GetJinjaExports()
+
+  @UseJinja("cpp_templates/module-sync.cc.tmpl", filters=cpp_filters)
+  def GenerateModuleSynchronousSource(self):
+    return self.GetJinjaExports()
+
   @UseJinja("cpp_templates/module.cc.tmpl", filters=cpp_filters)
   def GenerateModuleSource(self):
     return self.GetJinjaExports()
@@ -448,5 +464,13 @@ class Generator(generator.Generator):
         self.MatchMojomFilePath("%s.h" % self.module.name))
     self.Write(self.GenerateModuleInternalHeader(),
         self.MatchMojomFilePath("%s-internal.h" % self.module.name))
+    self.Write(self.GenerateModuleCommonHeader(),
+        self.MatchMojomFilePath("%s-common.h" % self.module.name))
+    self.Write(self.GenerateModuleCommonSource(),
+        self.MatchMojomFilePath("%s-common.cc" % self.module.name))
+    self.Write(self.GenerateModuleSynchronousHeader(),
+        self.MatchMojomFilePath("%s-sync.h" % self.module.name))
+    self.Write(self.GenerateModuleSynchronousSource(),
+        self.MatchMojomFilePath("%s-sync.cc" % self.module.name))
     self.Write(self.GenerateModuleSource(),
         self.MatchMojomFilePath("%s.cc" % self.module.name))

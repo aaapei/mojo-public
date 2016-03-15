@@ -68,34 +68,42 @@ void Message::FreeDataAndCloseHandles() {
   }
 }
 
-MojoResult ReadAndDispatchMessage(MessagePipeHandle handle,
-                                  MessageReceiver* receiver,
-                                  bool* receiver_result) {
-  MojoResult rv;
+MojoResult ReadMessage(MessagePipeHandle handle, Message* message) {
+  MOJO_DCHECK(handle.is_valid());
+  MOJO_DCHECK(message);
+  MOJO_DCHECK(message->handles()->empty());
+  MOJO_DCHECK(message->data_num_bytes() == 0);
 
-  uint32_t num_bytes = 0, num_handles = 0;
-  rv = ReadMessageRaw(handle,
-                      nullptr,
-                      &num_bytes,
-                      nullptr,
-                      &num_handles,
-                      MOJO_READ_MESSAGE_FLAG_NONE);
+  uint32_t num_bytes = 0;
+  uint32_t num_handles = 0;
+  MojoResult rv = ReadMessageRaw(handle, nullptr, &num_bytes, nullptr,
+                                 &num_handles, MOJO_READ_MESSAGE_FLAG_NONE);
   if (rv != MOJO_RESULT_RESOURCE_EXHAUSTED)
     return rv;
 
-  Message message;
-  message.AllocUninitializedData(num_bytes);
-  message.mutable_handles()->resize(num_handles);
+  message->AllocUninitializedData(num_bytes);
+  message->mutable_handles()->resize(num_handles);
 
+  uint32_t num_bytes_actual = num_bytes;
+  uint32_t num_handles_actual = num_handles;
   rv = ReadMessageRaw(
-      handle,
-      message.mutable_data(),
-      &num_bytes,
-      message.mutable_handles()->empty()
+      handle, message->mutable_data(), &num_bytes_actual,
+      message->mutable_handles()->empty()
           ? nullptr
-          : reinterpret_cast<MojoHandle*>(&message.mutable_handles()->front()),
-      &num_handles,
-      MOJO_READ_MESSAGE_FLAG_NONE);
+          : reinterpret_cast<MojoHandle*>(&message->mutable_handles()->front()),
+      &num_handles_actual, MOJO_READ_MESSAGE_FLAG_NONE);
+
+  MOJO_DCHECK(num_bytes == num_bytes_actual);
+  MOJO_DCHECK(num_handles == num_handles_actual);
+
+  return rv;
+}
+
+MojoResult ReadAndDispatchMessage(MessagePipeHandle handle,
+                                  MessageReceiver* receiver,
+                                  bool* receiver_result) {
+  Message message;
+  MojoResult rv = ReadMessage(handle, &message);
   if (receiver && rv == MOJO_RESULT_OK)
     *receiver_result = receiver->Accept(&message);
 

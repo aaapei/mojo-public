@@ -44,3 +44,15 @@ mojo::Callback<void(
 const {{method.name}}Callback& callback
 {%-   endif -%}
 {%- endmacro -%}
+
+{%- macro declare_sync_request_params(method) -%}
+{{declare_params_as_args("in_", method.parameters)}}
+{#- You could have a response message without any fields! -#}
+{%-   if method.response_parameters != None and method.response_parameters|length > 0 -%}
+{%-     if method.parameters %}, {% endif -%}
+{%-     for param in method.response_parameters -%}
+{{param.kind|cpp_result_type}}* out_{{param.name}}
+{%-       if not loop.last %}, {% endif -%}
+{%-     endfor -%}
+{%-   endif -%}
+{%- endmacro -%}

@@ -15,8 +15,6 @@
 #include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
-class ErrorHandler;
-
 namespace internal {
 
 // The Connector class is responsible for performing read/write operations on a

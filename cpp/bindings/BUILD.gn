@@ -76,10 +76,13 @@ mojo_sdk_source_set("bindings") {
     "lib/no_interface.cc",
     "lib/router.cc",
     "lib/router.h",
+    "lib/synchronous_connector.cc",
+    "lib/synchronous_connector.h",
     "message.h",
     "message_validator.h",
     "no_interface.h",
     "strong_binding.h",
+    "synchronous_interface_ptr.h",
   ]
 
   public_deps = [
