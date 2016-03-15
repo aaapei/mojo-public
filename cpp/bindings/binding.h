@@ -82,21 +82,6 @@ class Binding {
   // of the parameters. |impl| must outlive the binding. |ptr| only needs to
   // last until the constructor returns. See class comment for definition of
   // |waiter|.
-  // TODO(vardhan): Deprecate this in favor of the |InterfaceHandle<>| overload
-  // below.
-  Binding(Interface* impl,
-          InterfacePtr<Interface>* ptr,
-          const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter())
-      : Binding(impl) {
-    Bind(ptr, waiter);
-  }
-
-  // Constructs a completed binding of |impl| to a new message pipe, passing the
-  // client end to |ptr|, which takes ownership of it. The caller is expected to
-  // pass |ptr| on to the client of the service. Does not take ownership of any
-  // of the parameters. |impl| must outlive the binding. |ptr| only needs to
-  // last until the constructor returns. See class comment for definition of
-  // |waiter|.
   Binding(Interface* impl,
           InterfaceHandle<Interface>* interface_handle,
           const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter())
@@ -138,24 +123,6 @@ class Binding {
     internal_router_->set_incoming_receiver(&stub_);
     internal_router_->set_connection_error_handler(
         [this]() { connection_error_handler_.Run(); });
-  }
-
-  // Completes a binding that was constructed with only an interface
-  // implementation by creating a new message pipe, binding one end of it to the
-  // previously specified implementation, and passing the other to |ptr|, which
-  // takes ownership of it. The caller is expected to pass |ptr| on to the
-  // eventual client of the service. Does not take ownership of |ptr|. See
-  // class comment for definition of |waiter|.
-  // TODO(vardhan): Deprecate this in favor of the |InterfaceHandle<>| overload
-  // below.
-  void Bind(
-      InterfacePtr<Interface>* ptr,
-      const MojoAsyncWaiter* waiter = Environment::GetDefaultAsyncWaiter()) {
-    MessagePipe pipe;
-    ptr->Bind(
-        InterfaceHandle<Interface>(pipe.handle0.Pass(), Interface::Version_),
-        waiter);
-    Bind(pipe.handle1.Pass(), waiter);
   }
 
   // Completes a binding that was constructed with only an interface

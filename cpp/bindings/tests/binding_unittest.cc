@@ -215,11 +215,11 @@ class IntegerAccessorImpl : public sample::IntegerAccessor {
   MOJO_DISALLOW_COPY_AND_ASSIGN(IntegerAccessorImpl);
 };
 
-TEST_F(BindingTest, SetInterfacePtrVersion) {
+TEST_F(BindingTest, SetInterfaceHandleVersion) {
   IntegerAccessorImpl impl;
-  sample::IntegerAccessorPtr ptr;
-  Binding<sample::IntegerAccessor> binding(&impl, &ptr);
-  EXPECT_EQ(3u, ptr.version());
+  mojo::InterfaceHandle<sample::IntegerAccessor> handle;
+  Binding<sample::IntegerAccessor> binding(&impl, &handle);
+  EXPECT_EQ(3u, handle.version());
 }
 
 // StrongBindingTest -----------------------------------------------------------
