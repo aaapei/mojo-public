@@ -16,7 +16,8 @@
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
 #include "mojo/public/cpp/environment/logging.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
 

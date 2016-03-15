@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// DEPRECATED -- do not use: include individual header files instead.
+//
+// TODO(vtl): Delete this header file.
+
 #ifndef MOJO_PUBLIC_CPP_SYSTEM_CORE_H_
 #define MOJO_PUBLIC_CPP_SYSTEM_CORE_H_
 

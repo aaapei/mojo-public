@@ -8,13 +8,15 @@
 #include <assert.h>
 
 #include "mojo/public/c/environment/async_waiter.h"
+#include "mojo/public/c/system/time.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/callback.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/cpp/bindings/lib/message_header_validator.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
 

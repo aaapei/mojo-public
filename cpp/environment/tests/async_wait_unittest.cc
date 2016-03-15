@@ -5,9 +5,12 @@
 #include <string>
 
 #include "mojo/public/c/environment/async_waiter.h"
+#include "mojo/public/c/system/result.h"
+#include "mojo/public/c/system/time.h"
 #include "mojo/public/cpp/environment/environment.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/handle.h"
 #include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/cpp/system/message_pipe.h"
 #include "mojo/public/cpp/test_support/test_utils.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "testing/gtest/include/gtest/gtest.h"

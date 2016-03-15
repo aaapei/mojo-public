@@ -8,8 +8,11 @@
 #include <map>
 #include <queue>
 
+#include "mojo/public/c/system/time.h"
 #include "mojo/public/cpp/bindings/callback.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/handle.h"
+#include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
 

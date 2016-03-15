@@ -6,7 +6,7 @@
 
 #include "mojo/public/cpp/bindings/lib/bindings_serialization.h"
 #include "mojo/public/cpp/bindings/lib/bounds_checker.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/handle.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {

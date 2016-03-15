@@ -11,7 +11,7 @@
 
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/application/lib/service_registry.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/application/application.mojom.h"
 #include "mojo/public/interfaces/application/application_connector.mojom.h"
 #include "mojo/public/interfaces/application/shell.mojom.h"

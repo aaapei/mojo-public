@@ -7,7 +7,6 @@
 
 #include "mojo/public/cpp/bindings/message.h"
 #include "mojo/public/cpp/bindings/message_validator.h"
-#include "mojo/public/cpp/system/core.h"
 
 namespace mojo {
 

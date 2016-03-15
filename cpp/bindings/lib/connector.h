@@ -6,10 +6,13 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_LIB_CONNECTOR_H_
 
 #include "mojo/public/c/environment/async_waiter.h"
+#include "mojo/public/c/system/result.h"
+#include "mojo/public/c/system/time.h"
 #include "mojo/public/cpp/bindings/callback.h"
 #include "mojo/public/cpp/bindings/message.h"
 #include "mojo/public/cpp/environment/environment.h"
-#include "mojo/public/cpp/system/core.h"
+#include "mojo/public/cpp/system/macros.h"
+#include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
 class ErrorHandler;
