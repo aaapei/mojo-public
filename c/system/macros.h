@@ -34,7 +34,7 @@
 #endif
 
 // Like the C++11 |alignof| operator.
-#if __cplusplus >= 201103L
+#if defined(__cplusplus) && __cplusplus >= 201103L
 #define MOJO_ALIGNOF(type) alignof(type)
 #elif defined(__GNUC__)
 #define MOJO_ALIGNOF(type) __alignof__(type)
@@ -52,7 +52,7 @@
 // Unlike the C++11 |alignas()|, |alignment| must be an integer. It may not be a
 // type, nor can it be an expression like |MOJO_ALIGNOF(type)| (due to the
 // non-C++11 MSVS version).
-#if __cplusplus >= 201103L
+#if defined(__cplusplus) && __cplusplus >= 201103L
 #define MOJO_ALIGNAS(alignment) alignas(alignment)
 #elif defined(__GNUC__)
 #define MOJO_ALIGNAS(alignment) __attribute__((aligned(alignment)))
