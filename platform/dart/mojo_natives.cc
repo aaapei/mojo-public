@@ -28,26 +28,27 @@ namespace dart {
 #define DECLARE_FUNCTION(name, count)                                          \
   extern void name(Dart_NativeArguments args);
 
-#define MOJO_NATIVE_LIST(V)          \
-  V(MojoSharedBuffer_Create, 2)      \
-  V(MojoSharedBuffer_Duplicate, 2)   \
-  V(MojoSharedBuffer_Map, 4)         \
-  V(MojoDataPipe_Create, 3)          \
-  V(MojoDataPipe_WriteData, 4)       \
-  V(MojoDataPipe_BeginWriteData, 2)  \
-  V(MojoDataPipe_EndWriteData, 2)    \
-  V(MojoDataPipe_ReadData, 4)        \
-  V(MojoDataPipe_BeginReadData, 2)   \
-  V(MojoDataPipe_EndReadData, 2)     \
-  V(MojoMessagePipe_Create, 1)       \
-  V(MojoMessagePipe_Write, 5)        \
-  V(MojoMessagePipe_Read, 5)         \
-  V(MojoMessagePipe_QueryAndRead, 3) \
-  V(Mojo_GetTimeTicksNow, 0)         \
-  V(MojoHandle_Close, 1)             \
-  V(MojoHandle_Wait, 3)              \
-  V(MojoHandle_RegisterFinalizer, 2) \
-  V(MojoHandle_WaitMany, 3)          \
+#define MOJO_NATIVE_LIST(V)                \
+  V(MojoSharedBuffer_Create, 2)            \
+  V(MojoSharedBuffer_Duplicate, 2)         \
+  V(MojoSharedBuffer_Map, 4)               \
+  V(MojoSharedBuffer_GetInformation, 1)    \
+  V(MojoDataPipe_Create, 3)                \
+  V(MojoDataPipe_WriteData, 4)             \
+  V(MojoDataPipe_BeginWriteData, 2)        \
+  V(MojoDataPipe_EndWriteData, 2)          \
+  V(MojoDataPipe_ReadData, 4)              \
+  V(MojoDataPipe_BeginReadData, 2)         \
+  V(MojoDataPipe_EndReadData, 2)           \
+  V(MojoMessagePipe_Create, 1)             \
+  V(MojoMessagePipe_Write, 5)              \
+  V(MojoMessagePipe_Read, 5)               \
+  V(MojoMessagePipe_QueryAndRead, 3)       \
+  V(Mojo_GetTimeTicksNow, 0)               \
+  V(MojoHandle_Close, 1)                   \
+  V(MojoHandle_Wait, 3)                    \
+  V(MojoHandle_RegisterFinalizer, 2)       \
+  V(MojoHandle_WaitMany, 3)                \
   V(MojoHandleWatcher_SendControlData, 5)
 
 MOJO_NATIVE_LIST(DECLARE_FUNCTION);
@@ -342,6 +343,26 @@ void MojoSharedBuffer_Map(Dart_NativeArguments arguments) {
   }
   Dart_ListSetAt(list, 0, Dart_NewInteger(res));
   Dart_ListSetAt(list, 1, typed_data);
+  Dart_SetReturnValue(arguments, list);
+}
+
+void MojoSharedBuffer_GetInformation(Dart_NativeArguments arguments) {
+  int64_t handle = 0;
+  CHECK_INTEGER_ARGUMENT(arguments, 0, &handle, Null);
+
+  MojoBufferInformation buffer_information;
+
+  MojoResult res = MojoGetBufferInformation(static_cast<MojoHandle>(handle),
+                                            &buffer_information,
+                                            sizeof(buffer_information));
+
+  Dart_Handle list = Dart_NewList(3);
+  Dart_ListSetAt(list, 0, Dart_NewInteger(res));
+  if (res == MOJO_RESULT_OK) {
+    Dart_ListSetAt(list, 1, Dart_NewInteger(buffer_information.flags));
+    Dart_ListSetAt(list, 2, Dart_NewInteger(buffer_information.num_bytes));
+  }
+
   Dart_SetReturnValue(arguments, list);
 }
 
