@@ -140,6 +140,13 @@ public class InvalidHandle implements UntypedHandle, MessagePipeHandle, Consumer
     public void unmap(ByteBuffer buffer) {
         throw new MojoException(MojoResult.INVALID_ARGUMENT);
     }
+    /**
+     * @see SharedBufferHandle#getBufferInformation()
+     */
+    @Override
+    public BufferInformation getBufferInformation() {
+        throw new MojoException(MojoResult.INVALID_ARGUMENT);
+    }
 
     /**
      * @see DataPipe.ProducerHandle#writeData(java.nio.ByteBuffer, DataPipe.WriteFlags)

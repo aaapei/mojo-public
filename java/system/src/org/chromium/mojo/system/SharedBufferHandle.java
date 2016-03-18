@@ -130,6 +130,54 @@ public interface SharedBufferHandle extends Handle {
     }
 
     /**
+     * Flags for the shared buffer information operation.
+     */
+    public static class BufferInformationFlags extends Flags<BufferInformationFlags> {
+        private static final int FLAG_NONE = 0;
+
+        /**
+         * Immutable flag with not bit set.
+         */
+        public static final BufferInformationFlags NONE = BufferInformationFlags.none().immutable();
+
+        /**
+         * Dedicated constructor.
+         *
+         * @param flags initial value of the flags.
+         */
+        public BufferInformationFlags(int flags) {
+            super(flags);
+        }
+
+        /**
+         * @return flags with no bit set.
+         */
+        public static BufferInformationFlags none() {
+            return new BufferInformationFlags(FLAG_NONE);
+        }
+    }
+
+    /**
+     * Used to receive information for a shared buffer.
+     */
+    public static class BufferInformation {
+        private final BufferInformationFlags mFlags;
+        private final long mBufferSize;
+
+        public BufferInformation(BufferInformationFlags flags, long bufferSize) {
+            this.mFlags = flags;
+            this.mBufferSize = bufferSize;
+        }
+
+        public BufferInformationFlags getFlags() {
+            return mFlags;
+        }
+        public long getBufferSize() {
+            return mBufferSize;
+        }
+    }
+
+    /**
      * @see org.chromium.mojo.system.Handle#pass()
      */
     @Override
@@ -157,4 +205,8 @@ public interface SharedBufferHandle extends Handle {
      */
     public void unmap(ByteBuffer buffer);
 
+    /**
+     * Retrieves information about the shared buffer.
+     */
+    public BufferInformation getBufferInformation();
 }
