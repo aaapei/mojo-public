@@ -12,13 +12,13 @@ enum {{union|name}}Tag {
 
 {%- macro wrapper_def(union) %}
 class {{union|name}} extends bindings.Union {
-  static final _tag_to_int = const {
+  static final _tagToInt = const {
 {%-   for field in union.fields %}
     {{union|name}}Tag.{{field|name}}: {{field.ordinal}},
 {%-   endfor %}
   };
 
-  static final _int_to_tag = const {
+  static final _intToTag = const {
 {%-   for field in union.fields %}
     {{field.ordinal}}: {{union|name}}Tag.{{field|name}},
 {%-   endfor %}
@@ -51,7 +51,7 @@ class {{union|name}} extends bindings.Union {
     {{union|name}} result = new {{union|name}}();
 
     {# Unknown union members not handled. #}
-    {{union|name}}Tag tag = _int_to_tag[decoder0.decodeUint32(offset + 4)];
+    {{union|name}}Tag tag = _intToTag[decoder0.decodeUint32(offset + 4)];
     switch (tag) {
 {%-   for field in union.fields %}
       case {{union|name}}Tag.{{field|name}}:
@@ -73,7 +73,7 @@ class {{union|name}} extends bindings.Union {
   void encode(bindings.Encoder encoder0, int offset) {
     {# TODO(azani): Error when trying to encode an unknown member. #}
     encoder0.encodeUint32(16, offset);
-    encoder0.encodeUint32(_tag_to_int[_tag], offset + 4);
+    encoder0.encodeUint32(_tagToInt[_tag], offset + 4);
     switch (_tag) {
 {%-   for field in union.fields %}
       case {{union|name}}Tag.{{field|name}}:
