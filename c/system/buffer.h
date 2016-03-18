@@ -94,10 +94,10 @@ typedef uint32_t MojoMapBufferFlags;
 
 MOJO_BEGIN_EXTERN_C
 
-// Creates a buffer of size |num_bytes| bytes that can be shared between
-// applications (by duplicating the handle -- see |MojoDuplicateBufferHandle()|
-// -- and passing it over a message pipe). To access the buffer, one must call
-// |MojoMapBuffer()|.
+// |MojoCreateSharedBuffer()|: Creates a buffer of size |num_bytes| bytes that
+// can be shared between applications (by duplicating the handle -- see
+// |MojoDuplicateBufferHandle()| -- and passing it over a message pipe). To
+// access the buffer, one must call |MojoMapBuffer()|.
 //
 // |options| may be set to null for a shared buffer with the default options.
 //
@@ -117,14 +117,16 @@ MOJO_BEGIN_EXTERN_C
 //       maximum number of handles was exceeded).
 //   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
 MojoResult MojoCreateSharedBuffer(
-    const struct MojoCreateSharedBufferOptions* options,  // Optional.
-    uint64_t num_bytes,                                   // In.
-    MojoHandle* shared_buffer_handle);                    // Out.
+    const struct MojoCreateSharedBufferOptions* MOJO_RESTRICT
+        options,                                      // Optional in.
+    uint64_t num_bytes,                               // In.
+    MojoHandle* MOJO_RESTRICT shared_buffer_handle);  // Out.
 
-// Duplicates the handle |buffer_handle| to a buffer. This creates another
-// handle (returned in |*new_buffer_handle| on success), which can then be sent
-// to another application over a message pipe, while retaining access to the
-// |buffer_handle| (and any mappings that it may have).
+// |MojoDuplicateBufferHandle()|: Duplicates the handle |buffer_handle| to a
+// buffer. This creates another handle (returned in |*new_buffer_handle| on
+// success), which can then be sent to another application over a message pipe,
+// while retaining access to the |buffer_handle| (and any mappings that it may
+// have).
 //
 // |options| may be set to null to duplicate the buffer handle with the default
 // options.
@@ -138,14 +140,16 @@ MojoResult MojoCreateSharedBuffer(
 //       |buffer_handle| is not a valid buffer handle or |*options| is invalid).
 //   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
 MojoResult MojoDuplicateBufferHandle(
-    MojoHandle buffer_handle,
-    const struct MojoDuplicateBufferHandleOptions* options,  // Optional.
-    MojoHandle* new_buffer_handle);                          // Out.
+    MojoHandle buffer_handle,  // In.
+    const struct MojoDuplicateBufferHandleOptions* MOJO_RESTRICT
+        options,                                   // Optional in.
+    MojoHandle* MOJO_RESTRICT new_buffer_handle);  // Out.
 
-// Gets information about the buffer with handle |buffer_handle|. |info| should
-// be non-null and point to a buffer of size |info_num_bytes|; |info_num_bytes|
-// should be at least 16 (the size of the first, and currently only, version of
-// |struct MojoBufferInformation|).
+// |MojoGetBufferInformation()|: Gets information about the buffer with handle
+// |buffer_handle|. |info| should be non-null and point to a buffer of size
+// |info_num_bytes|; |info_num_bytes| should be at least 16 (the size of the
+// first, and currently only, version of |struct MojoBufferInformation|).
+
 //
 // On success, |*info| will be filled with information about the given buffer.
 // Note that if additional (larger) versions of |struct MojoBufferInformation|
@@ -158,15 +162,16 @@ MojoResult MojoDuplicateBufferHandle(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |buffer_handle| is not a valid buffer handle, |*info| is null, or
 //       |info_num_bytes| is too small).
-MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,
+MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
                                     struct MojoBufferInformation* info,  // Out.
                                     uint32_t info_num_bytes);            // In.
 
-// Maps the part (at offset |offset| of length |num_bytes|) of the buffer given
-// by |buffer_handle| into memory, with options specified by |flags|. |offset +
-// num_bytes| must be less than or equal to the size of the buffer. On success,
-// |*buffer| points to memory with the requested part of the buffer. (On
-// failure, it is not modified.)
+// |MojoMapBuffer()|: Maps the part (at offset |offset| of length |num_bytes|)
+// of the buffer given by |buffer_handle| into memory, with options specified by
+// |flags|. |offset + num_bytes| must be less than or equal to the size of the
+// buffer. On success, |*buffer| points to memory with the requested part of the
+// buffer. (On failure, it is not modified.)
+
 //
 // A single buffer handle may have multiple active mappings (possibly depending
 // on the buffer type). The permissions (e.g., writable or executable) of the
@@ -184,16 +189,17 @@ MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,
 //       |offset| and |num_bytes| is not valid).
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the mapping operation itself failed
 //       (e.g., due to not having appropriate address space available).
-MojoResult MojoMapBuffer(MojoHandle buffer_handle,
-                         uint64_t offset,
-                         uint64_t num_bytes,
-                         void** buffer,  // Out.
-                         MojoMapBufferFlags flags);
+MojoResult MojoMapBuffer(MojoHandle buffer_handle,   // In.
+                         uint64_t offset,            // In.
+                         uint64_t num_bytes,         // In.
+                         void** buffer,              // Out.
+                         MojoMapBufferFlags flags);  // In.
 
-// Unmaps a buffer pointer that was mapped by |MojoMapBuffer()|. |buffer| must
-// have been the result of |MojoMapBuffer()| (not some other pointer inside
-// the mapped memory), and the entire mapping will be removed (partial unmapping
-// is not supported). A mapping may only be unmapped once.
+// |MojoUnmapBuffer()|: Unmaps a buffer pointer that was mapped by
+// |MojoMapBuffer()|. |buffer| must have been the result of |MojoMapBuffer()|
+// (not some other pointer inside the mapped memory), and the entire mapping
+// will be removed (partial unmapping is not supported). A mapping may only be
+// unmapped once.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.

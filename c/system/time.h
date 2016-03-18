@@ -28,19 +28,12 @@ typedef uint64_t MojoDeadline;
 
 MOJO_BEGIN_EXTERN_C
 
-// Note: Pointer parameters that are labelled "optional" may be null (at least
-// under some circumstances). Non-const pointer parameters are also labeled
-// "in", "out", or "in/out", to indicate how they are used. (Note that how/if
-// such a parameter is used may depend on other parameters or the requested
-// operation's success/failure. E.g., a separate |flags| parameter may control
-// whether a given "in/out" parameter is used for input, output, or both.)
-
-// Returns the time, in microseconds, since some undefined point in the past.
-// The values are only meaningful relative to other values that were obtained
-// from the same device without an intervening system restart. Such values are
-// guaranteed to be monotonically non-decreasing with the passage of real time.
-// Although the units are microseconds, the resolution of the clock may vary and
-// is typically in the range of ~1-15 ms.
+// |MojoGetTimeTicksNow()|: Returns the time, in microseconds, since some
+// undefined point in the past. The values are only meaningful relative to other
+// values that were obtained from the same device without an intervening system
+// restart. Such values are guaranteed to be monotonically non-decreasing with
+// the passage of real time. Although the units are microseconds, the resolution
+// of the clock may vary and is typically in the range of ~1-15 ms.
 MojoTimeTicks MojoGetTimeTicksNow(void);
 
 MOJO_END_EXTERN_C

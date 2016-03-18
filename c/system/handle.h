@@ -57,7 +57,7 @@ MOJO_STATIC_ASSERT(sizeof(MojoHandleSignalsState) == 8,
 
 MOJO_BEGIN_EXTERN_C
 
-// Closes the given |handle|.
+// |MojoClose()|: Closes the given |handle|.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
@@ -67,7 +67,7 @@ MOJO_BEGIN_EXTERN_C
 // happen before the close, be cancelled with result |MOJO_RESULT_CANCELLED| if
 // they properly overlap (this is likely the case with |MojoWait()|, etc.), or
 // fail with |MOJO_RESULT_INVALID_ARGUMENT| if they happen after.
-MojoResult MojoClose(MojoHandle handle);
+MojoResult MojoClose(MojoHandle handle);  // In.
 
 MOJO_END_EXTERN_C
 

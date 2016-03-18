@@ -16,7 +16,7 @@
 
 MOJO_BEGIN_EXTERN_C
 
-// Waits on the given handle until one of the following happens:
+// |MojoWait()|: Waits on the given handle until one of the following happens:
 //   - A signal indicated by |signals| is satisfied.
 //   - It becomes known that no signal indicated by |signals| will ever be
 //     satisfied. (See the description of the |MOJO_RESULT_CANCELLED| and
@@ -48,12 +48,12 @@ MOJO_BEGIN_EXTERN_C
 // the same handle and signal, and that signal becomes satisfied, all waiters
 // will be awoken.
 MojoResult MojoWait(
-    MojoHandle handle,
-    MojoHandleSignals signals,
-    MojoDeadline deadline,
+    MojoHandle handle,                              // In.
+    MojoHandleSignals signals,                      // In.
+    MojoDeadline deadline,                          // In.
     struct MojoHandleSignalsState* signals_state);  // Optional out.
 
-// Waits on |handles[0]|, ..., |handles[num_handles-1]| until:
+// |MojoWaitMany()|: Waits on |handles[0]|, ..., |handles[num_handles-1]| until:
 //   - (At least) one handle satisfies a signal indicated in its respective
 //     |signals[0]|, ..., |signals[num_handles-1]|.
 //   - It becomes known that no signal in some |signals[i]| will ever be
@@ -92,13 +92,13 @@ MojoResult MojoWait(
 //       handles satisfying any of its signals.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if it is or becomes impossible that SOME
 //       |handle[i]| will ever satisfy any of the signals in |signals[i]|.
-MojoResult MojoWaitMany(
-    const MojoHandle* handles,
-    const MojoHandleSignals* signals,
-    uint32_t num_handles,
-    MojoDeadline deadline,
-    uint32_t* result_index,                          // Optional out
-    struct MojoHandleSignalsState* signals_states);  // Optional out
+MojoResult MojoWaitMany(const MojoHandle* MOJO_RESTRICT handles,         // In.
+                        const MojoHandleSignals* MOJO_RESTRICT signals,  // In.
+                        uint32_t num_handles,                            // In.
+                        MojoDeadline deadline,                           // In.
+                        uint32_t* MOJO_RESTRICT result_index,  // Optional out
+                        struct MojoHandleSignalsState* MOJO_RESTRICT
+                            signals_states);  // Optional out
 
 MOJO_END_EXTERN_C
 

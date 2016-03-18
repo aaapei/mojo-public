@@ -72,4 +72,19 @@
 #define MOJO_END_EXTERN_C
 #endif
 
+// Use |MOJO_RESTRICT| (in C function declarations) in place of C99's
+// |restrict|, to work properly with C++. (It allows certain optimizations, but
+// more importantly it serves a documentary purpose for the caller.)
+//
+// Recommendation: If a function has multiple pointer parameters at least one of
+// which is to non-const, then all the pointer parameters should be declared
+// using |MOJO_RESTRICT| unless aliasing is explicitly allowed.
+#if defined(__GNUC__) || defined(_MSC_VER)
+// Use |__restrict|, since it works both in C++ and when compiling as C90
+// (|restrict| is only available in C99 and later, and never in C++).
+#define MOJO_RESTRICT __restrict
+#else
+#error "Please define MOJO_RESTRICT for your compiler."
+#endif
+
 #endif  // MOJO_PUBLIC_C_SYSTEM_MACROS_H_

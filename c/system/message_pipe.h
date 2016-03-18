@@ -56,9 +56,9 @@ typedef uint32_t MojoReadMessageFlags;
 
 MOJO_BEGIN_EXTERN_C
 
-// Creates a message pipe, which is a bidirectional communication channel for
-// framed data (i.e., messages). Messages can contain plain data and/or Mojo
-// handles.
+// |MojoCreateMessagePipe()|: Creates a message pipe, which is a bidirectional
+// communication channel for framed data (i.e., messages). Messages can contain
+// plain data and/or Mojo handles.
 //
 // |options| may be set to null for a message pipe with the default options.
 //
@@ -72,16 +72,18 @@ MOJO_BEGIN_EXTERN_C
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
 //       been reached.
 MojoResult MojoCreateMessagePipe(
-    const struct MojoCreateMessagePipeOptions* options,  // Optional.
-    MojoHandle* message_pipe_handle0,                    // Out.
-    MojoHandle* message_pipe_handle1);                   // Out.
+    const struct MojoCreateMessagePipeOptions* MOJO_RESTRICT
+        options,                                      // Optional in.
+    MojoHandle* MOJO_RESTRICT message_pipe_handle0,   // Out.
+    MojoHandle* MOJO_RESTRICT message_pipe_handle1);  // Out.
 
-// Writes a message to the message pipe endpoint given by |message_pipe_handle|,
-// with message data specified by |bytes| of size |num_bytes| and attached
-// handles specified by |handles| of count |num_handles|, and options specified
-// by |flags|. If there is no message data, |bytes| may be null, in which case
-// |num_bytes| must be zero. If there are no attached handles, |handles| may be
-// null, in which case |num_handles| must be zero.
+// |MojoWriteMessage()|: Writes a message to the message pipe endpoint given by
+// |message_pipe_handle|, with message data specified by |bytes| of size
+// |num_bytes| and attached handles specified by |handles| of count
+// |num_handles|, and options specified by |flags|. If there is no message data,
+// |bytes| may be null, in which case |num_bytes| must be zero. If there are no
+// attached handles, |handles| may be null, in which case |num_handles| must be
+// zero.
 //
 // If handles are attached, on success the handles will no longer be valid (the
 // receiver will receive equivalent, but logically different, handles). Handles
@@ -104,19 +106,19 @@ MojoResult MojoCreateMessagePipe(
 //
 // TODO(vtl): Add a notion of capacity for message pipes, and return
 // |MOJO_RESULT_SHOULD_WAIT| if the message pipe is full.
-MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,
-                            const void* bytes,  // Optional.
-                            uint32_t num_bytes,
-                            const MojoHandle* handles,  // Optional.
-                            uint32_t num_handles,
-                            MojoWriteMessageFlags flags);
+MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,  // In.
+                            const void* bytes,               // Optional in.
+                            uint32_t num_bytes,              // In.
+                            const MojoHandle* handles,       // Optional in.
+                            uint32_t num_handles,            // In.
+                            MojoWriteMessageFlags flags);    // In.
 
-// Reads the next message from a message pipe, or indicates the size of the
-// message if it cannot fit in the provided buffers. The message will be read
-// in its entirety or not at all; if it is not, it will remain enqueued unless
-// the |MOJO_READ_MESSAGE_FLAG_MAY_DISCARD| flag was passed. At most one
-// message will be consumed from the queue, and the return value will indicate
-// whether a message was successfully read.
+// |MojoReadMessage()|: Reads the next message from a message pipe, or indicates
+// the size of the message if it cannot fit in the provided buffers. The message
+// will be read in its entirety or not at all; if it is not, it will remain
+// enqueued unless the |MOJO_READ_MESSAGE_FLAG_MAY_DISCARD| flag was passed. At
+// most one message will be consumed from the queue, and the return value will
+// indicate whether a message was successfully read.
 //
 // |num_bytes| and |num_handles| are optional in/out parameters that on input
 // must be set to the sizes of the |bytes| and |handles| arrays, and on output
@@ -142,12 +144,13 @@ MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,
 //
 // TODO(vtl): Reconsider the |MOJO_RESULT_RESOURCE_EXHAUSTED| error code; should
 // distinguish this from the hitting-system-limits case.
-MojoResult MojoReadMessage(MojoHandle message_pipe_handle,
-                           void* bytes,            // Optional out.
-                           uint32_t* num_bytes,    // Optional in/out.
-                           MojoHandle* handles,    // Optional out.
-                           uint32_t* num_handles,  // Optional in/out.
-                           MojoReadMessageFlags flags);
+MojoResult MojoReadMessage(
+    MojoHandle message_pipe_handle,       // In.
+    void* MOJO_RESTRICT bytes,            // Optional out.
+    uint32_t* MOJO_RESTRICT num_bytes,    // Optional in/out.
+    MojoHandle* MOJO_RESTRICT handles,    // Optional out.
+    uint32_t* MOJO_RESTRICT num_handles,  // Optional in/out.
+    MojoReadMessageFlags flags);          // In.
 
 MOJO_END_EXTERN_C
 

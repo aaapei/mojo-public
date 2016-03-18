@@ -80,11 +80,11 @@ typedef uint32_t MojoReadDataFlags;
 
 MOJO_BEGIN_EXTERN_C
 
-// Creates a data pipe, which is a unidirectional communication channel for
-// unframed data, with the given options. Data is unframed, but must come as
-// (multiples of) discrete elements, of the size given in |options|. See
-// |MojoCreateDataPipeOptions| for a description of the different options
-// available for data pipes.
+// |MojoCreateDataPipe()|: Creates a data pipe, which is a unidirectional
+// communication channel for unframed data, with the given options. Data is
+// unframed, but must come as (multiples of) discrete elements, of the size
+// given in |options|. See |MojoCreateDataPipeOptions| for a description of the
+// different options available for data pipes.
 //
 // |options| may be set to null for a data pipe with the default options (which
 // will have an element size of one byte and have some system-dependent
@@ -103,11 +103,12 @@ MOJO_BEGIN_EXTERN_C
 //       maximum number of handles was exceeded).
 //   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
 MojoResult MojoCreateDataPipe(
-    const struct MojoCreateDataPipeOptions* options,  // Optional.
-    MojoHandle* data_pipe_producer_handle,            // Out.
-    MojoHandle* data_pipe_consumer_handle);           // Out.
+    const struct MojoCreateDataPipeOptions* MOJO_RESTRICT
+        options,                                           // Optional in.
+    MojoHandle* MOJO_RESTRICT data_pipe_producer_handle,   // Out.
+    MojoHandle* MOJO_RESTRICT data_pipe_consumer_handle);  // Out.
 
-// Writes the given data to the data pipe producer given by
+// |MojoWriteData()|: Writes the given data to the data pipe producer given by
 // |data_pipe_producer_handle|. |elements| points to data of size |*num_bytes|;
 // |*num_bytes| should be a multiple of the data pipe's element size. If
 // |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| is set in |flags|, either all the data
@@ -135,15 +136,15 @@ MojoResult MojoCreateDataPipe(
 //       |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set.
 //
 // TODO(vtl): Should there be a way of querying how much data can be written?
-MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,
-                         const void* elements,
-                         uint32_t* num_bytes,  // In/out.
-                         MojoWriteDataFlags flags);
+MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
+                         const void* MOJO_RESTRICT elements,    // In.
+                         uint32_t* MOJO_RESTRICT num_bytes,     // In/out.
+                         MojoWriteDataFlags flags);             // In.
 
-// Begins a two-phase write to the data pipe producer given by
-// |data_pipe_producer_handle|. On success, |*buffer| will be a pointer to which
-// the caller can write |*buffer_num_bytes| bytes of data. There are currently
-// no flags allowed, so |flags| should be |MOJO_WRITE_DATA_FLAG_NONE|.
+// |MojoBeginWriteData()|: Begins a two-phase write to the data pipe producer
+// given by |data_pipe_producer_handle|. On success, |*buffer| will be a pointer
+// to which the caller can write |*buffer_num_bytes| bytes of data. There are
+// currently no flags allowed, so |flags| should be |MOJO_WRITE_DATA_FLAG_NONE|.
 //
 // During a two-phase write, |data_pipe_producer_handle| is *not* writable.
 // E.g., if another thread tries to write to it, it will get |MOJO_RESULT_BUSY|;
@@ -167,13 +168,13 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,
 //       called, but not yet the matching |MojoEndWriteData()|).
 //   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be written (and the
 //       consumer is still open).
-MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,
-                              void** buffer,               // Out.
-                              uint32_t* buffer_num_bytes,  // Out.
-                              MojoWriteDataFlags flags);
+MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
+                              void** MOJO_RESTRICT buffer,               // Out.
+                              uint32_t* MOJO_RESTRICT buffer_num_bytes,  // Out.
+                              MojoWriteDataFlags flags);                 // In.
 
-// Ends a two-phase write to the data pipe producer given by
-// |data_pipe_producer_handle| that was begun by a call to
+// |MojoEndWriteData()|: Ends a two-phase write to the data pipe producer given
+// by |data_pipe_producer_handle| that was begun by a call to
 // |MojoBeginWriteData()| on the same handle. |num_bytes_written| should
 // indicate the amount of data actually written; it must be less than or equal
 // to the value of |*buffer_num_bytes| output by |MojoBeginWriteData()| and must
@@ -194,11 +195,12 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer is not in a
 //       two-phase write (e.g., |MojoBeginWriteData()| was not called or
 //       |MojoEndWriteData()| has already been called).
-MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,
-                            uint32_t num_bytes_written);
+MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
+                            uint32_t num_bytes_written);           // In.
 
-// Reads data from the data pipe consumer given by |data_pipe_consumer_handle|.
-// May also be used to discard data or query the amount of data available.
+// |MojoReadData()|: Reads data from the data pipe consumer given by
+// |data_pipe_consumer_handle|. May also be used to discard data or query the
+// amount of data available.
 //
 // If |flags| has neither |MOJO_READ_DATA_FLAG_DISCARD| nor
 // |MOJO_READ_DATA_FLAG_QUERY| set, this tries to read up to |*num_bytes| (which
@@ -241,14 +243,14 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,
 //   |MOJO_RESULT_SHOULD_WAIT| if there is no data to be read or discarded (and
 //       the producer is still open) and |flags| does *not* have
 //       |MOJO_READ_DATA_FLAG_ALL_OR_NONE| set.
-MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,
-                        void* elements,       // Out.
-                        uint32_t* num_bytes,  // In/out.
-                        MojoReadDataFlags flags);
+MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
+                        void* MOJO_RESTRICT elements,          // Out.
+                        uint32_t* MOJO_RESTRICT num_bytes,     // In/out.
+                        MojoReadDataFlags flags);              // In.
 
-// Begins a two-phase read from the data pipe consumer given by
-// |data_pipe_consumer_handle|. On success, |*buffer| will be a pointer from
-// which the caller can read |*buffer_num_bytes| bytes of data. There are
+// |MojoBeginReadData()|: Begins a two-phase read from the data pipe consumer
+// given by |data_pipe_consumer_handle|. On success, |*buffer| will be a pointer
+// from which the caller can read |*buffer_num_bytes| bytes of data. There are
 // currently no valid flags, so |flags| must be |MOJO_READ_DATA_FLAG_NONE|.
 //
 // During a two-phase read, |data_pipe_consumer_handle| is *not* readable.
@@ -272,17 +274,17 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,
 //       called, but not yet the matching |MojoEndReadData()|).
 //   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be read (and the
 //       producer is still open).
-MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,
-                             const void** buffer,         // Out.
-                             uint32_t* buffer_num_bytes,  // Out.
-                             MojoReadDataFlags flags);
+MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,      // In.
+                             const void** MOJO_RESTRICT buffer,         // Out.
+                             uint32_t* MOJO_RESTRICT buffer_num_bytes,  // Out.
+                             MojoReadDataFlags flags);                  // In.
 
-// Ends a two-phase read from the data pipe consumer given by
-// |data_pipe_consumer_handle| that was begun by a call to |MojoBeginReadData()|
-// on the same handle. |num_bytes_read| should indicate the amount of data
-// actually read; it must be less than or equal to the value of
-// |*buffer_num_bytes| output by |MojoBeginReadData()| and must be a multiple of
-// the element size.
+// |MojoEndReadData()|: Ends a two-phase read from the data pipe consumer given
+// by |data_pipe_consumer_handle| that was begun by a call to
+// |MojoBeginReadData()| on the same handle. |num_bytes_read| should indicate
+// the amount of data actually read; it must be less than or equal to the value
+// of |*buffer_num_bytes| output by |MojoBeginReadData()| and must be a multiple
+// of the element size.
 //
 // On failure, the two-phase read (if any) is ended (so the handle may become
 // readable again) but no data is "removed" from the data pipe.
@@ -296,8 +298,8 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer is not in a
 //       two-phase read (e.g., |MojoBeginReadData()| was not called or
 //       |MojoEndReadData()| has already been called).
-MojoResult MojoEndReadData(MojoHandle data_pipe_consumer_handle,
-                           uint32_t num_bytes_read);
+MojoResult MojoEndReadData(MojoHandle data_pipe_consumer_handle,  // In.
+                           uint32_t num_bytes_read);              // In.
 
 MOJO_END_EXTERN_C
 
