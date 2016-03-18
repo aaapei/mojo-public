@@ -183,8 +183,9 @@ template("mojom") {
       script = generator_script
       inputs = generator_sources
       if (defined(invoker.generate_type_info) && invoker.generate_type_info) {
-        inputs +=
-            [ rebase_path("mojo/public/interfaces/bindings", ".", mojo_root) ]
+        deps = [
+          rebase_path("mojo/public/interfaces/bindings", ".", mojo_root),
+        ]
       }
       sources = invoker.sources
       outputs = generator_cpp_outputs + generator_dart_outputs +
