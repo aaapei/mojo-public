@@ -102,7 +102,10 @@ MojoResult MojoCreateMessagePipe(
 //       across processes), so this function may succeed even if the other
 //       endpoint has been closed (in which case the message would be dropped).
 //   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
-//   |MOJO_RESULT_BUSY| if some handle to be sent is currently in use.
+//   |MOJO_RESULT_BUSY| if |message_pipe_handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message), or if some handle to be sent is currently in
+//       use.
 //
 // TODO(vtl): Add a notion of capacity for message pipes, and return
 // |MOJO_RESULT_SHOULD_WAIT| if the message pipe is full.
@@ -141,6 +144,9 @@ MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,  // In.
 //       provided buffer(s). The message will have been left in the queue or
 //       discarded, depending on flags.
 //   |MOJO_RESULT_SHOULD_WAIT| if no message was available to be read.
+//   |MOJO_RESULT_BUSY| if |message_pipe_handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 //
 // TODO(vtl): Reconsider the |MOJO_RESULT_RESOURCE_EXHAUSTED| error code; should
 // distinguish this from the hitting-system-limits case.

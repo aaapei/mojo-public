@@ -128,8 +128,10 @@ MojoResult MojoCreateDataPipe(
 //   |MOJO_RESULT_OUT_OF_RANGE| if |flags| has
 //       |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set and the required amount of data
 //       (specified by |*num_bytes|) could not be written.
-//   |MOJO_RESULT_BUSY| if there is a two-phase write ongoing with
-//       |data_pipe_producer_handle| (i.e., |MojoBeginWriteData()| has been
+//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message), or if there is a two-phase write ongoing
+//       with |data_pipe_producer_handle| (i.e., |MojoBeginWriteData()| has been
 //       called, but not yet the matching |MojoEndWriteData()|).
 //   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be written (and the
 //       consumer is still open) and |flags| does *not* have
@@ -163,9 +165,11 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
 //       flags has |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set).
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle has been
 //       closed.
-//   |MOJO_RESULT_BUSY| if there is already a two-phase write ongoing with
-//       |data_pipe_producer_handle| (i.e., |MojoBeginWriteData()| has been
-//       called, but not yet the matching |MojoEndWriteData()|).
+//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message), or if there is already a two-phase write
+//       ongoing with |data_pipe_producer_handle| (i.e., |MojoBeginWriteData()|
+//       has been called, but not yet the matching |MojoEndWriteData()|).
 //   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be written (and the
 //       consumer is still open).
 MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
@@ -195,6 +199,9 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer is not in a
 //       two-phase write (e.g., |MojoBeginWriteData()| was not called or
 //       |MojoEndWriteData()| has already been called).
+//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message).
 MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
                             uint32_t num_bytes_written);           // In.
 
@@ -237,8 +244,10 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
 //   |MOJO_RESULT_OUT_OF_RANGE| if |flags| has |MOJO_READ_DATA_FLAG_ALL_OR_NONE|
 //       set and the required amount of data is not available to be read or
 //       discarded (and the producer is still open).
-//   |MOJO_RESULT_BUSY| if there is a two-phase read ongoing with
-//       |data_pipe_consumer_handle| (i.e., |MojoBeginReadData()| has been
+//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message), or if there is a two-phase read ongoing
+//       with |data_pipe_consumer_handle| (i.e., |MojoBeginReadData()| has been
 //       called, but not yet the matching |MojoEndReadData()|).
 //   |MOJO_RESULT_SHOULD_WAIT| if there is no data to be read or discarded (and
 //       the producer is still open) and |flags| does *not* have
@@ -269,9 +278,11 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
 //       or |flags| has invalid flags set).
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer handle has been
 //       closed.
-//   |MOJO_RESULT_BUSY| if there is already a two-phase read ongoing with
-//       |data_pipe_consumer_handle| (i.e., |MojoBeginReadData()| has been
-//       called, but not yet the matching |MojoEndReadData()|).
+//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message), or if there is already a two-phase read
+//       ongoing with |data_pipe_consumer_handle| (i.e., |MojoBeginReadData()|
+//       has been called, but not yet the matching |MojoEndReadData()|).
 //   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be read (and the
 //       producer is still open).
 MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,      // In.
@@ -298,6 +309,9 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,      // In.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer is not in a
 //       two-phase read (e.g., |MojoBeginReadData()| was not called or
 //       |MojoEndReadData()| has already been called).
+//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message).
 MojoResult MojoEndReadData(MojoHandle data_pipe_consumer_handle,  // In.
                            uint32_t num_bytes_read);              // In.
 

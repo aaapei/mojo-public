@@ -139,6 +139,9 @@ MojoResult MojoCreateSharedBuffer(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |buffer_handle| is not a valid buffer handle or |*options| is invalid).
 //   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
+//   |MOJO_RESULT_BUSY| if |buffer_handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoDuplicateBufferHandle(
     MojoHandle buffer_handle,  // In.
     const struct MojoDuplicateBufferHandleOptions* MOJO_RESTRICT
@@ -162,6 +165,9 @@ MojoResult MojoDuplicateBufferHandle(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |buffer_handle| is not a valid buffer handle, |*info| is null, or
 //       |info_num_bytes| is too small).
+//   |MOJO_RESULT_BUSY| if |buffer_handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
                                     struct MojoBufferInformation* info,  // Out.
                                     uint32_t info_num_bytes);            // In.
@@ -189,6 +195,9 @@ MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
 //       |offset| and |num_bytes| is not valid).
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the mapping operation itself failed
 //       (e.g., due to not having appropriate address space available).
+//   |MOJO_RESULT_BUSY| if |buffer_handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoMapBuffer(MojoHandle buffer_handle,   // In.
                          uint64_t offset,            // In.
                          uint64_t num_bytes,         // In.

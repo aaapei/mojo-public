@@ -43,6 +43,9 @@ MOJO_BEGIN_EXTERN_C
 //   |MOJO_RESULT_FAILED_PRECONDITION| if it becomes known that none of the
 //       signals in |signals| can ever be satisfied (e.g., when waiting on one
 //       end of a message pipe and the other end is closed).
+//   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
+//       (that, e.g., may result in it being invalidated, such as being sent in
+//       a message).
 //
 // If there are multiple waiters (on different threads, obviously) waiting on
 // the same handle and signal, and that signal becomes satisfied, all waiters
@@ -92,6 +95,9 @@ MojoResult MojoWait(
 //       handles satisfying any of its signals.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if it is or becomes impossible that SOME
 //       |handle[i]| will ever satisfy any of the signals in |signals[i]|.
+//   |MOJO_RESULT_BUSY| if some |handle[i]| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoWaitMany(const MojoHandle* MOJO_RESTRICT handles,         // In.
                         const MojoHandleSignals* MOJO_RESTRICT signals,  // In.
                         uint32_t num_handles,                            // In.
