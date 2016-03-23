@@ -493,6 +493,50 @@ TEST(CoreCppTest, ScopedHandleMoveCtorSelf) {
   EXPECT_TRUE(buffer1.is_valid());
 }
 
+TEST(CoreCppTest, WaitManyResult) {
+  {
+    WaitManyResult wmr(MOJO_RESULT_OK);
+    EXPECT_FALSE(wmr.IsIndexValid());
+    EXPECT_TRUE(wmr.AreSignalsStatesValid());
+    EXPECT_EQ(MOJO_RESULT_OK, wmr.result);
+  }
+
+  {
+    WaitManyResult wmr(MOJO_RESULT_FAILED_PRECONDITION);
+    EXPECT_FALSE(wmr.IsIndexValid());
+    EXPECT_TRUE(wmr.AreSignalsStatesValid());
+    EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION, wmr.result);
+  }
+
+  {
+    WaitManyResult wmr(MOJO_RESULT_INVALID_ARGUMENT);
+    EXPECT_FALSE(wmr.IsIndexValid());
+    EXPECT_FALSE(wmr.AreSignalsStatesValid());
+    EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, wmr.result);
+  }
+
+  // These should be like "invalid argument".
+  EXPECT_FALSE(
+      WaitManyResult(MOJO_RESULT_RESOURCE_EXHAUSTED).AreSignalsStatesValid());
+  EXPECT_FALSE(WaitManyResult(MOJO_RESULT_BUSY).AreSignalsStatesValid());
+
+  {
+    WaitManyResult wmr(MOJO_RESULT_OK, 5u);
+    EXPECT_TRUE(wmr.IsIndexValid());
+    EXPECT_TRUE(wmr.AreSignalsStatesValid());
+    EXPECT_EQ(MOJO_RESULT_OK, wmr.result);
+    EXPECT_EQ(5u, wmr.index);
+  }
+
+  {
+    WaitManyResult wmr(MOJO_RESULT_FAILED_PRECONDITION, 5u);
+    EXPECT_TRUE(wmr.IsIndexValid());
+    EXPECT_TRUE(wmr.AreSignalsStatesValid());
+    EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION, wmr.result);
+    EXPECT_EQ(5u, wmr.index);
+  }
+}
+
 // TODO(vtl): Write data pipe tests.
 
 }  // namespace

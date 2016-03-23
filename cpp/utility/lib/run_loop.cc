@@ -169,6 +169,11 @@ bool RunLoop::Wait(bool non_blocking) {
       handler->OnHandleReady(handle);
       return true;
     case MOJO_RESULT_INVALID_ARGUMENT:
+    case MOJO_RESULT_CANCELLED:
+    case MOJO_RESULT_BUSY:
+      // These results indicate a bug in "our" code (e.g., race conditions).
+      assert(false);
+      // Fall through.
     case MOJO_RESULT_FAILED_PRECONDITION:
       // Remove the handle first, this way if OnHandleError() tries to remove
       // the handle our iterator isn't invalidated.

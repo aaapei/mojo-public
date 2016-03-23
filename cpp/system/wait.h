@@ -44,7 +44,8 @@ struct WaitManyResult {
   // helper function to check if |signals_states| holds valid data.
   bool AreSignalsStatesValid() const {
     return result != MOJO_RESULT_INVALID_ARGUMENT &&
-           result != MOJO_RESULT_RESOURCE_EXHAUSTED;
+           result != MOJO_RESULT_RESOURCE_EXHAUSTED &&
+           result != MOJO_RESULT_BUSY;
   }
 
   MojoResult result;
