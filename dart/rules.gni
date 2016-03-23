@@ -172,20 +172,6 @@ template("dart_pkg_helper") {
       datadeps += invoker.datadeps
     }
 
-    list_mojoms_script =
-        rebase_path("mojo/public/tools/dart_list_mojoms.py", ".", mojo_sdk_root)
-    mojom_sources = []
-    foreach(d, deps) {
-      root_prefix = rebase_path(".", "", mojo_sdk_root)
-      source_directory = rebase_path(get_label_info(d, "dir"))
-      mojom_sources += exec_script(list_mojoms_script,
-                                   [
-                                     source_directory,
-                                     root_prefix,
-                                   ],
-                                   "list lines")
-    }
-
     sdk_ext_directory = []
     if (defined(invoker.sdk_ext_directory)) {
       sdk_ext_directory += [ invoker.sdk_ext_directory ]
@@ -238,10 +224,7 @@ template("dart_pkg_helper") {
       stamp_file,
     ]
 
-    inputs = [
-               list_mojoms_script,
-               script,
-             ] + rebase_path(sources)
+    inputs = [ script ] + rebase_path(sources)
 
     args = [
              "--package-name",
@@ -258,11 +241,10 @@ template("dart_pkg_helper") {
              rebase_path(entries_file),
              "--package-sources",
            ] + rebase_path(sources) + [ "--package-entrypoints" ] +
-           rebase_path(entrypoints) + [ "--mojom-sources" ] +
-           rebase_path(mojom_sources, "", mojo_sdk_root) +
-           [ "--sdk-ext-directories" ] + rebase_path(sdk_ext_directory) +
-           [ "--sdk-ext-files" ] + rebase_path(sdk_ext_files) +
-           [ "--sdk-ext-mappings" ] + sdk_ext_mappings + extra_flags
+           rebase_path(entrypoints) + [ "--sdk-ext-directories" ] +
+           rebase_path(sdk_ext_directory) + [ "--sdk-ext-files" ] +
+           rebase_path(sdk_ext_files) + [ "--sdk-ext-mappings" ] +
+           sdk_ext_mappings + extra_flags
   }
 }
 

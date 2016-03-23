@@ -19,26 +19,12 @@ USE_LINKS = sys.platform != "win32"
 DART_ANALYZE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "dart_analyze.py")
 
-def mojom_dart_filter(path):
-  if os.path.isdir(path):
-    return True
-  # Don't include all .dart, just .mojom.dart.
-  return path.endswith('.mojom.dart')
-
-
 def dart_filter(path):
   if os.path.isdir(path):
     return True
   _, ext = os.path.splitext(path)
   # .dart includes '.mojom.dart'
   return ext == '.dart'
-
-
-def mojom_filter(path):
-  if os.path.isdir(path):
-    return True
-  _, ext = os.path.splitext(path)
-  return ext == '.mojom'
 
 
 def ensure_dir_exists(path):
@@ -203,11 +189,6 @@ def main():
   parser.add_argument('--package-entrypoints',
                       metavar='package_entrypoints',
                       help='Package entry points for analyzer',
-                      nargs='*',
-                      default=[])
-  parser.add_argument('--mojom-sources',
-                      metavar='mojom_sources',
-                      help='.mojom and .mojom.dart sources',
                       nargs='*',
                       default=[])
   parser.add_argument('--sdk-ext-directories',
