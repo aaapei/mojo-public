@@ -11,6 +11,7 @@ type MojoSystem interface {
 	// Shared buffer
 	CreateSharedBuffer(flags uint32, numBytes uint64) (result uint32, handle uint32)
 	DuplicateBufferHandle(handle uint32, flags uint32) (result uint32, dupHandle uint32)
+	GetBufferInformation(handle uint32) (result uint32, flags uint32, numBytes uint64)
 	// After a successful MapBuffer call, the caller must pass the same slice value to UnmapBuffer to release
 	// the underlying memory segment.
 	MapBuffer(handle uint32, offset, numBytes uint64, flags uint32) (result uint32, buf []byte)

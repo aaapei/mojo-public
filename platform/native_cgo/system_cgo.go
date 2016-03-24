@@ -63,7 +63,7 @@ import (
 	"unsafe"
 )
 
-// CGoSystem provides an implementation of the system.System interface based on CGO
+// CGoSystem provides an implementation of the system.MojoSystem interface based on CGO
 type CGoSystem struct{}
 
 func (c *CGoSystem) CreateSharedBuffer(flags uint32, numBytes uint64) (uint32, uint32) {
@@ -95,6 +95,14 @@ func (c *CGoSystem) MapBuffer(handle uint32, offset, numBytes uint64, flags uint
 		return uint32(r), nil
 	}
 	return uint32(r), unsafeByteSlice(bufPtr, int(numBytes))
+}
+
+func (c *CGoSystem) GetBufferInformation(handle uint32) (result uint32, flags uint32, numBytes uint64) {
+	var info *C.struct_MojoBufferInformation
+	info = &C.struct_MojoBufferInformation{}
+	r := C.MojoGetBufferInformation(C.MojoHandle(handle), info, C.uint32_t(unsafe.Sizeof(*info)))
+
+	return uint32(r), uint32(info.flags), uint64(info.num_bytes)
 }
 
 func (c *CGoSystem) UnmapBuffer(buf []byte) (result uint32) {

@@ -95,3 +95,7 @@ func (h *InvalidHandle) MapBuffer(offset uint64, numBytes int, flags system.Mojo
 func (h *InvalidHandle) UnmapBuffer(buffer []byte) system.MojoResult {
 	return system.MOJO_RESULT_INVALID_ARGUMENT
 }
+
+func (h *InvalidHandle) GetBufferInformation() (system.MojoResult, system.MojoBufferInformation) {
+	return system.MOJO_RESULT_INVALID_ARGUMENT, system.MojoBufferInformation{}
+}

@@ -22,6 +22,7 @@ type MojoCreateMessagePipeOptionsFlags uint32
 type MojoCreateSharedBufferOptionsFlags uint32
 type MojoDuplicateBufferHandleOptionsFlags uint32
 type MojoMapBufferFlags uint32
+type MojoBufferInformationFlags uint32
 
 const (
 	MOJO_DEADLINE_INDEFINITE        MojoDeadline = math.MaxUint64
@@ -68,6 +69,7 @@ const (
 	MOJO_CREATE_SHARED_BUFFER_OPTIONS_FLAG_NONE    MojoCreateSharedBufferOptionsFlags    = 0
 	MOJO_DUPLICATE_BUFFER_HANDLE_OPTIONS_FLAG_NONE MojoDuplicateBufferHandleOptionsFlags = 0
 	MOJO_MAP_BUFFER_FLAG_NONE                      MojoMapBufferFlags                    = 0
+	MOJO_BUFFER_INFORMATION_FLAG_NONE              MojoBufferInformationFlags            = 0
 )
 
 // IsReadable returns true iff the |MOJO_HANDLE_SIGNAL_READABLE| bit is set.
@@ -121,4 +123,15 @@ type SharedBufferOptions struct {
 // duplicating access to a shared buffer.
 type DuplicateBufferHandleOptions struct {
 	Flags MojoDuplicateBufferHandleOptionsFlags
+}
+
+// MojoBufferInformation is returned by the GetBufferInformation system
+// call.
+type MojoBufferInformation struct {
+	// Possible values:
+	//   MOJO_BUFFER_INFORMATION_FLAG_NONE
+	Flags MojoBufferInformationFlags
+
+	// The size of this shared buffer, in bytes.
+	NumBytes uint64
 }

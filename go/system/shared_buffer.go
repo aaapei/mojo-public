@@ -24,6 +24,9 @@ type SharedBufferHandle interface {
 
 	// UnmapBuffer unmaps a buffer that was returned by MapBuffer.
 	UnmapBuffer(buffer []byte) MojoResult
+
+	// Gets the shared buffer information (buffer size, and the specified flags).
+	GetBufferInformation() (MojoResult, MojoBufferInformation)
 }
 
 type sharedBuffer struct {
@@ -59,6 +62,20 @@ func (h *sharedBuffer) UnmapBuffer(buffer []byte) MojoResult {
 	r := sysImpl.UnmapBuffer(buffer)
 	h.core.mu.Unlock()
 	return MojoResult(r)
+}
+
+func (h *sharedBuffer) GetBufferInformation() (MojoResult, MojoBufferInformation) {
+	h.core.mu.Lock()
+	r, flags, numBytes := sysImpl.GetBufferInformation(uint32(h.mojoHandle))
+	h.core.mu.Unlock()
+
+	if r != 0 {
+		return MojoResult(r), MojoBufferInformation{}
+	}
+
+	return MojoResult(r), MojoBufferInformation{
+		Flags:    MojoBufferInformationFlags(flags),
+		NumBytes: numBytes}
 }
 
 func newUnsafeSlice(ptr unsafe.Pointer, length int) unsafe.Pointer {

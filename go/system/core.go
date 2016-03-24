@@ -54,7 +54,11 @@ type Core interface {
 
 // coreImpl is an implementation of the Mojo system APIs.
 type coreImpl struct {
-	// Protects from making parallel non-blocking mojo cgo calls.
+	// The Go runtime spawns more OS threads (or recycles one from a thread pool)
+	// to serve its goroutines if a call blocks for more than some small fraction
+	// of time. To prevent creating spurrious OS threads, we try to have no more
+	// than one parallel non-blocking mojo system call; blocking calls shouldn't
+	// use this mutex.
 	mu sync.Mutex
 }
 
