@@ -10,7 +10,7 @@ module mojo.test.versioning;
 
 enum Department {
   SALES,
-  DEV
+  DEV,
 };
 
 struct Date {
@@ -34,6 +34,5 @@ interface HumanResourceDatabase {
       => (Employee? employee, [MinVersion=1] array<uint8>? finger_print);
 
   [MinVersion=1]
-  AttachFingerPrint(uint64 id, array<uint8> finger_print)
-      => (bool success);
+  AttachFingerPrint(uint64 id, array<uint8> finger_print) => (bool success);
 };

@@ -2,7 +2,8 @@
 module mojo.test;
 
 enum TestEnum {
-  TEST = 0, V = 1, FOO = 2, BAR = 3
+  TEST = 0,
+  V = 1,
+  FOO = 2,
+  BAR = 3,
 };
-
-

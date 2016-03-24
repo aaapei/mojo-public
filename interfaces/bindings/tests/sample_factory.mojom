@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-[DartPackage="_mojo_for_test_only", JavaPackage="org.chromium.mojo.bindings.test.mojom.sample"]
+[DartPackage="_mojo_for_test_only",
+ JavaPackage="org.chromium.mojo.bindings.test.mojom.sample"]
 module sample;
 
 import "sample_import.mojom";
@@ -31,12 +32,12 @@ interface NamedObject {
 };
 
 interface Factory {
-  DoStuff(Request request, handle<message_pipe>? pipe) =>
-      (Response response, string text);
+  DoStuff(Request request, handle<message_pipe>? pipe)
+      => (Response response, string text);
   DoStuff2(handle<data_pipe_consumer> pipe) => (string text);
   CreateNamedObject(NamedObject& obj);
-  RequestImportedInterface(
-      imported.ImportedInterface& obj) => (imported.ImportedInterface& obj);
-  TakeImportedInterface(
-      imported.ImportedInterface obj) => (imported.ImportedInterface obj);
+  RequestImportedInterface(imported.ImportedInterface& obj)
+      => (imported.ImportedInterface& obj);
+  TakeImportedInterface(imported.ImportedInterface obj)
+      => (imported.ImportedInterface obj);
 };

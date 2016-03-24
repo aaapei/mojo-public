@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-[DartPackage="_mojo_for_test_only", JavaPackage="org.chromium.mojo.bindings.test.mojom.test_structs"]
+[DartPackage="_mojo_for_test_only",
+ JavaPackage="org.chromium.mojo.bindings.test.mojom.test_structs"]
 module mojo.test;
 
 import "mojo/public/interfaces/bindings/tests/rect.mojom";
@@ -35,9 +36,7 @@ struct RectPair {
   Rect? second;
 };
 
-struct EmptyStruct {
-};
-
+struct EmptyStruct {};
 
 struct HandleStruct {
   handle<message_pipe>? h;
@@ -126,11 +125,11 @@ struct ScopedConstants {
     E3 = E2,
     E4,
   };
-  EType f0 = E0; // 0
-  EType f1 = E1; // 1
-  EType f2 = E2; // 10
-  EType f3 = E3; // 10
-  EType f4 = E4; // 11
+  EType f0 = E0;  // 0
+  EType f1 = E1;  // 1
+  EType f2 = E2;  // 10
+  EType f3 = E3;  // 10
+  EType f4 = E4;  // 11
   int32 f5 = TEN;
   int32 f6 = ALSO_TEN;
 };
@@ -214,13 +213,13 @@ struct FloatNumberValues {
 // decoded correctly.
 
 struct IntegerNumberValues {
-  const int8 V0 = -128; // Minimum
-  const int8 V1 = -1;   // -1
-  const int8 V2 = 0;    // 0
-  const int8 V3 = 42;   // An arbitrary valid value.
+  const int8 V0 = -128;  // Minimum
+  const int8 V1 = -1;  // -1
+  const int8 V2 = 0;  // 0
+  const int8 V3 = 42;  // An arbitrary valid value.
   const int8 V4 = 127;  // Maximum
 
-  const int16 V5 = -32768; // ...
+  const int16 V5 = -32768;  // ...
   const int16 V6 = -1;
   const int16 V7 = 0;
   const int16 V8 = 12345;
@@ -233,11 +232,11 @@ struct IntegerNumberValues {
   const int32 V14 = 2147483647;
 
   // The limits for JavaScript integers are +/- (2^53 - 1).
-  const int64 V15 = -9007199254740991; // Number.MIN_SAFE_INTEGER
+  const int64 V15 = -9007199254740991;  // Number.MIN_SAFE_INTEGER
   const int64 V16 = -1;
   const int64 V17 = 0;
   const int64 V18 = 1234567890123456;
-  const int64 V19 = 9007199254740991; // Number.MAX_SAFE_INTEGER
+  const int64 V19 = 9007199254740991;  // Number.MAX_SAFE_INTEGER
 
   int8 f0 = V0;
   int8 f1 = V1;
@@ -268,11 +267,11 @@ struct IntegerNumberValues {
 // decoded correctly.
 
 struct UnsignedNumberValues {
-  const uint8 V0 = 0;    // Minimum = 0.
-  const uint8 V1 = 42;   // An arbitrary valid value.
-  const uint8 V2 = 0xFF; // Maximum
+  const uint8 V0 = 0;  // Minimum = 0.
+  const uint8 V1 = 42;  // An arbitrary valid value.
+  const uint8 V2 = 0xFF;  // Maximum
 
-  const uint16 V3 = 0; // ...
+  const uint16 V3 = 0;  // ...
   const uint16 V4 = 12345;
   const uint16 V5 = 0xFFFF;
 
@@ -283,7 +282,7 @@ struct UnsignedNumberValues {
   // The limits for JavaScript integers are +/- (2^53 - 1).
   const uint64 V9 = 0;
   const uint64 V10 = 1234567890123456;
-  const uint64 V11 = 9007199254740991; // Number.MAX_SAFE_INTEGER
+  const uint64 V11 = 9007199254740991;  // Number.MAX_SAFE_INTEGER
 
   uint8 f0 = V0;
   uint8 f1 = V1;
@@ -294,7 +293,7 @@ struct UnsignedNumberValues {
   uint16 f5 = V5;
 
   uint32 f6 = V6;
-  uint32 f7  = V7;
+  uint32 f7 = V7;
   uint32 f8 = V8;
 
   uint64 f9 = V9;
@@ -318,67 +317,44 @@ struct BitArrayValues {
 // Used to verify that different versions can be decoded correctly.
 
 struct MultiVersionStruct {
-  [MinVersion=0]
-  int32 f_int32;
-  [MinVersion=1]
-  Rect? f_rect;
-  [MinVersion=3]
-  string? f_string;
-  [MinVersion=5]
-  array<int8>? f_array;
-  [MinVersion=7]
-  handle<message_pipe>? f_message_pipe;
-  [MinVersion=7]
-  bool f_bool;
-  [MinVersion=9]
-  int16 f_int16;
+  [MinVersion=0] int32 f_int32;
+  [MinVersion=1] Rect? f_rect;
+  [MinVersion=3] string? f_string;
+  [MinVersion=5] array<int8>? f_array;
+  [MinVersion=7] handle<message_pipe>? f_message_pipe;
+  [MinVersion=7] bool f_bool;
+  [MinVersion=9] int16 f_int16;
 };
 
 struct MultiVersionStructV0 {
-  [MinVersion=0]
-  int32 f_int32;
+  [MinVersion=0] int32 f_int32;
 };
 
 struct MultiVersionStructV1 {
-  [MinVersion=0]
-  int32 f_int32;
-  [MinVersion=1]
-  Rect? f_rect;
+  [MinVersion=0] int32 f_int32;
+  [MinVersion=1] Rect? f_rect;
 };
 
 struct MultiVersionStructV3 {
-  [MinVersion=0]
-  int32 f_int32;
-  [MinVersion=1]
-  Rect? f_rect;
-  [MinVersion=3]
-  string? f_string;
+  [MinVersion=0] int32 f_int32;
+  [MinVersion=1] Rect? f_rect;
+  [MinVersion=3] string? f_string;
 };
 
 struct MultiVersionStructV5 {
-  [MinVersion=0]
-  int32 f_int32;
-  [MinVersion=1]
-  Rect? f_rect;
-  [MinVersion=3]
-  string? f_string;
-  [MinVersion=5]
-  array<int8>? f_array;
+  [MinVersion=0] int32 f_int32;
+  [MinVersion=1] Rect? f_rect;
+  [MinVersion=3] string? f_string;
+  [MinVersion=5] array<int8>? f_array;
 };
 
 struct MultiVersionStructV7 {
-  [MinVersion=0]
-  int32 f_int32;
-  [MinVersion=1]
-  Rect? f_rect;
-  [MinVersion=3]
-  string? f_string;
-  [MinVersion=5]
-  array<int8>? f_array;
-  [MinVersion=7]
-  handle<message_pipe>? f_message_pipe;
-  [MinVersion=7]
-  bool f_bool;
+  [MinVersion=0] int32 f_int32;
+  [MinVersion=1] Rect? f_rect;
+  [MinVersion=3] string? f_string;
+  [MinVersion=5] array<int8>? f_array;
+  [MinVersion=7] handle<message_pipe>? f_message_pipe;
+  [MinVersion=7] bool f_bool;
 };
 
 // Used to verify that interfaces that are struct members can be defined in the
@@ -402,7 +378,6 @@ struct ContainsInterfaceRequest {
   SomeInterface& req;
   SomeInterface&? nullable_req;
 };
-
 
 struct DartKeywordStruct {
   enum Keywords {

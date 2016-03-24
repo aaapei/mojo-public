@@ -2,29 +2,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-[DartPackage="mojo", JavaPackage="org.chromium.mojo.bindings.types"]
+[DartPackage="mojo",
+ JavaPackage="org.chromium.mojo.bindings.types"]
 module mojo.bindings.types;
 
 import "mojom_types.mojom";
 
 /*
-* The structures in this file are intended to be used by the Mojom compiler
-* and code generators. The front end of the compiler takes as input a
-* .mojom file (or a list of .mojom files) and produces a MojomFileGraph struct.
-*
-* The backend of the compiler consumes a MojomFileGraph and invokes each of the
-* code generators passing them data derived from the MojomFileGraph.
-*
-* A MojomFile represents the data parsed from a single .mojom file. Mojom
-* modules form a directed acyclic graph via the "imports" relation.
-* That is, if Module A imports Module B then there is a directed edge in the
-* graph from A to B. A MojomFileGraph represents the whole Graph.
+ * The structures in this file are intended to be used by the Mojom compiler
+ * and code generators. The front end of the compiler takes as input a
+ * .mojom file (or a list of .mojom files) and produces a MojomFileGraph struct.
+ *
+ * The backend of the compiler consumes a MojomFileGraph and invokes each of the
+ * code generators passing them data derived from the MojomFileGraph.
+ *
+ * A MojomFile represents the data parsed from a single .mojom file. Mojom
+ * modules form a directed acyclic graph via the "imports" relation.
+ * That is, if Module A imports Module B then there is a directed edge in the
+ * graph from A to B. A MojomFileGraph represents the whole Graph.
 
-* The Mojom structures represented here have been fully resolved, meaning that
-* the type references have been associated with their corresponding type
-* definitions. This resolved type data is contained in the resolved_types data
-* in MojomFileGraph.
-*/
+ * The Mojom structures represented here have been fully resolved, meaning that
+ * the type references have been associated with their corresponding type
+ * definitions. This resolved type data is contained in the resolved_types data
+ * in MojomFileGraph.
+ */
 
 // A MojomFile represents the data defined by a single .mojom file, when
 // all of the type references to types declared in imported .mojom files
@@ -50,8 +51,8 @@ struct MojomFile {
   // in the |imports| field of another |MojomFile|.
   string? specified_file_name;
 
-   // The namespace is the identifier declared via the "module" declaration
-   // in the .mojom file.
+  // The namespace is the identifier declared via the "module" declaration
+  // in the .mojom file.
   string? module_namespace;
 
   // Attributes declared in the Mojom file at the module level.

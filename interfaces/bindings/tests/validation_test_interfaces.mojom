@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
-[DartPackage="_mojo_for_test_only", JavaPackage="org.chromium.mojo.bindings.test.mojom.mojo"]
+[DartPackage="_mojo_for_test_only",
+ JavaPackage="org.chromium.mojo.bindings.test.mojom.mojo"]
 module mojo.test;
 
 struct StructA {
@@ -33,12 +33,9 @@ struct StructF {
 
 struct StructG {
   int32 i;
-  [MinVersion=1]
-  StructA? struct_a;
-  [MinVersion=3]
-  string? str;
-  [MinVersion=3]
-  bool b;
+  [MinVersion=1] StructA? struct_a;
+  [MinVersion=3] string? str;
+  [MinVersion=3] bool b;
 };
 
 struct StructH {
@@ -69,8 +66,7 @@ union UnionB {
   uint32 d;
 };
 
-interface InterfaceA {
-};
+interface InterfaceA {};
 
 // This interface is used for testing bounds-checking in the mojom
 // binding code. If you add a method please update the files
@@ -116,13 +112,16 @@ enum BasicEnum {
   B,
   C = A,
   D = -3,
-  E = 0xA
+  E = 0xA,
 };
 
 // The enum validation function should be generated within the scope of this
 // struct.
 struct StructWithEnum {
   enum EnumWithin {
-    A, B, C, D
+    A,
+    B,
+    C,
+    D,
   };
 };

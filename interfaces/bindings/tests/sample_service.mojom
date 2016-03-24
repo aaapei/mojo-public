@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-[DartPackage="_mojo_for_test_only", JavaPackage="org.chromium.mojo.bindings.test.mojom.sample"]
+[DartPackage="_mojo_for_test_only",
+ JavaPackage="org.chromium.mojo.bindings.test.mojom.sample"]
 module sample;
 
 import "sample_import.mojom";
@@ -15,7 +16,7 @@ struct Bar {
     VERTICAL = 1,
     HORIZONTAL,
     BOTH,
-    INVALID
+    INVALID,
   };
   uint8 alpha@0 = 0xff;
   uint8 beta@1;
@@ -43,6 +44,7 @@ struct Foo {
 };
 
 struct DefaultsTest {
+  // no-format
   int8 a0@0 = -12;
   uint8 a1@1 = sample.kTwelve;
   int16 a2@2 = 1234;
@@ -61,6 +63,7 @@ struct DefaultsTest {
   double a15@15 = 1E10;
   double a16@16 = -1.2E+20;
   double a17@17 = +1.23E-20;
+  // end-no-format
 
   // TODO(vtl): Add tests for default vs null when those are implemented (for
   // structs, arrays, and strings).
@@ -97,11 +100,11 @@ struct StructWithHoleV2 {
 interface Service {
   enum BazOptions {
     REGULAR = 0,
-    EXTRA
+    EXTRA,
   };
   const uint8 kFavoriteBaz = 1;
   Frobinate@0(Foo? foo@0, BazOptions baz@1, Port? port@2) => (int32 result@0);
-  GetPort@1(Port& port @0);
+  GetPort@1(Port& port@0);
 };
 
 // This interface is referenced above where it is defined. It also refers to

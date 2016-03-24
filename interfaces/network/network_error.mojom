@@ -9,5 +9,3 @@ struct NetworkError {
   int32 code;
   string? description;
 };
-
-

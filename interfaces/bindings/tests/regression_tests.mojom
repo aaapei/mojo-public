@@ -4,34 +4,36 @@
 
 // Module containing entities for regression tests of the generator. Entities
 // must never be modified, instead new entity must be added to add new tests.
-[DartPackage="_mojo_for_test_only", JavaPackage="org.chromium.mojo.bindings.test.mojom.regression_tests"]
+[DartPackage="_mojo_for_test_only",
+ JavaPackage="org.chromium.mojo.bindings.test.mojom.regression_tests"]
 module regression_tests;
 
 interface CheckMethodWithEmptyResponse {
-WithoutParameterAndEmptyResponse() => ();
-WithParameterAndEmptyResponse(bool b) => ();
+  WithoutParameterAndEmptyResponse() => ();
+  WithParameterAndEmptyResponse(bool b) => ();
 };
 
 interface CheckNameCollision {
-WithNameCollision(bool message, bool response) => (bool message, bool response);
+  WithNameCollision(bool message, bool response)
+      => (bool message, bool response);
 };
 
 enum EnumWithReference {
   k_STEREO_AND_KEYBOARD_MIC = 30,
-  k_MAX = k_STEREO_AND_KEYBOARD_MIC
+  k_MAX = k_STEREO_AND_KEYBOARD_MIC,
 };
 
 enum EnumWithLowercase {
   PlanarF16,
-  PlanarF32
+  PlanarF32,
 };
 
 enum EnumWithNumbers {
-  k_2_1 = 4
+  k_2_1 = 4,
 };
 
 enum EnumWithK {
-  K = 0
+  K = 0,
 };
 
 struct Edge {
@@ -42,8 +44,7 @@ struct Vertex {
   EmptyStruct? e;
 };
 
-struct EmptyStruct {
-};
+struct EmptyStruct {};
 
 struct A {
   B? b;
@@ -107,5 +108,5 @@ enum CamelCaseTestEnum {
   UINT8T_h1ng,
   UINT16t_h1NG,
   UINT32_TH1ng,
-  UINT64_TH1NG
+  UINT64_TH1NG,
 };

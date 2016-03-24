@@ -8,22 +8,23 @@ module mojo.test;
 import "test_included_unions.mojom";
 
 enum AnEnum {
-  FIRST, SECOND
+  FIRST,
+  SECOND,
 };
 
 union PodUnion {
-  int8   f_int8;
-  int8   f_int8_other;
-  uint8  f_uint8;
-  int16  f_int16;
+  int8 f_int8;
+  int8 f_int8_other;
+  uint8 f_uint8;
+  int16 f_int16;
   uint16 f_uint16;
-  int32  f_int32;
+  int32 f_int32;
   uint32 f_uint32;
-  int64  f_int64;
+  int64 f_int64;
   uint64 f_uint64;
-  float  f_float;
+  float f_float;
   double f_double;
-  bool   f_bool;
+  bool f_bool;
   AnEnum f_enum;
 };
 
@@ -46,7 +47,7 @@ struct StructOfUnions {
 };
 
 union ObjectUnion {
-  int8   f_int8;
+  int8 f_int8;
   string f_string;
   DummyStruct f_dummy;
   DummyStruct? f_nullable;

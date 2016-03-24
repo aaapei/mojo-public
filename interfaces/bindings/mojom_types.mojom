@@ -2,51 +2,51 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-[DartPackage="mojo", JavaPackage="org.chromium.mojo.bindings.types"]
+[DartPackage="mojo",
+ JavaPackage="org.chromium.mojo.bindings.types"]
 module mojo.bindings.types;
 
-
 /*
-* This file contains definitions of data structures used to represent
-* Mojom types and values.
-*
-* As described in the Mojom Language Specification, Mojom types are defined
-* recursively and consequently a |Type| object may recursively contain
-* other |Type| objects. For example a |Type| object representing an array<int32>
-* will contain a |Type| object representing an int32.
-*
-* A Mojom type declaration may contain an identifier that resolves  to a
-* user-defined type: a struct, union, enum or interface. We use |TypeReference|
-* to represent an occurrence of such an identifier. A |TypeReference| may be
-* resolved or not. Resolved means that the user-defined type to which the
-* identifier refers has been found and associated with the |TypeReference|.
-* A |Type| object is fully-resolved if it, and recursively all of its
-* sub-components, do not contain any unresolved TypeReferences.
-*
-* A resolved |TypeReference| does not literally contain a structure representing
-* the user-defined type that it represents but rather refers to its target type
-* indirectly via a string called a |type_key|. The type_key may be used to
-* lookup the user-defined type to which it refers.
-*
-* The mapping from |type_keys| to user-defined types is not
-* represented by any structures in this file and instead must be maintained
-* by a higher layer context in which this file is used. For example the
-* |ServiceDescription| interface defined in service_describer.mojom includes
-* the method:
-*     GetTypeDefinition(string type_key) => UserDefinedType? type);
-* for this purpose.
-* We refer to this higher-layer context as the *owning context.*
-*
-* In addition to types, Mojom values are also representd by structures in this
-* file. A |Value| may be a LiteralValue, a UserValueReference or a
-* BuiltinConstantValue. Similarly to the situation with TypeReferences,
-* UserValueReferences contain a |value_key| which may be used to lookup
-* a UserDefinedValue (an EnumValue or a UserDefinedConstant) in
-* the owning context. For example the |MojomFileGraph| struct in
-* mojom_files.mojom contains the map:
-*     map<string, UserDefinedValue> resolved_values;
-* for this purpose.
-*/
+ * This file contains definitions of data structures used to represent
+ * Mojom types and values.
+ *
+ * As described in the Mojom Language Specification, Mojom types are defined
+ * recursively and consequently a |Type| object may recursively contain
+ * other |Type| objects. For example a |Type| object representing an
+ * array<int32> will contain a |Type| object representing an int32.
+ *
+ * A Mojom type declaration may contain an identifier that resolves  to a
+ * user-defined type: a struct, union, enum or interface. We use |TypeReference|
+ * to represent an occurrence of such an identifier. A |TypeReference| may be
+ * resolved or not. Resolved means that the user-defined type to which the
+ * identifier refers has been found and associated with the |TypeReference|.
+ * A |Type| object is fully-resolved if it, and recursively all of its
+ * sub-components, do not contain any unresolved TypeReferences.
+ *
+ * A resolved |TypeReference| does not literally contain a structure
+ * representing the user-defined type that it represents but rather refers to
+ * its target type indirectly via a string called a |type_key|. The type_key may
+ * be used to lookup the user-defined type to which it refers.
+ *
+ * The mapping from |type_keys| to user-defined types is not
+ * represented by any structures in this file and instead must be maintained
+ * by a higher layer context in which this file is used. For example the
+ * |ServiceDescription| interface defined in service_describer.mojom includes
+ * the method:
+ *     GetTypeDefinition(string type_key) => UserDefinedType? type);
+ * for this purpose.
+ * We refer to this higher-layer context as the *owning context.*
+ *
+ * In addition to types, Mojom values are also representd by structures in this
+ * file. A |Value| may be a LiteralValue, a UserValueReference or a
+ * BuiltinConstantValue. Similarly to the situation with TypeReferences,
+ * UserValueReferences contain a |value_key| which may be used to lookup
+ * a UserDefinedValue (an EnumValue or a UserDefinedConstant) in
+ * the owning context. For example the |MojomFileGraph| struct in
+ * mojom_files.mojom contains the map:
+ *     map<string, UserDefinedValue> resolved_values;
+ * for this purpose.
+ */
 
 // The different kinds of types. We divide the types into five categories:
 // simple, string, compound, handle, and user-defined.
@@ -78,7 +78,7 @@ enum SimpleType {
   UINT8,
   UINT16,
   UINT32,
-  UINT64
+  UINT64,
 };
 
 struct StringType {
@@ -136,7 +136,6 @@ struct TypeReference {
   // a Scope field to TypeReference so that resolution may occur later.
   string? identifier;
 
-
   // This field is non-null if this reference has been resolved.
   string? type_key;
 };
@@ -160,7 +159,7 @@ union UserDefinedType {
 // A field of a struct. These structures are contained in the |fields| field
 // of the |MojomStruct| struct.
 struct StructField {
-  DeclarationData? decl_data; // Some implementations may not provide this.
+  DeclarationData? decl_data;  // Some implementations may not provide this.
 
   Type type;
 
@@ -190,7 +189,7 @@ union DefaultFieldValue {
 
 // A built-in pseudo-value, indicated by the keyword "default", that
 // specifies that the default value of a user-defined type should be used.
-struct DefaultKeyword{};
+struct DefaultKeyword {};
 
 struct StructVersion {
   uint32 version_number;
@@ -205,7 +204,7 @@ struct StructVersion {
 };
 
 struct MojomStruct {
-  DeclarationData? decl_data; // Some implementations may not provide this.
+  DeclarationData? decl_data;  // Some implementations may not provide this.
 
   // The fields are in ordinal order. Note that this may be different than
   // the order in which the fields are declared in the .mojom file.
@@ -223,14 +222,14 @@ struct MojomStruct {
 // A field of a union. These structures are contained in the |fields| field
 // of the |MojomUnion| struct.
 struct UnionField {
-  DeclarationData? decl_data; // Some implementations may not provide this.
+  DeclarationData? decl_data;  // Some implementations may not provide this.
 
   Type type;
   uint32 tag;
 };
 
 struct MojomUnion {
-  DeclarationData? decl_data; // Some implementations may not provide this.
+  DeclarationData? decl_data;  // Some implementations may not provide this.
 
   // The fields are in tag order. Note that this may be different than
   // the order in which the fields are declared in the .mojom file.
@@ -256,13 +255,13 @@ struct EnumValue {
 };
 
 struct MojomEnum {
-  DeclarationData? decl_data; // Some implementations may not provide this.
+  DeclarationData? decl_data;  // Some implementations may not provide this.
 
   array<EnumValue> values;
 };
 
 struct MojomMethod {
-  DeclarationData? decl_data; // Some implementations may not provide this.
+  DeclarationData? decl_data;  // Some implementations may not provide this.
 
   MojomStruct parameters;
 
@@ -395,7 +394,6 @@ struct DeclaredConstant {
 // Declaration Data
 ////////////////////////////////////////////////////////////////////////////
 
-
 struct Attribute {
   string key;
 
@@ -414,7 +412,7 @@ struct DeclarationData {
 
   // The value of the "MinVersion" attribute, if any. This field is
   // for convenience as it can also be parsed from the |attributes| field.
-  int32 min_version = -1; // Negative value means unset.
+  int32 min_version = -1;  // Negative value means unset.
 
   string? short_name;  // Some implementations may not provide names.
 
@@ -425,7 +423,7 @@ struct DeclarationData {
 
   // The serialization ordinal of this element as declared in the
   // .mojom file using the "@" notation.
-  int32 declared_ordinal = -1; // Negative value means unset.
+  int32 declared_ordinal = -1;  // Negative value means unset.
 
   // The zero-based ordinal position of this element within its containing
   // scope as it appears in the Mojom declaration. This is not the serialization
@@ -520,4 +518,3 @@ struct RuntimeTypeInfo {
   // The keys are the |type_key|s.
   map<string, UserDefinedType> type_map;
 };
-

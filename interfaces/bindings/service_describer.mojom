@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-[DartPackage="mojo", JavaPackage="org.chromium.mojo.bindings"]
+[DartPackage="mojo",
+ JavaPackage="org.chromium.mojo.bindings"]
 // TODO(rudominer) Move this file into the module mojo.bindings when
 // https://github.com/domokit/mojo/issues/435 is fixed.
 module mojo.bindings.types;
@@ -22,7 +23,7 @@ interface ServiceDescriber {
   // with the given name. If the host is not willing or able to describe the
   // service with the given name it will close the |description_request| pipe.
   DescribeService(string interface_name,
-      ServiceDescription& description_request);
+                  ServiceDescription& description_request);
 };
 
 // A ServiceDescription allows a client to request information about the Mojom
@@ -47,8 +48,8 @@ interface ServiceDescription {
   // Returns the |UserDefinedType| for the given |type_key|. Valid keys are
   // those that are embedded in the structures returned from earlier queries
   // of this ServiceDescription. If the key is invalid then |type| will be null.
-  GetTypeDefinition(string type_key) =>
-      (mojo.bindings.types.UserDefinedType? type);
+  GetTypeDefinition(string type_key)
+      => (mojo.bindings.types.UserDefinedType? type);
 
   // Returns all the data queryable via GetTypeDefinition in a single
   // structure, or null if the implementation is not willing or not able to

@@ -5,5 +5,5 @@
 // Entities without module
 
 enum EnumWithoutModule {
-  A
+  A,
 };
