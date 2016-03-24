@@ -101,7 +101,7 @@ def TestNullableTypes():
            mojom.SHAREDBUFFER.MakeNullableKind(),
            mojom.InterfaceRequest().MakeNullableKind())
   fields = (1, 2, 4, 3, 5, 6, 8, 7, 9, 10, 11)
-  offsets = (0, 8, 12, 16, 24, 32, 36, 40, 48, 52, 56)
+  offsets = (0, 8, 12, 16, 24, 32, 36, 40, 48, 56, 60)
   return TestSequence(kinds, fields, offsets)
 
 
@@ -114,7 +114,7 @@ def TestAllTypes():
        mojom.UINT64, mojom.Struct('test'), mojom.Array(),
        mojom.STRING.MakeNullableKind()),
       (1, 2, 4, 5, 7, 3, 6,  8,  9,  10, 11, 13, 12, 14, 15, 16, 17, 18),
-      (0, 1, 2, 4, 6, 8, 16, 24, 28, 32, 40, 44, 48, 56, 64, 72, 80, 88))
+      (0, 1, 2, 4, 6, 8, 16, 24, 28, 32, 40, 44, 48, 56, 64, 72, 80))
 
 
 def TestPaddingPackedOutOfOrderByOrdinal():
