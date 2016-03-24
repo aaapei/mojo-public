@@ -102,9 +102,9 @@ MojoResult MojoWaitMany(const MojoHandle* MOJO_RESTRICT handles,         // In.
                         const MojoHandleSignals* MOJO_RESTRICT signals,  // In.
                         uint32_t num_handles,                            // In.
                         MojoDeadline deadline,                           // In.
-                        uint32_t* MOJO_RESTRICT result_index,  // Optional out
+                        uint32_t* MOJO_RESTRICT result_index,  // Optional out.
                         struct MojoHandleSignalsState* MOJO_RESTRICT
-                            signals_states);  // Optional out
+                            signals_states);  // Optional out.
 
 MOJO_END_EXTERN_C
 

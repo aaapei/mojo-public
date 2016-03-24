@@ -7,7 +7,6 @@ import("../../mojo_sdk.gni")
 mojo_sdk_source_set("system") {
   sources = [
     "buffer.h",
-    "core.h",
     "data_pipe.h",
     "handle.h",
     "macros.h",
