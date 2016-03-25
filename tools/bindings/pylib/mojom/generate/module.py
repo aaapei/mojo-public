@@ -130,9 +130,6 @@ PRIMITIVES = (
 )
 
 
-ATTRIBUTE_MIN_VERSION = 'MinVersion'
-
-
 class NamedValue(object):
   def __init__(self, module=None, parent_kind=None, name=None):
     self.module = module
@@ -194,11 +191,6 @@ class Field(object):
     self.ordinal = ordinal
     self.default = default
     self.attributes = attributes
-
-  @property
-  def min_version(self):
-    return self.attributes.get(ATTRIBUTE_MIN_VERSION) \
-        if self.attributes else None
 
 
 class StructField(Field): pass
@@ -333,11 +325,6 @@ class Parameter(object):
     self.default = default
     self.attributes = attributes
 
-  @property
-  def min_version(self):
-    return self.attributes.get(ATTRIBUTE_MIN_VERSION) \
-        if self.attributes else None
-
 
 class Method(object):
   def __init__(self, interface, name, ordinal=None, attributes=None):
@@ -361,11 +348,6 @@ class Method(object):
     parameter = Parameter(name, kind, ordinal, default, attributes)
     self.response_parameters.append(parameter)
     return parameter
-
-  @property
-  def min_version(self):
-    return self.attributes.get(ATTRIBUTE_MIN_VERSION) \
-        if self.attributes else None
 
 
 class Interface(ReferenceKind):
@@ -410,11 +392,6 @@ class EnumField(object):
     self.value = value
     self.attributes = attributes
     self.numeric_value = numeric_value
-
-  @property
-  def min_version(self):
-    return self.attributes.get(ATTRIBUTE_MIN_VERSION) \
-        if self.attributes else None
 
 
 class Enum(Kind):

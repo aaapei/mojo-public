@@ -158,7 +158,9 @@ def GetNameForElement(element, exported=True):
                           mojom.Field,
                           mojom.Method,
                           mojom.Parameter)):
-    return FormatName(element.name, exported)
+    element_name = (element.go_name if hasattr(element, "go_name")
+        else element.name)
+    return FormatName(element_name, exported)
   if isinstance(element, (mojom.Enum,
                           mojom.Constant,
                           mojom.ConstantValue)):
@@ -423,23 +425,29 @@ class Generator(generator.Generator):
     return imports, mojom_imports
 
   # Overrides the implementation from the base class in order to customize the
-  # struct and field names.
+  # struct and field names. Since the Python objects representing the struct
+  # and fields are shared by all language generators we don't want to actually
+  # modify the |name| property. Instead we add a |go_name| property.
   def _GetStructFromMethod(self, method):
-    params_class = "%s_%s_Params" % (GetNameForElement(method.interface),
-        GetNameForElement(method))
-    struct = mojom.Struct(params_class, module=method.interface.module)
-    for param in method.parameters:
-      struct.AddField("in%s" % GetNameForElement(param),
-          param.kind, param.ordinal, attributes=param.attributes)
-    return self._AddStructComputedData(False, struct)
+    self._AddStructComputedData(False, method.param_struct)
+    # Only generate the go_names if they have not already been generated.
+    if not hasattr(method.param_struct, "go_name"):
+      method.param_struct.go_name = "%s_%s_Params" % (
+          GetNameForElement(method.interface), GetNameForElement(method))
+      for field in method.param_struct.fields:
+        field.go_name = "in%s" % GetNameForElement(field)
+    return method.param_struct
 
   # Overrides the implementation from the base class in order to customize the
-  # struct and field names.
+  # struct and field names. Since the Python objects representing the struct
+  # and fields are shared by all language generators we don't want to actually
+  # modify the |name| property. Instead we add a |go_name| property.
   def _GetResponseStructFromMethod(self, method):
-    params_class = "%s_%s_ResponseParams" % (
-        GetNameForElement(method.interface), GetNameForElement(method))
-    struct = mojom.Struct(params_class, module=method.interface.module)
-    for param in method.response_parameters:
-      struct.AddField("out%s" % GetNameForElement(param),
-          param.kind, param.ordinal, attributes=param.attributes)
-    return self._AddStructComputedData(False, struct)
+    self._AddStructComputedData(False, method.response_param_struct)
+    if not hasattr(method.response_param_struct, "go_name"):
+      # Only generate the go_names if they have not already been generated.
+      method.response_param_struct.go_name = "%s_%s_ResponseParams" % (
+          GetNameForElement(method.interface), GetNameForElement(method))
+      for field in method.response_param_struct.fields:
+        field.go_name = "out%s" % GetNameForElement(field)
+    return method.response_param_struct

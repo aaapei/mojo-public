@@ -86,6 +86,7 @@ class TestTranslateFile(unittest.TestCase):
           full_identifier='foo.AStruct',
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)))
+    add_version_info(mojom_struct, 0)
     graph.resolved_types['struct_key'] = mojom_types_mojom.UserDefinedType(
         struct_type=mojom_struct)
 
@@ -248,24 +249,39 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
             short_name='field03',
             declaration_order=2),
           type=mojom_types_mojom.Type(
-            simple_type=mojom_types_mojom.SimpleType.BOOL)),
+            simple_type=mojom_types_mojom.SimpleType.BOOL),
+          offset=21,
+          bit=6,
+          min_version=11),
         mojom_types_mojom.StructField(
           decl_data=mojom_types_mojom.DeclarationData(
             short_name='field01',
             declared_ordinal=1,
             declaration_order=0),
           type=mojom_types_mojom.Type(
-            simple_type=mojom_types_mojom.SimpleType.BOOL)),
+            simple_type=mojom_types_mojom.SimpleType.BOOL),
+          offset=17,
+          bit=1,
+          min_version=4),
         mojom_types_mojom.StructField(
           decl_data=mojom_types_mojom.DeclarationData(
             short_name='field02',
             declaration_order=1),
           type=mojom_types_mojom.Type(
             simple_type=mojom_types_mojom.SimpleType.DOUBLE),
+          offset=0,
+          bit=0,
+          min_version=0,
           default_value=mojom_types_mojom.DefaultFieldValue(
             value=mojom_types_mojom.Value(
               literal_value=mojom_types_mojom.LiteralValue(double_value=15)))),
         ]
+    mojom_struct.version_info=[
+        mojom_types_mojom.StructVersion(
+            version_number=0, num_bytes=67, num_fields=1),
+         mojom_types_mojom.StructVersion(
+            version_number=1, num_bytes=76, num_fields=3),
+    ]
     # mojom_fields_declaration_order lists, in declaration order, the indices
     # of the fields in mojom_types_mojom.StructField.
     mojom_fields_declaration_order = [1, 2, 0]
@@ -290,6 +306,20 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
       else:
         self.assertEquals(None, f.ordinal)
       self.assertEquals(gold_index, f.computed_ordinal)
+      self.assertEquals(gold.offset, f.computed_offset)
+      self.assertEquals(gold.bit, f.computed_bit)
+      self.assertEquals(gold.min_version, f.computed_min_version)
+      self.assertEquals(struct.fields_in_ordinal_order[index].name,
+          mojom_struct.fields[index].decl_data.short_name)
+
+    self.assertEquals(2, len(struct.versions))
+    for i in xrange(0, 2):
+      self.assertEquals(mojom_struct.version_info[i].version_number,
+          struct.versions[i].version)
+      self.assertEquals(mojom_struct.version_info[i].num_bytes,
+          struct.versions[i].num_bytes)
+      self.assertEquals(mojom_struct.version_info[i].num_fields,
+          struct.versions[i].num_fields)
 
     self.assertEquals(module.BOOL, struct.fields[0].kind)
     self.assertEquals(module.DOUBLE, struct.fields[1].kind)
@@ -315,6 +345,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
           short_name='AStruct',
           source_file_info =mojom_types_mojom.SourceFileInfo(
             file_name=file_name)))
+    add_version_info(mojom_struct, 0)
     graph.resolved_types = {'struct_key': mojom_types_mojom.UserDefinedType(
       struct_type=mojom_struct)}
 
@@ -384,6 +415,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
           short_name='AStruct',
           source_file_info =mojom_types_mojom.SourceFileInfo(
             file_name=file_name)))
+    add_version_info(mojom_struct, 0)
     graph.resolved_types = {'struct_key': mojom_types_mojom.UserDefinedType(
       struct_type=mojom_struct)}
 
@@ -522,6 +554,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         source_file_info=mojom_types_mojom.SourceFileInfo(
           file_name='root/c.mojom'))
     mojom_struct.fields = []
+    add_version_info(mojom_struct, 0)
 
     type_key = 'some_type_key'
     graph.resolved_types = {
@@ -566,21 +599,27 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
           short_name='AMethod10',
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)),
-        parameters=mojom_types_mojom.MojomStruct(fields=[]))
+        parameters=mojom_types_mojom.MojomStruct(fields=[],
+            version_info=build_version_info(0),
+            decl_data=build_decl_data('AMethod10_Request')))
     mojom_method0 = mojom_types_mojom.MojomMethod(
         ordinal=0,
         decl_data=mojom_types_mojom.DeclarationData(
           short_name='AMethod0',
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)),
-        parameters=mojom_types_mojom.MojomStruct(fields=[]))
+        parameters=mojom_types_mojom.MojomStruct(fields=[],
+            version_info=build_version_info(0),
+            decl_data=build_decl_data('AMethod0_Request')))
     mojom_method7 = mojom_types_mojom.MojomMethod(
         ordinal=7,
         decl_data=mojom_types_mojom.DeclarationData(
-          short_name='AMethod10',
+          short_name='AMethod7',
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)),
-        parameters=mojom_types_mojom.MojomStruct(fields=[]))
+        parameters=mojom_types_mojom.MojomStruct(fields=[],
+            version_info=build_version_info(0),
+            decl_data=build_decl_data('AMethod7_Request')))
     mojom_interface.methods = {10: mojom_method10, 0: mojom_method0,
         7: mojom_method7}
 
@@ -614,15 +653,23 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
     param1 = mojom_types_mojom.StructField(
         decl_data=mojom_types_mojom.DeclarationData(short_name='a_param'),
         type=mojom_types_mojom.Type(
-          simple_type=mojom_types_mojom.SimpleType.UINT32))
+          simple_type=mojom_types_mojom.SimpleType.UINT32),
+        offset=21,
+        bit=6,
+        min_version=11)
     param2 = mojom_types_mojom.StructField(
         decl_data=mojom_types_mojom.DeclarationData(short_name='b_param'),
         type=mojom_types_mojom.Type(
-          simple_type=mojom_types_mojom.SimpleType.UINT64))
+          simple_type=mojom_types_mojom.SimpleType.UINT64),
+        offset=22,
+        bit=7,
+        min_version=12)
     mojom_method.parameters = mojom_types_mojom.MojomStruct(
-        fields=[param1, param2])
+        fields=[param1, param2],
+        version_info=build_version_info(2),
+        decl_data=build_decl_data('Not used'))
 
-    interface = module.Interface()
+    interface = module.Interface('MyInterface')
     graph = mojom_files_mojom.MojomFileGraph()
     translator = mojom_translator.FileTranslator(graph, file_name)
     method = translator.MethodFromMojom(mojom_method, interface)
@@ -635,9 +682,21 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         len(mojom_method.parameters.fields), len(method.parameters))
     self.assertEquals(param1.decl_data.short_name, method.parameters[0].name)
     self.assertEquals(param2.decl_data.short_name, method.parameters[1].name)
+    self.assertEquals('MyInterface_AMethod_Params', method.param_struct.name)
+    self.assertEquals(len(mojom_method.parameters.fields),
+      len(method.param_struct.fields))
+    for i in xrange(0, len(mojom_method.parameters.fields)):
+        gold = mojom_method.parameters.fields[i]
+        f = method.param_struct.fields_in_ordinal_order[i]
+        self.assertEquals(gold.decl_data.short_name, f.name)
+        self.assertEquals(gold.offset, f.computed_offset)
+        self.assertEquals(gold.bit, f.computed_bit)
+        self.assertEquals(gold.min_version, f.computed_min_version)
 
     # Add empty return params.
     mojom_method.response_params = mojom_types_mojom.MojomStruct(fields=[])
+    add_version_info(mojom_method.response_params, 0)
+    add_decl_data(mojom_method.response_params, 'AMethod_Response')
     method = translator.MethodFromMojom(mojom_method, interface)
     self.assertEquals([], method.response_parameters)
 
@@ -967,6 +1026,7 @@ class TestKindFromMojom(unittest.TestCase):
           type=mojom_types_mojom.Type(
             type_reference=mojom_types_mojom.TypeReference(type_key=type_key)))
         ]
+    add_version_info(mojom_struct, 1)
     graph.resolved_types = {
         type_key: mojom_types_mojom.UserDefinedType(struct_type=mojom_struct)}
 
@@ -992,3 +1052,50 @@ class TestKindFromMojom(unittest.TestCase):
 
 if __name__ == '__main__':
   unittest.main()
+
+def build_decl_data(short_name):
+  """Builds and returns a DeclarationData with the given short_name.
+
+  Args:
+    short_name: {str} short_name to use
+
+  Returns:
+    {mojom_types_mojom.DeclarationData} With the given short_name
+  """
+  return mojom_types_mojom.DeclarationData(short_name=short_name)
+
+def add_decl_data(element, short_name):
+  """Builds a DeclarationData with the given short_name and adds it
+  as the |decl_data| attribute of |element|.
+
+  Args:
+    element: {any} The Python object to which a |decl_data| attribute will be
+        added.
+    short_name: {str} short_name to use
+  """
+  element.decl_data=build_decl_data(short_name)
+
+def build_version_info(num_fields):
+  """Builds and returns a list containing a single StructVersion with
+  version_number=0, num_bytes=0, and the given value for num_fields.
+
+  Args:
+    num_fields: {int} The value of num_fields to use.
+  Returns:
+    {[mojom_types_mojom.StructVersion]} Containing a single element with
+        the given value for num_fields.
+  """
+  return [mojom_types_mojom.StructVersion(
+        version_number=0, num_bytes=0,num_fields=num_fields)]
+
+def add_version_info(mojom_struct, num_fields):
+  """Builds a list containing a single StructVersion with
+  version_number=0, num_bytes=0, and the given value for num_fields. Adds this
+  as the |version_info| attribute of |mojom_struct|.
+
+  Args:
+    mojom_struct: {any} The Python object to which a |version_info| attribute
+        will be added.
+    num_fields: {int} The value of num_fields to use.
+  """
+  mojom_struct.version_info=build_version_info(num_fields)

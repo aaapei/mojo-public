@@ -29,6 +29,7 @@ from generated import mojom_files_mojom
 from generated import mojom_types_mojom
 import module
 import operator
+import pack
 
 
 class FileTranslator(object):
@@ -192,12 +193,26 @@ class FileTranslator(object):
     """
     assert mojom_type.tag == mojom_types_mojom.UserDefinedType.Tags.struct_type
     mojom_struct = mojom_type.struct_type
+    self.StructFromMojomStruct(struct, mojom_struct)
+
+  def StructFromMojomStruct(self, struct, mojom_struct):
+    """Populates a module.Struct based on a MojomStruct.
+
+    Args:
+      struct: {module.Struct} to be populated.
+      mojom_struct: {mojom_types.MojomStruct} to be translated.
+    """
     self.PopulateUserDefinedType(struct, mojom_struct)
-    # mojom_struct.fields is indexed by the field ordinals. We want
-    # to capture these ordinals but sort struct.fields by declaration_order.
-    struct.fields = [self.StructFieldFromMojom(ordinal, f) for (ordinal, f) in
-        enumerate(mojom_struct.fields)]
+    # mojom_struct.fields is indexed by the field ordinals.
+    struct.fields_in_ordinal_order = [self.StructFieldFromMojom(ordinal, f)
+        for (ordinal, f) in  enumerate(mojom_struct.fields)]
+    # We also want a list of fields sorted in declaration_order.
+    struct.fields = [f for f in struct.fields_in_ordinal_order]
     struct.fields.sort(key=lambda field: field.declaration_order)
+
+    assert mojom_struct.version_info
+    struct.versions = [self.VersionInfoFromMojom(version) for version in
+        mojom_struct.version_info]
     self.PopulateContainedDeclarationsFromMojom(
         struct, mojom_struct.decl_data.contained_declarations)
 
@@ -239,6 +254,9 @@ class FileTranslator(object):
     """
     struct_field = module.StructField()
     self.PopulateCommonFieldValues(struct_field, mojom_field)
+    struct_field.computed_offset = mojom_field.offset
+    struct_field.computed_bit = mojom_field.bit
+    struct_field.computed_min_version = mojom_field.min_version
     # Note that the |ordinal| attribute of |struct_field| records only the
     # *declared* ordinal and as such is not defined for every field whereas
     # the |computed_ordinal| attribute is defined for every field. If
@@ -255,6 +273,18 @@ class FileTranslator(object):
             mojom_field.default_value.value)
 
     return struct_field
+
+  def VersionInfoFromMojom(self, mojom_version):
+    """Translates a mojom_types_mojom.StructVersion to a pack.VersionInfo
+    Args:
+       mojom_version: {mojom_types_mojom.StructVersion} to be translated.
+
+    Returns:
+      {pack.VersionInfo} translated from |mojom_version|.
+    """
+    return pack.VersionInfo(mojom_version.version_number,
+        mojom_version.num_fields, mojom_version.num_bytes)
+
 
   def ParamFromMojom(self, mojom):
     """Translates a mojom_types_mojom.StructField to a module.Parameter.
@@ -454,11 +484,35 @@ class FileTranslator(object):
     """
     method = module.Method(interface, mojom_method.decl_data.short_name)
     method.ordinal = mojom_method.ordinal
+    method.param_struct = module.Struct()
+    self.StructFromMojomStruct(method.param_struct, mojom_method.parameters)
+    # The name of a synthetic request parameter struct is not guaranteed by
+    # the frontend to be anything in particular so we set the name of the
+    # translated struct to a value that the code generators are expecting.
+    method.param_struct.name = "%s_%s_Params" % (
+        method.interface.name, method.name)
     method.parameters = [self.ParamFromMojom(param)
         for param in mojom_method.parameters.fields]
     if mojom_method.response_params is not None:
+      method.response_param_struct = module.Struct()
+      self.StructFromMojomStruct(method.response_param_struct,
+          mojom_method.response_params)
+      # The name of a synthetic response parameter struct is not guaranteed by
+      # the frontend to be anything in particular so we set the name of the
+      # translated struct to a value that the code generators are expecting.
+      method.response_param_struct.name = "%s_%s_ResponseParams" % (
+          method.interface.name, method.name)
       method.response_parameters = [self.ParamFromMojom(param)
           for param in mojom_method.response_params.fields]
+
+    # Set the min_version attribute on the method.
+    method.min_version=None
+    # TODO(rudominer) For now we parse the "MinVersion" attribute here but
+    # after we add a min_version field to mojom_types_mojom.MojomMethod then
+    # we should take the value from there instead.
+    if method.attributes:
+      method.min_version=method.get('MinVersion')
+
     return method
 
   def ConstantFromValueKey(self, value_key):

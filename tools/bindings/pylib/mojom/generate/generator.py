@@ -88,15 +88,20 @@ class Generator(object):
   def _AddStructComputedData(self, exported, struct):
     """Adds computed data to the given struct. The data is computed once and
     used repeatedly in the generation process."""
-    struct.packed = pack.PackedStruct(struct)
-    struct.bytes = pack.GetByteLayout(struct.packed)
-    struct.versions = pack.GetVersionInfo(struct.packed)
+    if not hasattr(struct, 'packed') or struct.packed is None:
+      struct.packed = pack.PackedStruct(struct)
+      struct.bytes = pack.GetByteLayout(struct.packed)
     struct.exported = exported
     return struct
 
   def _AddInterfaceComputedData(self, interface):
     """Adds computed data to the given interface. The data is computed once and
     used repeatedly in the generation process."""
+    # Here we set the interface's |version| attribute to be the maximum value
+    # of the |min_version| attributes of all methods in the interface and all
+    # parameters in those methods.
+    # TODO(rudominer) Consider adding this value to the intermediate
+    # representation.
     interface.version = 0
     for method in interface.methods:
       if method.min_version is not None:
@@ -116,19 +121,9 @@ class Generator(object):
     return interface
 
   def _GetStructFromMethod(self, method):
-    """Converts a method's parameters into the fields of a struct."""
-    params_class = "%s_%s_Params" % (method.interface.name, method.name)
-    struct = mojom.Struct(params_class, module=method.interface.module)
-    for param in method.parameters:
-      struct.AddField(param.name, param.kind, param.ordinal,
-                      attributes=param.attributes)
-    return self._AddStructComputedData(False, struct)
+    """Returns a method's parameters as a struct."""
+    return self._AddStructComputedData(False, method.param_struct)
 
   def _GetResponseStructFromMethod(self, method):
-    """Converts a method's response_parameters into the fields of a struct."""
-    params_class = "%s_%s_ResponseParams" % (method.interface.name, method.name)
-    struct = mojom.Struct(params_class, module=method.interface.module)
-    for param in method.response_parameters:
-      struct.AddField(param.name, param.kind, param.ordinal,
-                      attributes=param.attributes)
-    return self._AddStructComputedData(False, struct)
+    """Returns a method's response_parameters as a struct."""
+    return self._AddStructComputedData(False, method.response_param_struct)
