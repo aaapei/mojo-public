@@ -75,11 +75,11 @@ struct MapSerializer<
 template <typename U, typename U_Data>
 struct MapSerializer<U, U_Data, true, true> {
   static size_t GetBaseArraySize(size_t count) {
-    return count * sizeof(U_Data);
+    // GetSerializedSize_ (called in GetItemSize()) will account for
+    // sizeof(U_Data), so prevent double counting by having this count be 0.
+    return 0;
   }
-  static size_t GetItemSize(const U& item) {
-    return GetSerializedSize_(item, true);
-  }
+  static size_t GetItemSize(const U& item) { return GetSerializedSize_(item); }
 };
 
 template <>

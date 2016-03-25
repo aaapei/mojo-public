@@ -15,7 +15,7 @@
   size_t size = sizeof(internal::{{struct.name}}_Data);
 {%-   for pf in struct.packed.packed_fields_in_ordinal_order if pf.field.kind|is_object_kind %}
 {%-     if pf.field.kind|is_union_kind %}
-  size += GetSerializedSize_({{input_field_pattern|format(pf.field.name)}}, true);
+  size += GetSerializedSize_({{input_field_pattern|format(pf.field.name)}});
 {%-     elif pf.field.kind|is_struct_kind %}
   size += {{input_field_pattern|format(pf.field.name)}}.is_null()
               ? 0
@@ -76,16 +76,14 @@
   }
 {%- endmacro -%}
 
-{%- macro call_serialize_union(input, buffer, output, inlined,
-                               should_return_errors) -%}  
+{%- macro call_serialize_union(input, buffer, output, should_return_errors) -%}  
   {
 {%- if should_return_errors %}
     auto retval =
 {%- endif %}
       SerializeUnion_({{input}},
                       {{buffer}},
-                      {{output}},
-                      {{inlined}});
+                      {{output}});
 {%- if should_return_errors %}
     if (retval != mojo::internal::ValidationError::NONE)
       return retval;
@@ -157,7 +155,6 @@
   {{call_serialize_union(input = input_field ~ ".get()",
                          buffer = buffer,
                          output = "&%s_ptr"|format(name),
-                         inlined = "true",
                          should_return_errors = should_return_errors)}}
 {%-     elif kind|is_string_kind %}
   SerializeString_({{input_field}}, {{buffer}}, &{{output}}->{{name}}.ptr);

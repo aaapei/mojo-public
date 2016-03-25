@@ -434,7 +434,7 @@ struct ArraySerializer<U, U_Data, true> {
     for (size_t i = 0; i < input.size(); ++i) {
       // GetSerializedSize_ will account for both the data in the union and the
       // space in the array used to hold the union.
-      size += GetSerializedSize_(input[i], false);
+      size += GetSerializedSize_(input[i]);
     }
     return size;
   }
@@ -448,7 +448,7 @@ struct ArraySerializer<U, U_Data, true> {
       const ArrayValidateParams* validate_params) {
     for (size_t i = 0; i < num_elements; ++i, ++it) {
       U_Data* result = output->storage() + i;
-      auto retval = SerializeUnion_(it->get(), buf, &result, true);
+      auto retval = SerializeUnion_(it->get(), buf, &result);
       if (retval != ValidationError::NONE)
         return retval;
       if (!validate_params->element_is_nullable && output->at(i).is_null()) {

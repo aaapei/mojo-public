@@ -1,20 +1,20 @@
-{% import 'struct_macros.tmpl' as struct_macros without context %} 
-size_t GetSerializedSize_(const {{union.name}}Ptr& input, bool inlined) {
-  size_t size = 0U;
-  if (!inlined) {
-    size += sizeof(internal::{{union.name}}_Data);
-  }
-
-  if (!input)
-    return size;
-
+{% import 'struct_macros.tmpl' as struct_macros without context %}
+{# Assumes |input| is an InlinedStruct. #}
+size_t GetSerializedSize_(const {{union.name}}Ptr& input) {
+   size_t size = sizeof(internal::{{union.name}}_Data);
+   if (!input)
+    return size;  
+  
   mojo::internal::UnionAccessor<{{union.name}}> input_acc(input.get());
   switch (input->which()) {
 {%  for field in union.fields %}
 {%    if field.kind|is_object_kind %}
     case {{union.name}}::Tag::{{field.name|upper}}:
 {%      if field.kind|is_union_kind %}
-      size += GetSerializedSize_(*(input_acc.data()->{{field.name}}), false);
+      if ((input_acc.data()->{{field.name}})) {
+        //size += sizeof(mojo::internal::UnionPointer<{{field.kind|get_name_for_kind}}::Data_>);
+        size += GetSerializedSize_(*(input_acc.data()->{{field.name}}));
+      }
 {%      elif field.kind|is_struct_kind %}
       size += GetSerializedSize_(*(input_acc.data()->{{field.name}}->get()));
 {%      else %}
@@ -29,16 +29,20 @@ size_t GetSerializedSize_(const {{union.name}}Ptr& input, bool inlined) {
   return size;
 }
 
+{#
+  |input|: Could be mutated if it contains handles.
+  |buf|: Used to allocate memory, should we need it.
+  |output|: Serialize into *output; it is expected that *output points to a
+            memory we can serialize into without allocating from |buf|. However,
+            if this union contains another union, we will use |buf| to allocate
+            memory and serialize out-of-line.
+#}
 mojo::internal::ValidationError SerializeUnion_(
     {{union.name}}* input,
     mojo::internal::Buffer* buf,
-    internal::{{union.name}}_Data** output,
-    bool inlined) {
+    internal::{{union.name}}_Data** output) {
   internal::{{union.name}}_Data* result = *output;
   if (input) {
-    if (!inlined) {
-      result = internal::{{union.name}}_Data::New(buf);
-    }
     mojo::internal::UnionAccessor<{{union.name}}> input_acc(input);
     // TODO(azani): Handle unknown and objects.
     // Set the not-null flag.
@@ -59,12 +63,19 @@ mojo::internal::ValidationError SerializeUnion_(
               output = "&result->data.f_%s.ptr"|format(field.name),
               should_return_errors = true)|indent(6)}}
 {%      elif field.kind|is_union_kind %}
-          {{struct_macros.call_serialize_union(
-              input = "input_acc.data()->%s->get()"|format(field.name),
-              buffer = "buf",
-              output = "&result->data.f_%s.ptr"|format(field.name),
-              inlined = "false",
-              should_return_errors = true)|indent(6)}}
+          // Point *output to newly allocated memory
+          // SerializeUnion_ into newly allocated memory.
+          if (!{{"input_acc.data()->%s->get()"|format(field.name)}}) {
+            {{"result->data.f_%s.ptr"|format(field.name)}} = nullptr;
+          } else {
+            {{"result->data.f_%s.ptr"|format(field.name)}} =
+              {{field.kind|get_name_for_kind}}::Data_::New(buf);
+            {{struct_macros.call_serialize_union(
+                input = "input_acc.data()->%s->get()"|format(field.name),
+                buffer = "buf",
+                output = "&result->data.f_%s.ptr"|format(field.name),
+                should_return_errors = true)|indent(8)}}
+          }
 {%      elif field.kind|is_array_kind %}
           {{struct_macros.call_serialize_array(
               name = field.name,
@@ -107,12 +118,9 @@ mojo::internal::ValidationError SerializeUnion_(
         MOJO_CHECK(false) << "No sane way to serialize a union with an unknown tag.";
         break;
     }
-  } else if (inlined) {
-    result->set_null();
   } else {
-    result = nullptr;
+    result->set_null();
   }
-  *output = result;
   return mojo::internal::ValidationError::NONE;
 }
 
