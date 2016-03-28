@@ -41,7 +41,7 @@ module mojo.bindings.types;
  * file. A |Value| may be a LiteralValue, a UserValueReference or a
  * BuiltinConstantValue. Similarly to the situation with TypeReferences,
  * UserValueReferences contain a |value_key| which may be used to lookup
- * a UserDefinedValue (an EnumValue or a UserDefinedConstant) in
+ * a UserDefinedValue (an EnumValue or a DeclaredConstant) in
  * the owning context. For example the |MojomFileGraph| struct in
  * mojom_files.mojom contains the map:
  *     map<string, UserDefinedValue> resolved_values;
@@ -226,6 +226,10 @@ struct UnionField {
 
   Type type;
   uint32 tag;
+
+  // The minimum version of the containing union that includes this field.
+  // The earliest version is version 0.
+  uint32 min_version;
 };
 
 struct MojomUnion {
@@ -244,14 +248,20 @@ struct EnumValue {
 
   // This is the value specified in the right-hand-side of the optional
   // initializer of an enum value declaration. The value must be a literal value
-  // of integer type or a UserValueReference whose |resolved_concrete_value| is
-  // one of those.
+  // of integer type or a UserValueReference that resolves to a different
+  // EnumValue from the same enum that was defined earlier lexically,
+  // or a UserValueReference that resolves to
+  // a DeclaredConstant whose |resolved_concrete_value| is one of those.
   Value? initializer_value;
 
   // The resolved concrete integer value corresponding to this enum value.
   // This number is computed based on the |specified_value|s of all of the
   // EnumValues in a MojomEnum.
   int32 int_value;
+
+  // The minimum version of the containing MojomEnum that includes this value.
+  // The earliest version is version 0.
+  uint32 min_version;
 };
 
 struct MojomEnum {
@@ -272,6 +282,10 @@ struct MojomMethod {
   MojomStruct? response_params;
 
   uint32 ordinal;
+
+  // The minimum version of the containing interface that includes this method.
+  // The earliest version is version 0.
+  uint32 min_version;
 };
 
 struct MojomInterface {
@@ -289,6 +303,14 @@ struct MojomInterface {
 
   // All the methods in the interface. The keys are the method ordinals.
   map<uint32, MojomMethod> methods;
+
+  // This value is the least integer that is at least as great as all of the
+  // |min_version| fields in all of the methods and parameters in this
+  // interface. In more detail it is the maximum of the |min_version| fields of
+  // each MojomMethod  in this interface, and the |min_version| fields of each
+  // StructField of each MojomStruct in the |params| and |response_params|
+  // fields of each MojomMethod in this interface.
+  uint32 current_version;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -343,18 +365,6 @@ struct UserValueReference {
   // an instance of |UserDefinedValue| and so an EnumValue or
   // DeclaredConstant.
   string? value_key;
-
-  // The resolved concrete value. This must be a LiteralValue or a
-  // BuiltinConstantValue, not a UserValueReference. The resolved
-  // concrete value is defined as follows: If |value_key| refers to an
-  // EnumValue then |resolved_concrete_value| is the |int_value| of that
-  // EnumValue. If |value_key| referes to a DeclaredConstant then
-  // |resolved_concrete_value| is defined recursively to be the resolved
-  // concrete value of the DeclaredConstant's |value|.
-
-  // This field is not-populated and should not be read. It will be removed
-  // in the future. See DeclaredConstant.resolved_concrete_value.
-  Value? resolved_concrete_value;
 };
 
 union UserDefinedValue {
@@ -409,10 +419,6 @@ struct Attribute {
 // provide some of this data.
 struct DeclarationData {
   array<Attribute>? attributes;
-
-  // The value of the "MinVersion" attribute, if any. This field is
-  // for convenience as it can also be parsed from the |attributes| field.
-  int32 min_version = -1;  // Negative value means unset.
 
   string? short_name;  // Some implementations may not provide names.
 

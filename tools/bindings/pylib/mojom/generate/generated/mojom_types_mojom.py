@@ -133,6 +133,7 @@ class UnionField(object):
       _descriptor.SingleFieldGroup('decl_data', _descriptor.StructType(lambda: DeclarationData, nullable=True), 0, 0),
       _descriptor.SingleFieldGroup('type', _descriptor.UnionType(lambda: Type), 1, 0),
       _descriptor.SingleFieldGroup('tag', _descriptor.TYPE_UINT32, 2, 0),
+      _descriptor.SingleFieldGroup('min_version', _descriptor.TYPE_UINT32, 3, 0),
     ],
   }
 
@@ -153,6 +154,7 @@ class EnumValue(object):
       _descriptor.SingleFieldGroup('enum_type_key', _descriptor.TYPE_STRING, 1, 0),
       _descriptor.SingleFieldGroup('initializer_value', _descriptor.UnionType(lambda: Value, nullable=True), 2, 0),
       _descriptor.SingleFieldGroup('int_value', _descriptor.TYPE_INT32, 3, 0),
+      _descriptor.SingleFieldGroup('min_version', _descriptor.TYPE_UINT32, 4, 0),
     ],
   }
 
@@ -173,6 +175,7 @@ class MojomMethod(object):
       _descriptor.SingleFieldGroup('parameters', _descriptor.StructType(lambda: MojomStruct), 1, 0),
       _descriptor.SingleFieldGroup('response_params', _descriptor.StructType(lambda: MojomStruct, nullable=True), 2, 0),
       _descriptor.SingleFieldGroup('ordinal', _descriptor.TYPE_UINT32, 3, 0),
+      _descriptor.SingleFieldGroup('min_version', _descriptor.TYPE_UINT32, 4, 0),
     ],
   }
 
@@ -183,6 +186,7 @@ class MojomInterface(object):
       _descriptor.SingleFieldGroup('decl_data', _descriptor.StructType(lambda: DeclarationData, nullable=True), 0, 0),
       _descriptor.SingleFieldGroup('service_name', _descriptor.TYPE_NULLABLE_STRING, 1, 0),
       _descriptor.SingleFieldGroup('methods', _descriptor.MapType(_descriptor.TYPE_UINT32, _descriptor.StructType(lambda: MojomMethod)), 2, 0),
+      _descriptor.SingleFieldGroup('current_version', _descriptor.TYPE_UINT32, 3, 0),
     ],
   }
 
@@ -192,7 +196,6 @@ class UserValueReference(object):
     'fields': [
       _descriptor.SingleFieldGroup('identifier', _descriptor.TYPE_STRING, 0, 0),
       _descriptor.SingleFieldGroup('value_key', _descriptor.TYPE_NULLABLE_STRING, 1, 0),
-      _descriptor.SingleFieldGroup('resolved_concrete_value', _descriptor.UnionType(lambda: Value, nullable=True), 2, 0),
     ],
   }
 
@@ -220,14 +223,13 @@ class DeclarationData(object):
   DESCRIPTOR = {
     'fields': [
       _descriptor.SingleFieldGroup('attributes', _descriptor.GenericArrayType(_descriptor.StructType(lambda: Attribute), nullable=True), 0, 0),
-      _descriptor.SingleFieldGroup('min_version', _descriptor.TYPE_INT32, 1, 0, default_value=-1),
-      _descriptor.SingleFieldGroup('declared_ordinal', _descriptor.TYPE_INT32, 4, 0, default_value=-1),
-      _descriptor.SingleFieldGroup('short_name', _descriptor.TYPE_NULLABLE_STRING, 2, 0),
-      _descriptor.SingleFieldGroup('full_identifier', _descriptor.TYPE_NULLABLE_STRING, 3, 0),
-      _descriptor.SingleFieldGroup('declaration_order', _descriptor.TYPE_INT32, 5, 0, default_value=-1),
-      _descriptor.SingleFieldGroup('source_file_info', _descriptor.StructType(lambda: SourceFileInfo, nullable=True), 6, 0),
-      _descriptor.SingleFieldGroup('contained_declarations', _descriptor.StructType(lambda: ContainedDeclarations, nullable=True), 7, 0),
-      _descriptor.SingleFieldGroup('container_type_key', _descriptor.TYPE_NULLABLE_STRING, 8, 0),
+      _descriptor.SingleFieldGroup('short_name', _descriptor.TYPE_NULLABLE_STRING, 1, 0),
+      _descriptor.SingleFieldGroup('full_identifier', _descriptor.TYPE_NULLABLE_STRING, 2, 0),
+      _descriptor.SingleFieldGroup('declared_ordinal', _descriptor.TYPE_INT32, 3, 0, default_value=-1),
+      _descriptor.SingleFieldGroup('declaration_order', _descriptor.TYPE_INT32, 4, 0, default_value=-1),
+      _descriptor.SingleFieldGroup('source_file_info', _descriptor.StructType(lambda: SourceFileInfo, nullable=True), 5, 0),
+      _descriptor.SingleFieldGroup('contained_declarations', _descriptor.StructType(lambda: ContainedDeclarations, nullable=True), 6, 0),
+      _descriptor.SingleFieldGroup('container_type_key', _descriptor.TYPE_NULLABLE_STRING, 7, 0),
     ],
   }
 
