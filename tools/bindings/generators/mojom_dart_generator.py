@@ -445,7 +445,10 @@ def ParseStringAttribute(attribute):
 
 def GetPackage(module):
   if module.attributes and 'DartPackage' in module.attributes:
-    return ParseStringAttribute(module.attributes['DartPackage'])
+    package = ParseStringAttribute(module.attributes['DartPackage'])
+    package = package.strip()
+    if package != '':
+      return package
   # Default package.
   return 'mojom'
 
