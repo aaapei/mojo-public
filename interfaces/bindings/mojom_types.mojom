@@ -226,10 +226,6 @@ struct UnionField {
 
   Type type;
   uint32 tag;
-
-  // The minimum version of the containing union that includes this field.
-  // The earliest version is version 0.
-  uint32 min_version;
 };
 
 struct MojomUnion {
@@ -258,10 +254,6 @@ struct EnumValue {
   // This number is computed based on the |specified_value|s of all of the
   // EnumValues in a MojomEnum.
   int32 int_value;
-
-  // The minimum version of the containing MojomEnum that includes this value.
-  // The earliest version is version 0.
-  uint32 min_version;
 };
 
 struct MojomEnum {

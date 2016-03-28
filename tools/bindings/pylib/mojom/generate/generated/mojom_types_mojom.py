@@ -133,7 +133,6 @@ class UnionField(object):
       _descriptor.SingleFieldGroup('decl_data', _descriptor.StructType(lambda: DeclarationData, nullable=True), 0, 0),
       _descriptor.SingleFieldGroup('type', _descriptor.UnionType(lambda: Type), 1, 0),
       _descriptor.SingleFieldGroup('tag', _descriptor.TYPE_UINT32, 2, 0),
-      _descriptor.SingleFieldGroup('min_version', _descriptor.TYPE_UINT32, 3, 0),
     ],
   }
 
@@ -154,7 +153,6 @@ class EnumValue(object):
       _descriptor.SingleFieldGroup('enum_type_key', _descriptor.TYPE_STRING, 1, 0),
       _descriptor.SingleFieldGroup('initializer_value', _descriptor.UnionType(lambda: Value, nullable=True), 2, 0),
       _descriptor.SingleFieldGroup('int_value', _descriptor.TYPE_INT32, 3, 0),
-      _descriptor.SingleFieldGroup('min_version', _descriptor.TYPE_UINT32, 4, 0),
     ],
   }
 
