@@ -601,8 +601,9 @@ class Generator(generator.Generator):
         raise e
 
   def GetImports(self, args):
+    used_imports = self.GetUsedImports(self.module)
     used_names = set()
-    for each_import in self.module.transitive_imports:
+    for each_import in used_imports.values():
       simple_name = each_import["module_name"].split(".")[0]
 
       # Since each import is assigned a library in Dart, they need to have
@@ -618,7 +619,7 @@ class Generator(generator.Generator):
       counter += 1
 
       each_import["rebased_path"] = GetImportUri(each_import['module'])
-    return self.module.imports
+    return sorted(used_imports.values(), key=lambda x: x['rebased_path'])
 
   def GetImportedInterfaces(self):
     interface_to_import = {}
