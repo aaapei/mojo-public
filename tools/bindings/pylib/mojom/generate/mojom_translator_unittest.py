@@ -582,6 +582,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
   def do_interface_test(self, specify_service_name):
     file_name = 'a.mojom'
     mojom_interface = mojom_types_mojom.MojomInterface(
+        current_version=47,
         decl_data=mojom_types_mojom.DeclarationData(
           short_name='AnInterface',
           source_file_info=mojom_types_mojom.SourceFileInfo(
@@ -597,6 +598,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         ordinal=10,
         decl_data=mojom_types_mojom.DeclarationData(
           short_name='AMethod10',
+          declaration_order=1,
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)),
         parameters=mojom_types_mojom.MojomStruct(fields=[],
@@ -606,6 +608,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         ordinal=0,
         decl_data=mojom_types_mojom.DeclarationData(
           short_name='AMethod0',
+           declaration_order=1,
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)),
         parameters=mojom_types_mojom.MojomStruct(fields=[],
@@ -615,6 +618,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         ordinal=7,
         decl_data=mojom_types_mojom.DeclarationData(
           short_name='AMethod7',
+          declaration_order=0,
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)),
         parameters=mojom_types_mojom.MojomStruct(fields=[],
@@ -629,10 +633,13 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
     translator.InterfaceFromMojom(interface, mojom_types_mojom.UserDefinedType(
       interface_type=mojom_interface))
 
+
     self.assertEquals(translator._module, interface.module)
     self.assertEquals('AnInterface', interface.name)
-    self.assertEquals(0, interface.methods[0].ordinal)
-    self.assertEquals(7, interface.methods[1].ordinal)
+    self.assertEquals(mojom_interface.current_version, interface.version)
+    # The methods should be ordered by declaration_order.
+    self.assertEquals(7, interface.methods[0].ordinal)
+    self.assertEquals(0, interface.methods[1].ordinal)
     self.assertEquals(10, interface.methods[2].ordinal)
     if specify_service_name:
       self.assertEquals('test::TheInterface', interface.service_name)
@@ -645,6 +652,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
     file_name = 'a.mojom'
     mojom_method = mojom_types_mojom.MojomMethod(
         ordinal=10,
+        min_version=6,
         decl_data=mojom_types_mojom.DeclarationData(
           short_name='AMethod',
           source_file_info=mojom_types_mojom.SourceFileInfo(
@@ -677,6 +685,7 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
     self.assertEquals(mojom_method.decl_data.short_name, method.name)
     self.assertEquals(interface, method.interface)
     self.assertEquals(mojom_method.ordinal, method.ordinal)
+    self.assertEquals(mojom_method.min_version, method.min_version)
     self.assertIsNone(method.response_parameters)
     self.assertEquals(
         len(mojom_method.parameters.fields), len(method.parameters))

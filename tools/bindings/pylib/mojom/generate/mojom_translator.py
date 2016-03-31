@@ -454,6 +454,7 @@ class FileTranslator(object):
     self.PopulateModuleOrImportedFrom(interface, mojom_interface)
     interface.name = mojom_interface.decl_data.short_name
     interface.spec = interface.name
+    interface.version = mojom_interface.current_version
     interface.service_name = mojom_interface.service_name
     if interface.attributes:
       assert interface.service_name == interface.attributes.get(
@@ -463,12 +464,12 @@ class FileTranslator(object):
 
 
     # Translate the dictionary of methods into a list of module.Methods.
-    # In order to have a deterministic ordering we sort by method ordinal.
-    # TODO(rudominer) Consider ordering by declaration order instead once
-    # this field is populated by the front-end.
     interface.methods = [self.MethodFromMojom(mojom_method, interface)
-        for ordinal, mojom_method in sorted(mojom_interface.methods.iteritems(),
-          key=operator.itemgetter(0))]
+        for ordinal, mojom_method in mojom_interface.methods.iteritems()]
+    # We want the methods in an interface to be in some deterministic order
+    # and we choose declaration order (i.e. lexical order within the
+    # .mojom file.)
+    interface.methods.sort(key=lambda method: method.declaration_order)
     self.PopulateContainedDeclarationsFromMojom(
         interface, mojom_interface.decl_data.contained_declarations)
 
@@ -484,6 +485,7 @@ class FileTranslator(object):
     """
     method = module.Method(interface, mojom_method.decl_data.short_name)
     method.ordinal = mojom_method.ordinal
+    method.declaration_order = mojom_method.decl_data.declaration_order
     method.param_struct = module.Struct()
     self.StructFromMojomStruct(method.param_struct, mojom_method.parameters)
     # The name of a synthetic request parameter struct is not guaranteed by
@@ -505,13 +507,7 @@ class FileTranslator(object):
       method.response_parameters = [self.ParamFromMojom(param)
           for param in mojom_method.response_params.fields]
 
-    # Set the min_version attribute on the method.
-    method.min_version=None
-    # TODO(rudominer) For now we parse the "MinVersion" attribute here but
-    # after we add a min_version field to mojom_types_mojom.MojomMethod then
-    # we should take the value from there instead.
-    if method.attributes:
-      method.min_version=method.get('MinVersion')
+    method.min_version=mojom_method.min_version
 
     return method
 

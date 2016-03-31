@@ -169,25 +169,10 @@ class Generator(object):
   def _AddInterfaceComputedData(self, interface):
     """Adds computed data to the given interface. The data is computed once and
     used repeatedly in the generation process."""
-    # Here we set the interface's |version| attribute to be the maximum value
-    # of the |min_version| attributes of all methods in the interface and all
-    # parameters in those methods.
-    # TODO(rudominer) Consider adding this value to the intermediate
-    # representation.
-    interface.version = 0
     for method in interface.methods:
-      if method.min_version is not None:
-        interface.version = max(interface.version, method.min_version)
-
       method.param_struct = self._GetStructFromMethod(method)
-      interface.version = max(interface.version,
-                              method.param_struct.versions[-1].version)
-
       if method.response_parameters is not None:
         method.response_param_struct = self._GetResponseStructFromMethod(method)
-        interface.version = max(
-            interface.version,
-            method.response_param_struct.versions[-1].version)
       else:
         method.response_param_struct = None
     return interface
