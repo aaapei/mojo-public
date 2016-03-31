@@ -21,6 +21,7 @@
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
+#include "mojo/public/c/system/wait_set.h"
 
 // The joys of the C preprocessor....
 #define STRINGIFY(x) #x

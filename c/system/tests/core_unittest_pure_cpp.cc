@@ -17,6 +17,7 @@
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
+#include "mojo/public/c/system/wait_set.h"
 
 // We don't actually want to test anything; we just want to make sure that this
 // file is compiled/linked in (this function is called from core_unittest.cc).

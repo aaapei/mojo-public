@@ -17,5 +17,6 @@ mojo_sdk_source_set("system") {
     "result.h",
     "time.h",
     "wait.h",
+    "wait_set.h",
   ]
 }
