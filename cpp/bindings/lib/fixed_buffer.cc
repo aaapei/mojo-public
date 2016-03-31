@@ -17,14 +17,14 @@ namespace internal {
 FixedBuffer::FixedBuffer() : ptr_(nullptr), cursor_(0), size_(0) {}
 
 void FixedBuffer::Initialize(void* memory, size_t size) {
-  MOJO_DCHECK(size == internal::Align(size));
-
   ptr_ = static_cast<char*>(memory);
   cursor_ = 0;
   size_ = size;
 }
 
 void* FixedBuffer::Allocate(size_t delta) {
+  // Ensure that all memory returned by Allocate() is 8-byte aligned w.r.t the
+  // start of the buffer.
   delta = internal::Align(delta);
 
   if (delta == 0 || delta > size_ - cursor_) {

@@ -44,9 +44,17 @@ class FixedBuffer : public Buffer {
 
   size_t size() const { return size_; }
 
+  // Returns the number of bytes used so far.
+  // TODO(vardhan): Introduce this method in |Buffer|? Doesn't seem necessary.
+  size_t BytesUsed() const { return cursor_; }
+
   // Grows the buffer by |num_bytes| and returns a pointer to the start of the
   // addition. The resulting address is 8-byte aligned, and the content of the
   // memory is zero-filled.
+  // TODO(vardhan): Allocate() should safely fail if we run out of buffer space.
+  // This will allow us to, e.g, fail when trying to consume a buffer to
+  // serialize into, and return an insufficient space error. Currently, there
+  // are consumers of FixedBuffer that rely on it CHECK-failing.
   void* Allocate(size_t num_bytes) override;
 
  protected:

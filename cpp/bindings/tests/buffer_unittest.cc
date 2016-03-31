@@ -21,6 +21,14 @@ bool IsZero(void* p_buf, size_t size) {
   return true;
 }
 
+// Tests that you can create a FixedBuffer whose underlying buffer size is not
+// a multiple of 8.
+TEST(FixedBufferTest, UnAlignedBufferSized) {
+  char char_buf[10] = {};
+  internal::FixedBuffer fixed_buf;
+  fixed_buf.Initialize(char_buf, sizeof(char_buf));
+}
+
 // Tests that FixedBuffer allocates memory aligned to 8 byte boundaries.
 TEST(FixedBufferTest, Alignment) {
   internal::FixedBufferForTesting buf(internal::Align(10) * 2);

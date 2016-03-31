@@ -663,8 +663,7 @@ TEST(UnionTest, Deserialize_NullableUnion) {
   EXPECT_TRUE(small_struct->pod_union.is_null());
 
   SmallStructPtr deserialized_struct = SmallStruct::New();
-  deserialized_struct->Deserialize(buf);
-
+  EXPECT_TRUE(deserialized_struct->Deserialize(buf, sizeof(buf)));
   EXPECT_TRUE(deserialized_struct->pod_union.is_null());
 }
 

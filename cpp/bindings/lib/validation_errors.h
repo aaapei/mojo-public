@@ -63,6 +63,7 @@ enum class ValidationError {
 
 const char* ValidationErrorToString(ValidationError error);
 
+// TODO(vardhan): This can die, along with |ValidationErrorObserverForTesting|.
 void ReportValidationError(ValidationError error,
                            std::string* description = nullptr);
 

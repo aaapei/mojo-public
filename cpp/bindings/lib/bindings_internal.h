@@ -98,6 +98,8 @@ struct IsHandle {
   enum { value = std::is_base_of<Handle, H>::value };
 };
 
+// TODO(vardhan): Replace RemoveStructPtr<> and UnwrapStructPtr<> with
+// specializations of std::pointer_traits<> on [Inlined]StructPtr<>.
 template <typename T>
 struct RemoveStructPtr {
   typedef T type;
