@@ -55,6 +55,9 @@ typedef uint32_t MojoHandleRights;
 //   |MOJO_HANDLE_SIGNAL_READABLE| - Can read (e.g., a message) from the handle.
 //   |MOJO_HANDLE_SIGNAL_WRITABLE| - Can write (e.g., a message) to the handle.
 //   |MOJO_HANDLE_SIGNAL_PEER_CLOSED| - The peer handle is closed.
+//   |MOJO_HANDLE_SIGNAL_READ_THRESHOLD| - Can read a certain amount of data
+//       from the handle (e.g., a data pipe consumer; see
+//       |MojoDataPipeConsumerOptions|).
 
 typedef uint32_t MojoHandleSignals;
 
@@ -62,6 +65,7 @@ typedef uint32_t MojoHandleSignals;
 #define MOJO_HANDLE_SIGNAL_READABLE ((MojoHandleSignals)1 << 0)
 #define MOJO_HANDLE_SIGNAL_WRITABLE ((MojoHandleSignals)1 << 1)
 #define MOJO_HANDLE_SIGNAL_PEER_CLOSED ((MojoHandleSignals)1 << 2)
+#define MOJO_HANDLE_SIGNAL_READ_THRESHOLD ((MojoHandleSignals)1 << 3)
 
 // |MojoHandleSignalsState|: Returned by wait functions to indicate the
 // signaling state of handles. Members are as follows:

@@ -42,7 +42,9 @@ MOJO_BEGIN_EXTERN_C
 //       the signals being satisfied.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if it becomes known that none of the
 //       signals in |signals| can ever be satisfied (e.g., when waiting on one
-//       end of a message pipe and the other end is closed).
+//       end of a message pipe and the other end is closed), at least not
+//       without performing some action on |handle| (see, e.g., |struct
+//       MojoDataPipeConsumerOptions|).
 //   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
 //       (that, e.g., may result in it being invalidated, such as being sent in
 //       a message).
@@ -94,7 +96,9 @@ MojoResult MojoWait(
 //   |MOJO_RESULT_DEADLINE_EXCEEDED| if the deadline has passed without any of
 //       handles satisfying any of its signals.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if it is or becomes impossible that SOME
-//       |handle[i]| will ever satisfy any of the signals in |signals[i]|.
+//       |handle[i]| will ever satisfy any of the signals in |signals[i]|, at
+//       least not without some action on |handle[i]| (see, e.g., |struct
+//       MojoDataPipeConsumerOptions|).
 //   |MOJO_RESULT_BUSY| if some |handle[i]| is currently in use in some
 //       transaction (that, e.g., may result in it being invalidated, such as
 //       being sent in a message).

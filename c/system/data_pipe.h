@@ -52,6 +52,30 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateDataPipeOptions) == 16,
 
 typedef uint32_t MojoWriteDataFlags;
 
+// |MojoDataPipeConsumerOptions|: Used to specify data pipe consumer options (to
+// |MojoSetDataPipeConsumerOptions()| and from
+// |MojoGetDataPipeConsumerOptions()|).
+//   |uint32_t struct_size|: Set to the size of the
+//       |MojoDataPipeConsumerOptions| struct. (Used to allow for future
+//       extensions.)
+//   |uint32_t read_threshold_num_bytes|: Set to the minimum number of bytes
+//       required for the handle to be signaled with
+//       |MOJO_HANDLE_SIGNAL_READ_THRESHOLD|; must be a multiple
+//       of the data pipe's element size. Set to zero to opt for the default,
+//       which is the size of a single element. Note: If the producer handle is
+//       closed with less than this amount of data in the data pipe, the
+//       consumer's |MOJO_HANDLE_SIGNAL_READ_THRESHOLD| will be considered
+//       unsatisfiable; if there is actually some data remaining in the data
+//       pipe, the status of this signal may be changed if this value is
+//       modified.
+
+struct MOJO_ALIGNAS(8) MojoDataPipeConsumerOptions {
+  uint32_t struct_size;
+  uint32_t read_threshold_num_bytes;
+};
+MOJO_STATIC_ASSERT(sizeof(MojoDataPipeConsumerOptions) == 8,
+                   "MojoDataPipeConsumerOptions has wrong size");
+
 #define MOJO_WRITE_DATA_FLAG_NONE ((MojoWriteDataFlags)0)
 #define MOJO_WRITE_DATA_FLAG_ALL_OR_NONE ((MojoWriteDataFlags)1 << 0)
 
@@ -107,6 +131,13 @@ MojoResult MojoCreateDataPipe(
         options,                                           // Optional in.
     MojoHandle* MOJO_RESTRICT data_pipe_producer_handle,   // Out.
     MojoHandle* MOJO_RESTRICT data_pipe_consumer_handle);  // Out.
+
+// TODO(vtl): Probably should have a way of getting the
+// |MojoCreateDataPipeOptions| (maybe just rename it to |MojoDataPipeOptions|?)
+// from either handle as well.
+
+// TODO(vtl): Need |Mojo{Set,Get}DataPipeProducerOptions()| analogous to the
+// ones for consumers.
 
 // |MojoWriteData()|: Writes the given data to the data pipe producer given by
 // |data_pipe_producer_handle|. |elements| points to data of size |*num_bytes|;
@@ -204,6 +235,49 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
 //       as being sent in a message).
 MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
                             uint32_t num_bytes_written);           // In.
+
+// |MojoSetDataPipeConsumerOptions()|: Sets options for the data pipe consumer
+// handle |data_pipe_consumer_handle|.
+//
+// |options| may be set to null to reset back to the default options.
+//
+// Returns:
+//   |MOJO_RESULT_OK| on success.
+//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//       |data_pipe_consumer_handle| is not a valid data pipe consumer handle or
+//       |*options| is invalid).
+//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message).
+MojoResult MojoSetDataPipeConsumerOptions(
+    MojoHandle data_pipe_consumer_handle,                // In.
+    const struct MojoDataPipeConsumerOptions* options);  // Optional in.
+
+// |MojoGetDataPipeConsumerOptions()|: Gets options for the data pipe consumer
+// handle |data_pipe_consumer_handle|. |options| should be non-null and point to
+// a buffer of size |options_num_bytes|; |options_num_bytes| should be at least
+// 8 (the size of the first, and currently only, version of
+// |MojoDataPipeConsumerOptions|).
+//
+// On success, |*options| will be filled with information about the given
+// buffer. Note that if additional (larger) versions of
+// |MojoDataPipeConsumerOptions| are defined, the largest version permitted by
+// |options_num_bytes| that is supported by the implementation will be filled.
+// Callers expecting more than the first 16-byte version must check the
+// resulting |options->struct_size|.
+//
+// Returns:
+//   |MOJO_RESULT_OK| on success.
+//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//       |data_pipe_consumer_handle| is not a valid data pipe consumer handle,
+//       |*options| is null, or |options_num_bytes| is too small).
+//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message).
+MojoResult MojoGetDataPipeConsumerOptions(
+    MojoHandle data_pipe_consumer_handle,         // In.
+    struct MojoDataPipeConsumerOptions* options,  // Out.
+    uint32_t options_num_bytes);                  // In.
 
 // |MojoReadData()|: Reads data from the data pipe consumer given by
 // |data_pipe_consumer_handle|. May also be used to discard data or query the

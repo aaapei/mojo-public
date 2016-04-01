@@ -152,7 +152,6 @@ MojoResult MojoDuplicateBufferHandle(
 // |buffer_handle|. |info| should be non-null and point to a buffer of size
 // |info_num_bytes|; |info_num_bytes| should be at least 16 (the size of the
 // first, and currently only, version of |struct MojoBufferInformation|).
-
 //
 // On success, |*info| will be filled with information about the given buffer.
 // Note that if additional (larger) versions of |struct MojoBufferInformation|
@@ -177,7 +176,6 @@ MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
 // |flags|. |offset + num_bytes| must be less than or equal to the size of the
 // buffer. On success, |*buffer| points to memory with the requested part of the
 // buffer. (On failure, it is not modified.)
-
 //
 // A single buffer handle may have multiple active mappings (possibly depending
 // on the buffer type). The permissions (e.g., writable or executable) of the
