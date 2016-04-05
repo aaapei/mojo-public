@@ -267,6 +267,145 @@ TEST(SystemImplTest, BasicDataPipe) {
   // 2 SystemImpls are leaked...
 }
 
+TEST(SystemImplTest, DataPipeReadThreshold) {
+  MojoSystemImpl sys0 = MojoSystemImplCreateImpl();
+  MojoSystemImpl sys1 = MojoSystemImplCreateImpl();
+  EXPECT_NE(sys0, sys1);
+
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplCreateDataPipe(sys0, nullptr, &hp, &hc));
+  EXPECT_NE(hp, MOJO_HANDLE_INVALID);
+  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+
+  // Move the other end of the pipe to a different SystemImpl.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplTransferHandle(sys0, hc, sys1, &hc));
+  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+
+  MojoDataPipeConsumerOptions copts;
+  static const uint32_t kCoptsSize = static_cast<uint32_t>(sizeof(copts));
+
+  // Check the current read threshold; should be the default.
+  memset(&copts, 255, kCoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetDataPipeConsumerOptions(
+                                sys1, hc, &copts, kCoptsSize));
+  EXPECT_EQ(kCoptsSize, copts.struct_size);
+  EXPECT_EQ(0u, copts.read_threshold_num_bytes);
+
+  // Shouldn't have the read threshold signal yet.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                               1000, nullptr));
+
+  // Write a byte to |hp|.
+  static const char kAByte = 'A';
+  uint32_t num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWriteData(sys0, hp, &kAByte, &num_bytes,
+                                    MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+
+  // Now should have the read threshold signal.
+  MojoHandleSignalsState state;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                               1000, &state));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            state.satisfiable_signals);
+
+  // Set the read threshold to 3, and then check it.
+  copts.struct_size = kCoptsSize;
+  copts.read_threshold_num_bytes = 3u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplSetDataPipeConsumerOptions(sys1, hc, &copts));
+
+  memset(&copts, 255, kCoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetDataPipeConsumerOptions(
+                                sys1, hc, &copts, kCoptsSize));
+  EXPECT_EQ(kCoptsSize, copts.struct_size);
+  EXPECT_EQ(3u, copts.read_threshold_num_bytes);
+
+  // Shouldn't have the read threshold signal again.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0,
+                               nullptr));
+
+  // Write another byte to |hp|.
+  static const char kBByte = 'B';
+  num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWriteData(sys0, hp, &kBByte, &num_bytes,
+                                    MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+
+  // Still shouldn't have the read threshold signal.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                               1000, nullptr));
+
+  // Write a third byte to |hp|.
+  static const char kCByte = 'C';
+  num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWriteData(sys0, hp, &kCByte, &num_bytes,
+                                    MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+
+  // Now should have the read threshold signal.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                               1000, nullptr));
+
+  // Read a byte.
+  char read_byte = 'x';
+  num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplReadData(sys1, hc, &read_byte, &num_bytes,
+                                   MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+  EXPECT_EQ(kAByte, read_byte);
+
+  // Shouldn't have the read threshold signal again.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0,
+                               nullptr));
+
+  // Set the read threshold to 2.
+  copts.struct_size = kCoptsSize;
+  copts.read_threshold_num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplSetDataPipeConsumerOptions(sys1, hc, &copts));
+
+  // Should have the read threshold signal again.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0,
+                               nullptr));
+
+  // Set the read threshold to the default by passing null, and check it.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplSetDataPipeConsumerOptions(sys1, hc, nullptr));
+
+  memset(&copts, 255, kCoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetDataPipeConsumerOptions(
+                                sys1, hc, &copts, kCoptsSize));
+  EXPECT_EQ(kCoptsSize, copts.struct_size);
+  EXPECT_EQ(0u, copts.read_threshold_num_bytes);
+
+  // Should still have the read threshold signal.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0,
+                               nullptr));
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys0, hp));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys1, hc));
+
+  // 2 SystemImpls are leaked...
+}
+
 TEST(SystemImplTest, BasicSharedBuffer) {
   const uint64_t kSize = 100u;
 
