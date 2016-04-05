@@ -138,6 +138,25 @@ MojoResult MojoSystemImplEndWriteData(MojoSystemImpl system,
                                            num_elements_written);
 }
 
+MojoResult MojoSystemImplSetDataPipeConsumerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_consumer_handle,
+    const struct MojoDataPipeConsumerOptions* options) {
+  assert(g_system_impl_thunks.SetDataPipeConsumerOptions);
+  return g_system_impl_thunks.SetDataPipeConsumerOptions(
+      system, data_pipe_consumer_handle, options);
+}
+
+MojoResult MojoSystemImplGetDataPipeConsumerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_consumer_handle,
+    struct MojoDataPipeConsumerOptions* options,
+    uint32_t options_num_bytes) {
+  assert(g_system_impl_thunks.GetDataPipeConsumerOptions);
+  return g_system_impl_thunks.GetDataPipeConsumerOptions(
+      system, data_pipe_consumer_handle, options, options_num_bytes);
+}
+
 MojoResult MojoSystemImplReadData(MojoSystemImpl system,
                                   MojoHandle data_pipe_consumer_handle,
                                   void* elements,

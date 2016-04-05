@@ -154,6 +154,27 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,
                                     num_bytes_written);
 }
 
+MojoResult MojoSetDataPipeConsumerOptions(
+    MojoHandle data_pipe_consumer_handle,
+    const struct MojoDataPipeConsumerOptions* options) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoSetDataPipeConsumerOptions(data_pipe_consumer_handle,
+                                                  options);
+}
+
+MojoResult MojoGetDataPipeConsumerOptions(
+    MojoHandle data_pipe_consumer_handle,
+    struct MojoDataPipeConsumerOptions* options,
+    uint32_t options_num_bytes) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoGetDataPipeConsumerOptions(data_pipe_consumer_handle,
+                                                  options, options_num_bytes);
+}
+
 MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,
                         void* elements,
                         uint32_t* num_bytes,

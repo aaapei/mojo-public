@@ -101,6 +101,15 @@ MojoResult MojoSystemImplBeginWriteData(MojoSystemImpl system,
 MojoResult MojoSystemImplEndWriteData(MojoSystemImpl system,
                                       MojoHandle data_pipe_producer_handle,
                                       uint32_t num_elements_written);
+MojoResult MojoSystemImplSetDataPipeConsumerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_consumer_handle,
+    const struct MojoDataPipeConsumerOptions* options);
+MojoResult MojoSystemImplGetDataPipeConsumerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_consumer_handle,
+    struct MojoDataPipeConsumerOptions* options,
+    uint32_t options_num_bytes);
 MojoResult MojoSystemImplReadData(MojoSystemImpl system,
                                   MojoHandle data_pipe_consumer_handle,
                                   void* elements,

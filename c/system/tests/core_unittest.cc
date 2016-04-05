@@ -74,8 +74,6 @@ TEST(CoreTest, InvalidHandle) {
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoEndWriteData(MOJO_HANDLE_INVALID, 1u));
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
-// TODO(vtl): Enable once I've added support for NaCl.
-#ifndef __native_client__
   MojoDataPipeConsumerOptions dpc_options = {
       sizeof(MojoDataPipeConsumerOptions), 0u};
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
@@ -84,7 +82,6 @@ TEST(CoreTest, InvalidHandle) {
             MojoGetDataPipeConsumerOptions(
                 MOJO_HANDLE_INVALID, &dpc_options,
                 static_cast<uint32_t>(sizeof(dpc_options))));
-#endif
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoReadData(MOJO_HANDLE_INVALID, buffer, &buffer_size,
                          MOJO_READ_DATA_FLAG_NONE));
@@ -318,8 +315,6 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // the producer never-writable?
 }
 
-// TODO(vtl): Enable once I've added support for NaCl.
-#ifndef __native_client__
 TEST(CoreTest, DataPipeReadThreshold) {
   MojoHandle hp = MOJO_HANDLE_INVALID;
   MojoHandle hc = MOJO_HANDLE_INVALID;
@@ -419,7 +414,6 @@ TEST(CoreTest, DataPipeReadThreshold) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
 }
-#endif
 
 // TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
 #ifdef __native_client__

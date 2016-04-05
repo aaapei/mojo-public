@@ -61,6 +61,13 @@ struct nacl_irt_mojo {
                                    MojoWriteDataFlags flags);
   MojoResult (*MojoEndWriteData)(MojoHandle data_pipe_producer_handle,
                                  uint32_t num_bytes_written);
+  MojoResult (*MojoSetDataPipeConsumerOptions)(
+      MojoHandle data_pipe_consumer_handle,
+      const struct MojoDataPipeConsumerOptions* options);
+  MojoResult (*MojoGetDataPipeConsumerOptions)(
+      MojoHandle data_pipe_consumer_handle,
+      struct MojoDataPipeConsumerOptions* options,
+      uint32_t options_num_bytes);
   MojoResult (*MojoReadData)(MojoHandle data_pipe_consumer_handle,
                              void* elements,
                              uint32_t* num_bytes,

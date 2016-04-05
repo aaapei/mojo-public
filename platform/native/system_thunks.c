@@ -102,6 +102,23 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,
   return g_thunks.EndWriteData(data_pipe_producer_handle, num_elements_written);
 }
 
+MojoResult MojoSetDataPipeConsumerOptions(
+    MojoHandle data_pipe_consumer_handle,
+    const struct MojoDataPipeConsumerOptions* options) {
+  assert(g_thunks.SetDataPipeConsumerOptions);
+  return g_thunks.SetDataPipeConsumerOptions(data_pipe_consumer_handle,
+                                             options);
+}
+
+MojoResult MojoGetDataPipeConsumerOptions(
+    MojoHandle data_pipe_consumer_handle,
+    struct MojoDataPipeConsumerOptions* options,
+    uint32_t options_num_bytes) {
+  assert(g_thunks.GetDataPipeConsumerOptions);
+  return g_thunks.GetDataPipeConsumerOptions(data_pipe_consumer_handle,
+                                             options, options_num_bytes);
+}
+
 MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,
                         void* elements,
                         uint32_t* num_elements,
