@@ -74,6 +74,17 @@ TEST(CoreTest, InvalidHandle) {
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoEndWriteData(MOJO_HANDLE_INVALID, 1u));
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
+// TODO(vtl): Enable once I've added support for NaCl.
+#ifndef __native_client__
+  MojoDataPipeConsumerOptions dpc_options = {
+      sizeof(MojoDataPipeConsumerOptions), 0u};
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoSetDataPipeConsumerOptions(MOJO_HANDLE_INVALID, &dpc_options));
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoGetDataPipeConsumerOptions(
+                MOJO_HANDLE_INVALID, &dpc_options,
+                static_cast<uint32_t>(sizeof(dpc_options))));
+#endif
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoReadData(MOJO_HANDLE_INVALID, buffer, &buffer_size,
                          MOJO_READ_DATA_FLAG_NONE));
@@ -153,7 +164,6 @@ TEST(CoreTest, BasicMessagePipe) {
   sig = MOJO_HANDLE_SIGNAL_READABLE;
   EXPECT_EQ(MOJO_RESULT_OK, MojoWaitMany(&h0, &sig, 1, MOJO_DEADLINE_INDEFINITE,
                                          &result_index, states));
-
   EXPECT_EQ(0u, result_index);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE,
             states[0].satisfied_signals);
@@ -172,7 +182,6 @@ TEST(CoreTest, BasicMessagePipe) {
   // |h0| should no longer be readable.
   EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
             MojoWait(h0, MOJO_HANDLE_SIGNAL_READABLE, 10, &state));
-
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
                 MOJO_HANDLE_SIGNAL_PEER_CLOSED,
@@ -186,22 +195,18 @@ TEST(CoreTest, BasicMessagePipe) {
       MOJO_RESULT_FAILED_PRECONDITION,
       MojoWait(h1, MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE,
                1000, &state));
-
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfiable_signals);
 
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h1));
 }
 
-// TODO(ncbray): enable these tests once NaCl supports the corresponding APIs.
+// TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
 #ifdef __native_client__
 #define MAYBE_BasicDataPipe DISABLED_BasicDataPipe
-#define MAYBE_BasicSharedBuffer DISABLED_BasicSharedBuffer
 #else
 #define MAYBE_BasicDataPipe BasicDataPipe
-#define MAYBE_BasicSharedBuffer BasicSharedBuffer
 #endif
-
 TEST(CoreTest, MAYBE_BasicDataPipe) {
   MojoHandle hp, hc;
   MojoHandleSignals sig;
@@ -220,7 +225,6 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   MojoHandleSignalsState state;
   EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
-
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_NONE, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
                 MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
@@ -229,7 +233,6 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // The producer |hp| should be writable.
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, 0, &state));
-
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
             state.satisfiable_signals);
@@ -258,7 +261,6 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   sig = MOJO_HANDLE_SIGNAL_READABLE;
   EXPECT_EQ(MOJO_RESULT_OK, MojoWaitMany(&hc, &sig, 1, MOJO_DEADLINE_INDEFINITE,
                                          &result_index, states));
-
   EXPECT_EQ(0u, result_index);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
             states[0].satisfied_signals);
@@ -288,7 +290,6 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // |hc| should still be readable.
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
-
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
                 MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
             state.satisfied_signals);
@@ -308,7 +309,6 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // |hc| should no longer be readable.
   EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, 1000, &state));
-
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfiable_signals);
 
@@ -318,6 +318,115 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // the producer never-writable?
 }
 
+// TODO(vtl): Enable once I've added support for NaCl.
+#ifndef __native_client__
+TEST(CoreTest, DataPipeReadThreshold) {
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoCreateDataPipe(nullptr, &hp, &hc));
+  EXPECT_NE(hp, MOJO_HANDLE_INVALID);
+  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+
+  MojoDataPipeConsumerOptions copts;
+  static const uint32_t kCoptsSize = static_cast<uint32_t>(sizeof(copts));
+
+  // Check the current read threshold; should be the default.
+  memset(&copts, 255, kCoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeConsumerOptions(hc, &copts, kCoptsSize));
+  EXPECT_EQ(kCoptsSize, copts.struct_size);
+  EXPECT_EQ(0u, copts.read_threshold_num_bytes);
+
+  // Shouldn't have the read threshold signal yet.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
+
+  // Write a byte to |hp|.
+  static const char kAByte = 'A';
+  uint32_t num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, &kAByte, &num_bytes,
+                                          MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+
+  // Now should have the read threshold signal.
+  MojoHandleSignalsState state;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, &state));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            state.satisfiable_signals);
+
+  // Set the read threshold to 3, and then check it.
+  copts.struct_size = kCoptsSize;
+  copts.read_threshold_num_bytes = 3u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeConsumerOptions(hc, &copts));
+
+  memset(&copts, 255, kCoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeConsumerOptions(hc, &copts, kCoptsSize));
+  EXPECT_EQ(kCoptsSize, copts.struct_size);
+  EXPECT_EQ(3u, copts.read_threshold_num_bytes);
+
+  // Shouldn't have the read threshold signal again.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
+
+  // Write another byte to |hp|.
+  static const char kBByte = 'B';
+  num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, &kBByte, &num_bytes,
+                                          MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+
+  // Still shouldn't have the read threshold signal.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
+
+  // Write a third byte to |hp|.
+  static const char kCByte = 'C';
+  num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, &kCByte, &num_bytes,
+                                          MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+
+  // Now should have the read threshold signal.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
+
+  // Read a byte.
+  char read_byte = 'x';
+  num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, &read_byte, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+  EXPECT_EQ(kAByte, read_byte);
+
+  // Shouldn't have the read threshold signal again.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
+
+  // Set the read threshold to 2.
+  copts.struct_size = kCoptsSize;
+  copts.read_threshold_num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeConsumerOptions(hc, &copts));
+
+  // Should have the read threshold signal again.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+#endif
+
+// TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
+#ifdef __native_client__
+#define MAYBE_BasicSharedBuffer DISABLED_BasicSharedBuffer
+#else
+#define MAYBE_BasicSharedBuffer BasicSharedBuffer
+#endif
 TEST(CoreTest, MAYBE_BasicSharedBuffer) {
   MojoHandle h0, h1;
   void* pointer;
@@ -326,6 +435,14 @@ TEST(CoreTest, MAYBE_BasicSharedBuffer) {
   h0 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateSharedBuffer(nullptr, 100, &h0));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
+
+  // Check information about the buffer from |h0|.
+  MojoBufferInformation info = {};
+  static const uint32_t kInfoSize = static_cast<uint32_t>(sizeof(info));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetBufferInformation(h0, &info, kInfoSize));
+  EXPECT_EQ(kInfoSize, info.struct_size);
+  EXPECT_EQ(MOJO_BUFFER_INFORMATION_FLAG_NONE, info.flags);
+  EXPECT_EQ(100u, info.num_bytes);
 
   // Map everything.
   pointer = nullptr;
@@ -338,6 +455,13 @@ TEST(CoreTest, MAYBE_BasicSharedBuffer) {
   h1 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoDuplicateBufferHandle(h0, nullptr, &h1));
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
+
+  // Check information about the buffer from |h1|.
+  info = MojoBufferInformation();
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetBufferInformation(h1, &info, kInfoSize));
+  EXPECT_EQ(kInfoSize, info.struct_size);
+  EXPECT_EQ(MOJO_BUFFER_INFORMATION_FLAG_NONE, info.flags);
+  EXPECT_EQ(100u, info.num_bytes);
 
   // Close |h0|.
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h0));

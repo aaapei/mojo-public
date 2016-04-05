@@ -112,6 +112,13 @@ struct MojoSystemThunks {
   MojoResult (*GetBufferInformation)(MojoHandle buffer_handle,
                                      struct MojoBufferInformation* info,
                                      uint32_t info_num_bytes);
+  MojoResult (*SetDataPipeConsumerOptions)(
+      MojoHandle data_pipe_consumer_handle,
+      const struct MojoDataPipeConsumerOptions* options);
+  MojoResult (*GetDataPipeConsumerOptions)(
+      MojoHandle data_pipe_consumer_handle,
+      struct MojoDataPipeConsumerOptions* options,
+      uint32_t options_num_bytes);
 };
 #pragma pack(pop)
 
@@ -141,6 +148,8 @@ inline MojoSystemThunks MojoMakeSystemThunks() {
       MojoMapBuffer,
       MojoUnmapBuffer,
       MojoGetBufferInformation,
+      MojoSetDataPipeConsumerOptions,
+      MojoGetDataPipeConsumerOptions,
   };
   return system_thunks;
 }
