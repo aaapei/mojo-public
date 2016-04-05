@@ -411,6 +411,19 @@ TEST(CoreTest, DataPipeReadThreshold) {
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
 
+  // Set the read threshold to the default by passing null, and check it.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeConsumerOptions(hc, nullptr));
+
+  memset(&copts, 255, kCoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeConsumerOptions(hc, &copts, kCoptsSize));
+  EXPECT_EQ(kCoptsSize, copts.struct_size);
+  EXPECT_EQ(0u, copts.read_threshold_num_bytes);
+
+  // Should still have the read threshold signal.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
+
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
 }
