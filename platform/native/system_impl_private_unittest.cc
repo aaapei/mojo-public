@@ -12,13 +12,6 @@
 namespace mojo {
 namespace {
 
-const MojoHandleSignals kSignalReadadableWritable =
-    MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE;
-
-const MojoHandleSignals kSignalAll = MOJO_HANDLE_SIGNAL_READABLE |
-                                     MOJO_HANDLE_SIGNAL_WRITABLE |
-                                     MOJO_HANDLE_SIGNAL_PEER_CLOSED;
-
 TEST(SystemImplTest, GetTimeTicksNow) {
   MojoSystemImpl system = MojoSystemImplCreateImpl();
   const MojoTimeTicks start = MojoSystemImplGetTimeTicksNow(system);
@@ -55,14 +48,18 @@ TEST(SystemImplTest, BasicMessagePipe) {
       MOJO_RESULT_DEADLINE_EXCEEDED,
       MojoSystemImplWait(sys0, h0, MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
-  EXPECT_EQ(kSignalAll, state.satisfiable_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+            state.satisfiable_signals);
 
   // Should be writable.
   EXPECT_EQ(
       MOJO_RESULT_OK,
       MojoSystemImplWait(sys0, h0, MOJO_HANDLE_SIGNAL_WRITABLE, 0, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
-  EXPECT_EQ(kSignalAll, state.satisfiable_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+            state.satisfiable_signals);
 
   // Last parameter is optional.
   EXPECT_EQ(
@@ -91,8 +88,11 @@ TEST(SystemImplTest, BasicMessagePipe) {
                                    &result_index, states));
 
   EXPECT_EQ(0u, result_index);
-  EXPECT_EQ(kSignalReadadableWritable, states[0].satisfied_signals);
-  EXPECT_EQ(kSignalAll, states[0].satisfiable_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE,
+            states[0].satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+            states[0].satisfiable_signals);
 
   // Read from |h0|.
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
@@ -108,7 +108,9 @@ TEST(SystemImplTest, BasicMessagePipe) {
       MojoSystemImplWait(sys0, h0, MOJO_HANDLE_SIGNAL_READABLE, 10, &state));
 
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
-  EXPECT_EQ(kSignalAll, state.satisfiable_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+            state.satisfiable_signals);
 
   // Close |h0|.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys0, h0));
@@ -157,7 +159,8 @@ TEST(SystemImplTest, BasicDataPipe) {
       MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
 
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_NONE, state.satisfied_signals);
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
             state.satisfiable_signals);
 
   // The producer |hp| should be writable.
@@ -198,8 +201,10 @@ TEST(SystemImplTest, BasicDataPipe) {
                                    &result_index, states));
 
   EXPECT_EQ(0u, result_index);
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE, states[0].satisfied_signals);
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            states[0].satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
             states[0].satisfiable_signals);
 
   // Do a two-phase write to |hp|.
@@ -229,9 +234,11 @@ TEST(SystemImplTest, BasicDataPipe) {
       MOJO_RESULT_OK,
       MojoSystemImplWait(sys1, hc, MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
 
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
             state.satisfied_signals);
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
             state.satisfiable_signals);
 
   // Do a two-phase read from |hc|.
