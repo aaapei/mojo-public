@@ -44,6 +44,25 @@ struct MOJO_ALIGNAS(8) MojoCreateDataPipeOptions {
 MOJO_STATIC_ASSERT(sizeof(MojoCreateDataPipeOptions) == 16,
                    "MojoCreateDataPipeOptions has wrong size");
 
+// |MojoDataPipeProducerOptions|: Used to specify data pipe producer options (to
+// |MojoSetDataPipeProducerOptions()| and from
+// |MojoGetDataPipeProducerOptions()|).
+//   |uint32_t struct_size|: Set to the size of the
+//       |MojoDataPipeProducerOptions| struct. (Used to allow for future
+//       extensions.)
+//   |uint32_t write_threshold_num_bytes|: Set to the minimum amount of space
+//       required to be available, in number of bytes, for the handle to be
+//       signaled with |MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD|; must be a multiple
+//       of the data pipe's element size. Set to zero to opt for the default,
+//       which is the size of a single element.
+
+struct MOJO_ALIGNAS(8) MojoDataPipeProducerOptions {
+  uint32_t struct_size;
+  uint32_t write_threshold_num_bytes;
+};
+MOJO_STATIC_ASSERT(sizeof(MojoDataPipeProducerOptions) == 8,
+                   "MojoDataPipeProducerOptions has wrong size");
+
 // |MojoWriteDataFlags|: Used to specify different modes to |MojoWriteData()|
 // and |MojoBeginWriteData()|.
 //   |MOJO_WRITE_DATA_FLAG_NONE| - No flags; default mode.
@@ -52,6 +71,9 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateDataPipeOptions) == 16,
 
 typedef uint32_t MojoWriteDataFlags;
 
+#define MOJO_WRITE_DATA_FLAG_NONE ((MojoWriteDataFlags)0)
+#define MOJO_WRITE_DATA_FLAG_ALL_OR_NONE ((MojoWriteDataFlags)1 << 0)
+
 // |MojoDataPipeConsumerOptions|: Used to specify data pipe consumer options (to
 // |MojoSetDataPipeConsumerOptions()| and from
 // |MojoGetDataPipeConsumerOptions()|).
@@ -59,7 +81,7 @@ typedef uint32_t MojoWriteDataFlags;
 //       |MojoDataPipeConsumerOptions| struct. (Used to allow for future
 //       extensions.)
 //   |uint32_t read_threshold_num_bytes|: Set to the minimum number of bytes
-//       required for the handle to be signaled with
+//       required to be available for the handle to be signaled with
 //       |MOJO_HANDLE_SIGNAL_READ_THRESHOLD|; must be a multiple
 //       of the data pipe's element size. Set to zero to opt for the default,
 //       which is the size of a single element. Note: If the producer handle is
@@ -75,9 +97,6 @@ struct MOJO_ALIGNAS(8) MojoDataPipeConsumerOptions {
 };
 MOJO_STATIC_ASSERT(sizeof(MojoDataPipeConsumerOptions) == 8,
                    "MojoDataPipeConsumerOptions has wrong size");
-
-#define MOJO_WRITE_DATA_FLAG_NONE ((MojoWriteDataFlags)0)
-#define MOJO_WRITE_DATA_FLAG_ALL_OR_NONE ((MojoWriteDataFlags)1 << 0)
 
 // |MojoReadDataFlags|: Used to specify different modes to |MojoReadData()| and
 // |MojoBeginReadData()|.
@@ -136,8 +155,52 @@ MojoResult MojoCreateDataPipe(
 // |MojoCreateDataPipeOptions| (maybe just rename it to |MojoDataPipeOptions|?)
 // from either handle as well.
 
-// TODO(vtl): Need |Mojo{Set,Get}DataPipeProducerOptions()| analogous to the
-// ones for consumers.
+// |MojoSetDataPipeProducerOptions()|: Sets options for the data pipe producer
+// handle |data_pipe_producer_handle|.
+//
+// |options| may be set to null to reset back to the default options.
+//
+// Note that changing the write threshold may also result in the state (both
+// satisfied or satisfiable) of the |MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD| handle
+// signal being changed.
+//
+// Returns:
+//   |MOJO_RESULT_OK| on success.
+//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//       |data_pipe_producer_handle| is not a valid data pipe producer handle or
+//       |*options| is invalid).
+//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message).
+MojoResult MojoSetDataPipeProducerOptions(
+    MojoHandle data_pipe_producer_handle,                // In.
+    const struct MojoDataPipeProducerOptions* options);  // Optional in.
+
+// |MojoGetDataPipeProducerOptions()|: Gets options for the data pipe producer
+// handle |data_pipe_producer_handle|. |options| should be non-null and point to
+// a buffer of size |options_num_bytes|; |options_num_bytes| should be at least
+// 8 (the size of the first, and currently only, version of
+// |MojoDataPipeProducerOptions|).
+//
+// On success, |*options| will be filled with information about the given
+// buffer. Note that if additional (larger) versions of
+// |MojoDataPipeProducerOptions| are defined, the largest version permitted by
+// |options_num_bytes| that is supported by the implementation will be filled.
+// Callers expecting more than the first 16-byte version must check the
+// resulting |options->struct_size|.
+//
+// Returns:
+//   |MOJO_RESULT_OK| on success.
+//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//       |data_pipe_producer_handle| is not a valid data pipe producer handle,
+//       |*options| is null, or |options_num_bytes| is too small).
+//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message).
+MojoResult MojoGetDataPipeProducerOptions(
+    MojoHandle data_pipe_producer_handle,         // In.
+    struct MojoDataPipeProducerOptions* options,  // Out.
+    uint32_t options_num_bytes);                  // In.
 
 // |MojoWriteData()|: Writes the given data to the data pipe producer given by
 // |data_pipe_producer_handle|. |elements| points to data of size |*num_bytes|;
@@ -240,6 +303,10 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
 // handle |data_pipe_consumer_handle|.
 //
 // |options| may be set to null to reset back to the default options.
+//
+// Note that changing the read threshold may also result in the state (both
+// satisfied or satisfiable) of the |MOJO_HANDLE_SIGNAL_READ_THRESHOLD| handle
+// signal being changed.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.

@@ -66,6 +66,7 @@ typedef uint32_t MojoHandleSignals;
 #define MOJO_HANDLE_SIGNAL_WRITABLE ((MojoHandleSignals)1 << 1)
 #define MOJO_HANDLE_SIGNAL_PEER_CLOSED ((MojoHandleSignals)1 << 2)
 #define MOJO_HANDLE_SIGNAL_READ_THRESHOLD ((MojoHandleSignals)1 << 3)
+#define MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD ((MojoHandleSignals)1 << 4)
 
 // |MojoHandleSignalsState|: Returned by wait functions to indicate the
 // signaling state of handles. Members are as follows:
