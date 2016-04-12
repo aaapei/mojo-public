@@ -22,13 +22,6 @@
 namespace mojo {
 namespace {
 
-const MojoHandleSignals kSignalReadableWritable =
-    MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE;
-
-const MojoHandleSignals kSignalAll = MOJO_HANDLE_SIGNAL_READABLE |
-                                     MOJO_HANDLE_SIGNAL_WRITABLE |
-                                     MOJO_HANDLE_SIGNAL_PEER_CLOSED;
-
 TEST(CoreCppTest, GetTimeTicksNow) {
   const MojoTimeTicks start = GetTimeTicksNow();
   EXPECT_NE(static_cast<MojoTimeTicks>(0), start)
@@ -182,7 +175,7 @@ TEST(CoreCppTest, Basic) {
       EXPECT_FALSE(h0.get().is_valid());
       EXPECT_FALSE(h1.get().is_valid());
 
-      CreateMessagePipe(nullptr, &h0, &h1);
+      ASSERT_EQ(MOJO_RESULT_OK, CreateMessagePipe(nullptr, &h0, &h1));
       EXPECT_TRUE(h0.get().is_valid());
       EXPECT_TRUE(h1.get().is_valid());
       EXPECT_NE(h0.get().value(), h1.get().value());
@@ -194,9 +187,10 @@ TEST(CoreCppTest, Basic) {
 
       EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
                 Wait(h0.get(), MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
-
       EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
-      EXPECT_EQ(kSignalAll, state.satisfiable_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                    MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+                state.satisfiable_signals);
 
       std::vector<Handle> wh;
       wh.push_back(h0.get());
@@ -211,9 +205,13 @@ TEST(CoreCppTest, Basic) {
       EXPECT_TRUE(wait_many_result.IsIndexValid());
       EXPECT_TRUE(wait_many_result.AreSignalsStatesValid());
       EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, states[0].satisfied_signals);
-      EXPECT_EQ(kSignalAll, states[0].satisfiable_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                    MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+                states[0].satisfiable_signals);
       EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, states[1].satisfied_signals);
-      EXPECT_EQ(kSignalAll, states[1].satisfiable_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                    MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+                states[1].satisfiable_signals);
 
       // Test closing |h1| explicitly.
       Close(h1.Pass());
@@ -227,7 +225,6 @@ TEST(CoreCppTest, Basic) {
       EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
                 Wait(h0.get(), MOJO_HANDLE_SIGNAL_READABLE,
                      MOJO_DEADLINE_INDEFINITE, &state));
-
       EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
       EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfiable_signals);
     }
@@ -239,7 +236,7 @@ TEST(CoreCppTest, Basic) {
     {
       ScopedMessagePipeHandle h0;
       ScopedMessagePipeHandle h1;
-      CreateMessagePipe(nullptr, &h0, &h1);
+      ASSERT_EQ(MOJO_RESULT_OK, CreateMessagePipe(nullptr, &h0, &h1));
 
       const char kHello[] = "hello";
       const uint32_t kHelloSize = static_cast<uint32_t>(sizeof(kHello));
@@ -254,8 +251,11 @@ TEST(CoreCppTest, Basic) {
       MojoHandleSignalsState state;
       EXPECT_EQ(MOJO_RESULT_OK, Wait(h1.get(), MOJO_HANDLE_SIGNAL_READABLE,
                                      MOJO_DEADLINE_INDEFINITE, &state));
-      EXPECT_EQ(kSignalReadableWritable, state.satisfied_signals);
-      EXPECT_EQ(kSignalAll, state.satisfiable_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE,
+                state.satisfied_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                    MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+                state.satisfiable_signals);
 
       char buffer[10] = {0};
       uint32_t buffer_size = static_cast<uint32_t>(sizeof(buffer));
@@ -304,8 +304,11 @@ TEST(CoreCppTest, Basic) {
       // Read "hello" and the sent handle.
       EXPECT_EQ(MOJO_RESULT_OK, Wait(h0.get(), MOJO_HANDLE_SIGNAL_READABLE,
                                      MOJO_DEADLINE_INDEFINITE, &state));
-      EXPECT_EQ(kSignalReadableWritable, state.satisfied_signals);
-      EXPECT_EQ(kSignalAll, state.satisfiable_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE,
+                state.satisfied_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                    MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+                state.satisfiable_signals);
 
       memset(buffer, 0, sizeof(buffer));
       buffer_size = static_cast<uint32_t>(sizeof(buffer));
@@ -332,8 +335,11 @@ TEST(CoreCppTest, Basic) {
       EXPECT_EQ(MOJO_RESULT_OK,
                 Wait(mp.handle1.get(), MOJO_HANDLE_SIGNAL_READABLE,
                      MOJO_DEADLINE_INDEFINITE, &state));
-      EXPECT_EQ(kSignalReadableWritable, state.satisfied_signals);
-      EXPECT_EQ(kSignalAll, state.satisfiable_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE,
+                state.satisfied_signals);
+      EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
+                    MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+                state.satisfiable_signals);
 
       memset(buffer, 0, sizeof(buffer));
       buffer_size = static_cast<uint32_t>(sizeof(buffer));
@@ -364,12 +370,12 @@ TEST(CoreCppTest, TearDownWithMessagesEnqueued) {
   {
     ScopedMessagePipeHandle h0;
     ScopedMessagePipeHandle h1;
-    CreateMessagePipe(nullptr, &h0, &h1);
+    ASSERT_EQ(MOJO_RESULT_OK, CreateMessagePipe(nullptr, &h0, &h1));
 
     // Send a handle over the previously-establish message pipe.
     ScopedMessagePipeHandle h2;
     ScopedMessagePipeHandle h3;
-    CreateMessagePipe(nullptr, &h2, &h3);
+    ASSERT_EQ(MOJO_RESULT_OK, CreateMessagePipe(nullptr, &h2, &h3));
 
     // Write a message to |h2|, before we send |h3|.
     const char kWorld[] = "world!";
@@ -417,12 +423,12 @@ TEST(CoreCppTest, TearDownWithMessagesEnqueued) {
   {
     ScopedMessagePipeHandle h0;
     ScopedMessagePipeHandle h1;
-    CreateMessagePipe(nullptr, &h0, &h1);
+    ASSERT_EQ(MOJO_RESULT_OK, CreateMessagePipe(nullptr, &h0, &h1));
 
     // Send a handle over the previously-establish message pipe.
     ScopedMessagePipeHandle h2;
     ScopedMessagePipeHandle h3;
-    CreateMessagePipe(nullptr, &h2, &h3);
+    ASSERT_EQ(MOJO_RESULT_OK, CreateMessagePipe(nullptr, &h2, &h3));
 
     // Write a message to |h2|, before we send |h3|.
     const char kWorld[] = "world!";
@@ -537,7 +543,110 @@ TEST(CoreCppTest, WaitManyResult) {
   }
 }
 
-// TODO(vtl): Write data pipe tests.
+// TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
+#ifdef __native_client__
+#define MAYBE_DataPipe DISABLED_DataPipe
+#else
+#define MAYBE_DataPipe DataPipe
+#endif
+TEST(CoreCppTest, MAYBE_DataPipe) {
+  ScopedDataPipeProducerHandle ph;
+  ScopedDataPipeConsumerHandle ch;
+
+  ASSERT_EQ(MOJO_RESULT_OK, CreateDataPipe(nullptr, &ph, &ch));
+  ASSERT_TRUE(ph.get().is_valid());
+  ASSERT_TRUE(ch.get().is_valid());
+
+  uint32_t read_threshold = 123u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            GetDataPipeConsumerOptions(ch.get(), &read_threshold));
+  EXPECT_EQ(0u, read_threshold);
+
+  EXPECT_EQ(MOJO_RESULT_OK, SetDataPipeConsumerOptions(ch.get(), 2u));
+
+  EXPECT_EQ(MOJO_RESULT_OK,
+            GetDataPipeConsumerOptions(ch.get(), &read_threshold));
+  EXPECT_EQ(2u, read_threshold);
+
+  // Write a byte.
+  static const char kA = 'A';
+  uint32_t num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            WriteDataRaw(ph.get(), &kA, &num_bytes, MOJO_WRITE_DATA_FLAG_NONE));
+
+  // Waiting for "read threshold" should fail. (Wait a nonzero amount, in case
+  // there's some latency.)
+  MojoHandleSignalsState state;
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, &state));
+  // ... but it should be readable.
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE, state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            state.satisfiable_signals);
+
+  // Do a two-phase write of another byte.
+  void* write_buffer = nullptr;
+  num_bytes = 0u;
+  ASSERT_EQ(MOJO_RESULT_OK,
+            BeginWriteDataRaw(ph.get(), &write_buffer, &num_bytes,
+                              MOJO_WRITE_DATA_FLAG_NONE));
+  ASSERT_TRUE(write_buffer);
+  ASSERT_GT(num_bytes, 0u);
+  static_cast<char*>(write_buffer)[0] = 'B';
+  EXPECT_EQ(MOJO_RESULT_OK, EndWriteDataRaw(ph.get(), 1u));
+
+  // Now waiting for "read threshold" should succeed. (Wait a nonzero amount, in
+  // case there's some latency.)
+  state = MojoHandleSignalsState();
+  EXPECT_EQ(MOJO_RESULT_OK,
+            Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, &state));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            state.satisfiable_signals);
+
+  // Read a byte.
+  char read_byte = 'x';
+  num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK, ReadDataRaw(ch.get(), &read_byte, &num_bytes,
+                                        MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(1u, num_bytes);
+  EXPECT_EQ('A', read_byte);
+
+  // Waiting for "read threshold" should now fail.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
+
+  // Reset the read threshold/options.
+  EXPECT_EQ(MOJO_RESULT_OK, SetDataPipeConsumerOptionsToDefault(ch.get()));
+
+  // Waiting for "read threshold" should now succeed.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
+
+  // Do a two-phase read.
+  const void* read_buffer = nullptr;
+  num_bytes = 0u;
+  ASSERT_EQ(MOJO_RESULT_OK, BeginReadDataRaw(ch.get(), &read_buffer, &num_bytes,
+                                             MOJO_READ_DATA_FLAG_NONE));
+  ASSERT_TRUE(read_buffer);
+  ASSERT_EQ(1u, num_bytes);
+  EXPECT_EQ('B', static_cast<const char*>(read_buffer)[0]);
+  EXPECT_EQ(MOJO_RESULT_OK, EndReadDataRaw(ch.get(), 1u));
+
+  // Waiting for "read" should now fail (time out).
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
+
+  // Close the producer.
+  ph.reset();
+
+  // Waiting for "read" should now fail.
+  EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
+            Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
+}
 
 }  // namespace
 }  // namespace mojo

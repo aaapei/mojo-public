@@ -101,6 +101,41 @@ inline MojoResult EndWriteDataRaw(DataPipeProducerHandle data_pipe_producer,
   return MojoEndWriteData(data_pipe_producer.value(), num_bytes_written);
 }
 
+// Sets data pipe consumer options to their defaults. See
+// |MojoGetDataPipeConsumerOptions()| for complete documentation.
+inline MojoResult SetDataPipeConsumerOptionsToDefault(
+    DataPipeConsumerHandle data_pipe_consumer) {
+  return MojoSetDataPipeConsumerOptions(data_pipe_consumer.value(), nullptr);
+}
+
+// Sets data pipe consumer options (in an "unwrapped" format). See
+// |MojoGetDataPipeConsumerOptions()| for complete documentation.
+inline MojoResult SetDataPipeConsumerOptions(
+    DataPipeConsumerHandle data_pipe_consumer,
+    uint32_t read_threshold_num_bytes) {
+  MojoDataPipeConsumerOptions options = {
+      static_cast<uint32_t>(sizeof(MojoDataPipeConsumerOptions)),
+      read_threshold_num_bytes};
+  return MojoSetDataPipeConsumerOptions(data_pipe_consumer.value(), &options);
+}
+
+// Gets data pipe consumer options (in an "unwrapped" format). See
+// |MojoGetDataPipeConsumerOptions()| for complete documentation.
+inline MojoResult GetDataPipeConsumerOptions(
+    DataPipeConsumerHandle data_pipe_consumer,
+    uint32_t* read_threshold_num_bytes) {
+  MojoDataPipeConsumerOptions options = {};
+  MojoResult rv =
+      MojoGetDataPipeConsumerOptions(data_pipe_consumer.value(), &options,
+                                     static_cast<uint32_t>(sizeof(options)));
+  if (rv == MOJO_RESULT_OK) {
+    // No need to check |struct_size|, since all versions of the struct has this
+    // field.
+    *read_threshold_num_bytes = options.read_threshold_num_bytes;
+  }
+  return rv;
+}
+
 // Reads from a data pipe. See |MojoReadData()| for complete documentation.
 inline MojoResult ReadDataRaw(DataPipeConsumerHandle data_pipe_consumer,
                               void* elements,
