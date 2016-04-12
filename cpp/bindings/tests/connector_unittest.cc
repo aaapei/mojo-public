@@ -5,10 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <string>
+
 #include "mojo/public/cpp/bindings/lib/connector.h"
 #include "mojo/public/cpp/bindings/lib/message_builder.h"
 #include "mojo/public/cpp/bindings/tests/message_queue.h"
 #include "mojo/public/cpp/environment/environment.h"
+#include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -16,60 +19,6 @@
 namespace mojo {
 namespace test {
 namespace {
-
-class MessageAccumulator : public MessageReceiver {
- public:
-  MessageAccumulator() {}
-
-  bool Accept(Message* message) override {
-    queue_.Push(message);
-    return true;
-  }
-
-  bool IsEmpty() const { return queue_.IsEmpty(); }
-
-  void Pop(Message* message) { queue_.Pop(message); }
-
- private:
-  MessageQueue queue_;
-};
-
-class ConnectorDeletingMessageAccumulator : public MessageAccumulator {
- public:
-  explicit ConnectorDeletingMessageAccumulator(internal::Connector** connector)
-      : connector_(connector) {}
-
-  bool Accept(Message* message) override {
-    delete *connector_;
-    *connector_ = 0;
-    return MessageAccumulator::Accept(message);
-  }
-
- private:
-  internal::Connector** connector_;
-};
-
-class ReentrantMessageAccumulator : public MessageAccumulator {
- public:
-  explicit ReentrantMessageAccumulator(internal::Connector* connector)
-      : connector_(connector), number_of_calls_(0) {}
-
-  bool Accept(Message* message) override {
-    if (!MessageAccumulator::Accept(message))
-      return false;
-    number_of_calls_++;
-    if (number_of_calls_ == 1) {
-      return connector_->WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE);
-    }
-    return true;
-  }
-
-  int number_of_calls() { return number_of_calls_; }
-
- private:
-  internal::Connector* connector_;
-  int number_of_calls_;
-};
 
 class ConnectorTest : public testing::Test {
  public:
@@ -98,6 +47,27 @@ class ConnectorTest : public testing::Test {
  private:
   Environment env_;
   RunLoop loop_;
+
+  MOJO_DISALLOW_COPY_AND_ASSIGN(ConnectorTest);
+};
+
+class MessageAccumulator : public MessageReceiver {
+ public:
+  MessageAccumulator() {}
+
+  bool Accept(Message* message) override {
+    queue_.Push(message);
+    return true;
+  }
+
+  bool IsEmpty() const { return queue_.IsEmpty(); }
+
+  void Pop(Message* message) { queue_.Pop(message); }
+
+ private:
+  MessageQueue queue_;
+
+  MOJO_DISALLOW_COPY_AND_ASSIGN(MessageAccumulator);
 };
 
 TEST_F(ConnectorTest, Basic) {
@@ -331,6 +301,23 @@ TEST_F(ConnectorTest, WaitForIncomingMessageWithError) {
   ASSERT_FALSE(connector0.WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE));
 }
 
+class ConnectorDeletingMessageAccumulator : public MessageAccumulator {
+ public:
+  explicit ConnectorDeletingMessageAccumulator(internal::Connector** connector)
+      : connector_(connector) {}
+
+  bool Accept(Message* message) override {
+    delete *connector_;
+    *connector_ = 0;
+    return MessageAccumulator::Accept(message);
+  }
+
+ private:
+  internal::Connector** connector_;
+
+  MOJO_DISALLOW_COPY_AND_ASSIGN(ConnectorDeletingMessageAccumulator);
+};
+
 TEST_F(ConnectorTest, WaitForIncomingMessageWithDeletion) {
   internal::Connector connector0(handle0_.Pass());
   internal::Connector* connector1 = new internal::Connector(handle1_.Pass());
@@ -357,6 +344,30 @@ TEST_F(ConnectorTest, WaitForIncomingMessageWithDeletion) {
       std::string(kText),
       std::string(reinterpret_cast<const char*>(message_received.payload())));
 }
+
+class ReentrantMessageAccumulator : public MessageAccumulator {
+ public:
+  explicit ReentrantMessageAccumulator(internal::Connector* connector)
+      : connector_(connector), number_of_calls_(0) {}
+
+  bool Accept(Message* message) override {
+    if (!MessageAccumulator::Accept(message))
+      return false;
+    number_of_calls_++;
+    if (number_of_calls_ == 1) {
+      return connector_->WaitForIncomingMessage(MOJO_DEADLINE_INDEFINITE);
+    }
+    return true;
+  }
+
+  int number_of_calls() { return number_of_calls_; }
+
+ private:
+  internal::Connector* connector_;
+  int number_of_calls_;
+
+  MOJO_DISALLOW_COPY_AND_ASSIGN(ReentrantMessageAccumulator);
+};
 
 TEST_F(ConnectorTest, WaitForIncomingMessageWithReentrancy) {
   internal::Connector connector0(handle0_.Pass());
@@ -388,6 +399,71 @@ TEST_F(ConnectorTest, WaitForIncomingMessageWithReentrancy) {
   }
 
   ASSERT_EQ(2, accumulator.number_of_calls());
+}
+
+// This message receiver just accepts messages, and responds (to another fixed
+// receiver)
+class NoTaskStarvationReplier : public MessageReceiver {
+ public:
+  explicit NoTaskStarvationReplier(MessageReceiver* reply_to)
+      : reply_to_(reply_to) {
+    MOJO_CHECK(reply_to_ != this);
+  }
+
+  bool Accept(Message* message) override {
+    num_accepted_++;
+
+    uint32_t name = message->name();
+
+    if (name >= 10u) {
+      RunLoop::current()->PostDelayedTask([]() { RunLoop::current()->Quit(); },
+                                          0);
+    }
+
+    // We don't necessarily expect the quit task to be processed immediately,
+    // but if some large number (say, ten thousand-ish) messages have been
+    // processed, we can say that starvation has occurred.
+    static const uint32_t kStarvationThreshold = 10000;
+    EXPECT_LE(name, kStarvationThreshold);
+    // We'd prefer our test not hang, so don't send the reply in the failing
+    // case.
+    if (name > kStarvationThreshold)
+      return true;
+
+    MessageBuilder builder(name + 1u, 0u);
+    MOJO_CHECK(reply_to_->Accept(builder.message()));
+
+    return true;
+  }
+
+  unsigned num_accepted() const { return num_accepted_; }
+
+ private:
+  MessageReceiver* const reply_to_;
+  unsigned num_accepted_ = 0;
+
+  MOJO_DISALLOW_COPY_AND_ASSIGN(NoTaskStarvationReplier);
+};
+
+// TODO(vtl): This test currently fails. See the discussion on issue #604
+// (https://github.com/domokit/mojo/issues/604).
+TEST_F(ConnectorTest, DISABLED_NoTaskStarvation) {
+  internal::Connector connector0(handle0_.Pass());
+  internal::Connector connector1(handle1_.Pass());
+
+  // The replier will bounce messages to |connector0|, and will receiver
+  // messages from |connector1|.
+  NoTaskStarvationReplier replier(&connector0);
+  connector1.set_incoming_receiver(&replier);
+
+  // Kick things off by sending a messagge on |connector0| (starting with a
+  // "name" of 1).
+  MessageBuilder builder(1u, 0u);
+  ASSERT_TRUE(connector0.Accept(builder.message()));
+
+  PumpMessages();
+
+  EXPECT_GE(replier.num_accepted(), 10u);
 }
 
 }  // namespace
