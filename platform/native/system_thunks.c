@@ -78,6 +78,23 @@ MojoResult MojoCreateDataPipe(const struct MojoCreateDataPipeOptions* options,
                                  data_pipe_consumer_handle);
 }
 
+MojoResult MojoSetDataPipeProducerOptions(
+    MojoHandle data_pipe_producer_handle,
+    const struct MojoDataPipeProducerOptions* options) {
+  assert(g_thunks.SetDataPipeProducerOptions);
+  return g_thunks.SetDataPipeProducerOptions(data_pipe_producer_handle,
+                                             options);
+}
+
+MojoResult MojoGetDataPipeProducerOptions(
+    MojoHandle data_pipe_producer_handle,
+    struct MojoDataPipeProducerOptions* options,
+    uint32_t options_num_bytes) {
+  assert(g_thunks.GetDataPipeProducerOptions);
+  return g_thunks.GetDataPipeProducerOptions(data_pipe_producer_handle,
+                                             options, options_num_bytes);
+}
+
 MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,
                          const void* elements,
                          uint32_t* num_elements,
