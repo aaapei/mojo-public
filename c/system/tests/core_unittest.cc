@@ -230,8 +230,10 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // The producer |hp| should be writable.
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, 0, &state));
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
             state.satisfiable_signals);
 
   // Try to read from |hc|.
@@ -315,12 +317,15 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // the producer never-writable?
 }
 
+// TODO(vtl): Once thunks are in: TEST(CoreTest, DataPipeWriteThreshold) { ... }
+
 TEST(CoreTest, DataPipeReadThreshold) {
   MojoHandle hp = MOJO_HANDLE_INVALID;
   MojoHandle hc = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateDataPipe(nullptr, &hp, &hc));
   EXPECT_NE(hp, MOJO_HANDLE_INVALID);
   EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+  EXPECT_NE(hc, hp);
 
   MojoDataPipeConsumerOptions copts;
   static const uint32_t kCoptsSize = static_cast<uint32_t>(sizeof(copts));

@@ -168,8 +168,10 @@ TEST(SystemImplTest, BasicDataPipe) {
       MOJO_RESULT_OK,
       MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITABLE, 0, &state));
 
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
-  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
             state.satisfiable_signals);
 
   // Try to read from |hc|.
@@ -266,6 +268,9 @@ TEST(SystemImplTest, BasicDataPipe) {
 
   // 2 SystemImpls are leaked...
 }
+
+// TODO(vtl): Once thunks are in:
+//   TEST(SystemImplTest, DataPipeWriteThreshold) { ... }
 
 TEST(SystemImplTest, DataPipeReadThreshold) {
   MojoSystemImpl sys0 = MojoSystemImplCreateImpl();
