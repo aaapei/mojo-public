@@ -63,6 +63,14 @@ TEST(CoreTest, InvalidHandle) {
                             nullptr, MOJO_READ_MESSAGE_FLAG_NONE));
 
   // Data pipe:
+  MojoDataPipeProducerOptions dpp_options = {
+      sizeof(MojoDataPipeProducerOptions), 0u};
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoSetDataPipeProducerOptions(MOJO_HANDLE_INVALID, &dpp_options));
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoGetDataPipeProducerOptions(
+                MOJO_HANDLE_INVALID, &dpp_options,
+                static_cast<uint32_t>(sizeof(dpp_options))));
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoWriteData(MOJO_HANDLE_INVALID, buffer, &buffer_size,
@@ -317,8 +325,6 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   // the producer never-writable?
 }
 
-// TODO(vtl): Enable once I've added support for NaCl.
-#ifndef __native_client__
 TEST(CoreTest, DataPipeWriteThreshold) {
   const MojoCreateDataPipeOptions options = {
       static_cast<uint32_t>(
@@ -377,15 +383,12 @@ TEST(CoreTest, DataPipeWriteThreshold) {
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0, nullptr));
 
-  // Do a two-phase write of another element.
-  void* write_pointer = nullptr;
-  num_bytes = 0u;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginWriteData(hp, &write_pointer, &num_bytes,
-                                               MOJO_WRITE_DATA_FLAG_NONE));
-  ASSERT_TRUE(write_pointer);
-  ASSERT_EQ(2u, num_bytes);
-  *static_cast<uint16_t*>(write_pointer) = 6789u;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoEndWriteData(hp, 2u));
+  // Write another element.
+  static const uint16_t kAnotherTestElem = 12345u;
+  num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, &kAnotherTestElem, &num_bytes,
+                                          MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(2u, num_bytes);
 
   // Should no longer have the write threshold signal.
   state = MojoHandleSignalsState();
@@ -450,7 +453,6 @@ TEST(CoreTest, DataPipeWriteThreshold) {
 
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
 }
-#endif
 
 TEST(CoreTest, DataPipeReadThreshold) {
   MojoHandle hp = MOJO_HANDLE_INVALID;

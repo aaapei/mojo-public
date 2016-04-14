@@ -88,6 +88,15 @@ MojoResult MojoSystemImplCreateDataPipe(
     const struct MojoCreateDataPipeOptions* options,
     MojoHandle* data_pipe_producer_handle,
     MojoHandle* data_pipe_consumer_handle);
+MojoResult MojoSystemImplSetDataPipeProducerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_producer_handle,
+    const struct MojoDataPipeProducerOptions* options);
+MojoResult MojoSystemImplGetDataPipeProducerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_producer_handle,
+    struct MojoDataPipeProducerOptions* options,
+    uint32_t options_num_bytes);
 MojoResult MojoSystemImplWriteData(MojoSystemImpl system,
                                    MojoHandle data_pipe_producer_handle,
                                    const void* elements,

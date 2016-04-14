@@ -51,6 +51,13 @@ struct nacl_irt_mojo {
       const struct MojoCreateDataPipeOptions* options,
       MojoHandle* data_pipe_producer_handle,
       MojoHandle* data_pipe_consumer_handle);
+  MojoResult (*MojoSetDataPipeProducerOptions)(
+      MojoHandle data_pipe_producer_handle,
+      const struct MojoDataPipeProducerOptions* options);
+  MojoResult (*MojoGetDataPipeProducerOptions)(
+      MojoHandle data_pipe_producer_handle,
+      struct MojoDataPipeProducerOptions* options,
+      uint32_t options_num_bytes);
   MojoResult (*MojoWriteData)(MojoHandle data_pipe_producer_handle,
                               const void* elements,
                               uint32_t* num_bytes,

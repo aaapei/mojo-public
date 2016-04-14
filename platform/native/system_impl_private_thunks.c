@@ -110,6 +110,25 @@ MojoResult MojoSystemImplCreateDataPipe(
       system, options, data_pipe_producer_handle, data_pipe_consumer_handle);
 }
 
+MojoResult MojoSystemImplSetDataPipeProducerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_producer_handle,
+    const struct MojoDataPipeProducerOptions* options) {
+  assert(g_system_impl_thunks.SetDataPipeProducerOptions);
+  return g_system_impl_thunks.SetDataPipeProducerOptions(
+      system, data_pipe_producer_handle, options);
+}
+
+MojoResult MojoSystemImplGetDataPipeProducerOptions(
+    MojoSystemImpl system,
+    MojoHandle data_pipe_producer_handle,
+    struct MojoDataPipeProducerOptions* options,
+    uint32_t options_num_bytes) {
+  assert(g_system_impl_thunks.GetDataPipeProducerOptions);
+  return g_system_impl_thunks.GetDataPipeProducerOptions(
+      system, data_pipe_producer_handle, options, options_num_bytes);
+}
+
 MojoResult MojoSystemImplWriteData(MojoSystemImpl system,
                                    MojoHandle data_pipe_producer_handle,
                                    const void* elements,

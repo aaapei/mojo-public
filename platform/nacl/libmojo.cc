@@ -123,6 +123,27 @@ MojoResult MojoCreateDataPipe(const struct MojoCreateDataPipeOptions* options,
                                       data_pipe_consumer_handle);
 }
 
+MojoResult MojoSetDataPipeProducerOptions(
+    MojoHandle data_pipe_producer_handle,
+    const struct MojoDataPipeProducerOptions* options) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoSetDataPipeProducerOptions(data_pipe_producer_handle,
+                                                  options);
+}
+
+MojoResult MojoGetDataPipeProducerOptions(
+    MojoHandle data_pipe_producer_handle,
+    struct MojoDataPipeProducerOptions* options,
+    uint32_t options_num_bytes) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoGetDataPipeProducerOptions(data_pipe_producer_handle,
+                                                  options, options_num_bytes);
+}
+
 MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,
                          const void* elements,
                          uint32_t* num_bytes,

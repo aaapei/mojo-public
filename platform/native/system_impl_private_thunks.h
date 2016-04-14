@@ -69,6 +69,15 @@ struct MojoSystemImplThunksPrivate {
                                const struct MojoCreateDataPipeOptions* options,
                                MojoHandle* data_pipe_producer_handle,
                                MojoHandle* data_pipe_consumer_handle);
+  MojoResult (*SetDataPipeProducerOptions)(
+      MojoSystemImpl system,
+      MojoHandle data_pipe_producer_handle,
+      const struct MojoDataPipeProducerOptions* options);
+  MojoResult (*GetDataPipeProducerOptions)(
+      MojoSystemImpl system,
+      MojoHandle data_pipe_producer_handle,
+      struct MojoDataPipeProducerOptions* options,
+      uint32_t options_num_bytes);
   MojoResult (*WriteData)(MojoSystemImpl system,
                           MojoHandle data_pipe_producer_handle,
                           const void* elements,
@@ -150,6 +159,8 @@ inline MojoSystemImplThunksPrivate MojoMakeSystemImplThunksPrivate() {
       MojoSystemImplWriteMessage,
       MojoSystemImplReadMessage,
       MojoSystemImplCreateDataPipe,
+      MojoSystemImplSetDataPipeProducerOptions,
+      MojoSystemImplGetDataPipeProducerOptions,
       MojoSystemImplWriteData,
       MojoSystemImplBeginWriteData,
       MojoSystemImplEndWriteData,
