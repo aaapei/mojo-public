@@ -269,8 +269,155 @@ TEST(SystemImplTest, BasicDataPipe) {
   // 2 SystemImpls are leaked...
 }
 
-// TODO(vtl): Once thunks are in:
-//   TEST(SystemImplTest, DataPipeWriteThreshold) { ... }
+TEST(SystemImplTest, DataPipeWriteThreshold) {
+  MojoSystemImpl sys0 = MojoSystemImplCreateImpl();
+  MojoSystemImpl sys1 = MojoSystemImplCreateImpl();
+  EXPECT_NE(sys0, sys1);
+
+  const MojoCreateDataPipeOptions options = {
+      static_cast<uint32_t>(
+          sizeof(MojoCreateDataPipeOptions)),   // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      2u,                                       // |element_num_bytes|.
+      4u                                        // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplCreateDataPipe(sys0, &options, &hp, &hc));
+  EXPECT_NE(hp, MOJO_HANDLE_INVALID);
+  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+  EXPECT_NE(hc, hp);
+
+  // Move the other end of the pipe to a different SystemImpl.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplTransferHandle(sys0, hc, sys1, &hc));
+  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+
+  MojoDataPipeProducerOptions popts;
+  static const uint32_t kPoptsSize = static_cast<uint32_t>(sizeof(popts));
+
+  // Check the current write threshold; should be the default.
+  memset(&popts, 255, kPoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetDataPipeProducerOptions(
+                                sys0, hp, &popts, kPoptsSize));
+  EXPECT_EQ(kPoptsSize, popts.struct_size);
+  EXPECT_EQ(0u, popts.write_threshold_num_bytes);
+
+  // Should already have the write threshold signal.
+  MojoHandleSignalsState state = {};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0,
+                               &state));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            state.satisfiable_signals);
+
+  // Try setting the write threshold to something invalid.
+  popts.struct_size = kPoptsSize;
+  popts.write_threshold_num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoSystemImplSetDataPipeProducerOptions(sys0, hp, &popts));
+  // It shouldn't change the options.
+  memset(&popts, 255, kPoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetDataPipeProducerOptions(
+                                sys0, hp, &popts, kPoptsSize));
+  EXPECT_EQ(kPoptsSize, popts.struct_size);
+  EXPECT_EQ(0u, popts.write_threshold_num_bytes);
+
+  // Write an element.
+  static const uint16_t kTestElem = 12345u;
+  uint32_t num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWriteData(sys0, hp, &kTestElem, &num_bytes,
+                                    MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(2u, num_bytes);
+
+  // Should still have the write threshold signal.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0,
+                               nullptr));
+
+  // Write another element.
+  static const uint16_t kAnotherTestElem = 12345u;
+  num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWriteData(sys0, hp, &kAnotherTestElem, &num_bytes,
+                                    MOJO_WRITE_MESSAGE_FLAG_NONE));
+  EXPECT_EQ(2u, num_bytes);
+
+  // Should no longer have the write threshold signal.
+  state = MojoHandleSignalsState();
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0,
+                               &state));
+  EXPECT_EQ(0u, state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            state.satisfiable_signals);
+
+  // Set the write threshold to 2 (one element).
+  popts.struct_size = kPoptsSize;
+  popts.write_threshold_num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplSetDataPipeProducerOptions(sys0, hp, &popts));
+  // It should actually change the options.
+  memset(&popts, 255, kPoptsSize);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetDataPipeProducerOptions(
+                                sys0, hp, &popts, kPoptsSize));
+  EXPECT_EQ(kPoptsSize, popts.struct_size);
+  EXPECT_EQ(2u, popts.write_threshold_num_bytes);
+
+  // Should still not have the write threshold signal.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0,
+                               nullptr));
+
+  // Read an element.
+  uint16_t read_elem = 0u;
+  num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplReadData(sys1, hc, &read_elem, &num_bytes,
+                                   MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(2u, num_bytes);
+  EXPECT_EQ(kTestElem, read_elem);
+
+  // Should get the write threshold signal now.
+  state = MojoHandleSignalsState();
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+                               1000, &state));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            state.satisfiable_signals);
+
+  // Set the write threshold to 4 (two elements).
+  popts.struct_size = kPoptsSize;
+  popts.write_threshold_num_bytes = 4u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplSetDataPipeProducerOptions(sys0, hp, &popts));
+
+  // Should again not have the write threshold signal.
+  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+            MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0,
+                               nullptr));
+
+  // Close the consumer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys1, hc));
+
+  // The write threshold signal should now be unsatisfiable.
+  state = MojoHandleSignalsState();
+  EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
+            MojoSystemImplWait(sys0, hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0,
+                               &state));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys0, hp));
+}
 
 TEST(SystemImplTest, DataPipeReadThreshold) {
   MojoSystemImpl sys0 = MojoSystemImplCreateImpl();
