@@ -168,7 +168,14 @@ void HandleWatcherThreadState::AddHandle(MojoHandle handle,
 
 void HandleWatcherThreadState::RemoveHandle(MojoHandle handle) {
   auto it = handle_to_index_map_.find(handle);
-  MOJO_CHECK(it != handle_to_index_map_.end());
+
+  // Removal of a handle for an incoming event can race with the removal of
+  // a handle for an unsubscribe() call on the Dart MojoEventSubscription.
+  // This is not an error, so we ignore attempts to remove a handle that is not
+  // in the map.
+  if (it == handle_to_index_map_.end()) {
+    return;
+  }
   const intptr_t index = it->second;
   // We should never be removing the control handle.
   MOJO_CHECK(index != CONTROL_HANDLE_INDEX);
