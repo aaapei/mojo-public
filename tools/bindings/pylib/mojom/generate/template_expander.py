@@ -13,20 +13,13 @@ import sys
 # Disable lint check for finding modules:
 # pylint: disable=F0401
 
-def _GetDirAbove(dirname):
-  """Returns the directory "above" this file containing |dirname| (which must
-  also be "above" this file)."""
-  path = os.path.abspath(__file__)
-  while True:
-    path, tail = os.path.split(path)
-    assert tail
-    if tail == dirname:
-      return path
-
 try:
   imp.find_module("jinja2")
 except ImportError:
-  sys.path.append(os.path.join(_GetDirAbove("public"), "public/third_party"))
+  # Assume this file is in tools/pylib/bindings/mojom/generate.
+  sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                               os.pardir, os.pardir, os.pardir, os.pardir,
+                               os.pardir, "third_party"))
 import jinja2
 
 
