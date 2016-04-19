@@ -86,4 +86,4 @@ typedef uint32_t MojoResult;
 #define MOJO_RESULT_BUSY ((MojoResult)16)
 #define MOJO_RESULT_SHOULD_WAIT ((MojoResult)17)
 
-#endif  // MOJO_PUBLIC_C_SYSTEM_TYPES_H_
+#endif  // MOJO_PUBLIC_C_SYSTEM_RESULT_H_

@@ -17,11 +17,9 @@
 #include "mojo/public/c/system/time.h"
 
 // |MojoCreateWaitSetOptions|: Used to specify creation parameters for a wait
-// set to
-// |MojoCreateWaitSet()|.
+// set to |MojoCreateWaitSet()|.
 //   |uint32_t struct_size|: Set to the size of the |MojoCreateWaitSetOptions|
-//   struct. (Used to
-//       allow for future extensions).
+//       struct. (Used to allow for future extensions.)
 //   |MojoCreateWaitSetOptionsFlags flags|: Reserved for future use
 //       |MOJO_CREATE_WAIT_SET_OPTIONS_FLAGS_NONE|: No flags, default mode.
 
@@ -35,10 +33,9 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateWaitSetOptions) == 8,
                    "MojoCreateWaitSetOptions has wrong size");
 
 // |MojoWaitSetAddOptions|: Used to specify parameters in adding an entry to a
-// wait set with
-// |MojoWaitSetAdd()|.
+// wait set with |MojoWaitSetAdd()|.
 //   |uint32_t struct_size|: Set to the size of the |MojoWaitSetAddOptions|
-//       struct. (Used to allow for future extensions).
+//       struct. (Used to allow for future extensions.)
 //   |MojoWaitSetAddOptionsFlags flags|: Reserved for future use.
 //       |MOJO_WAIT_SET_ADD_OPTIONS_FLAGS_NONE|: No flags, default mode.
 
@@ -51,8 +48,9 @@ struct MOJO_ALIGNAS(8) MojoWaitSetAddOptions {
 MOJO_STATIC_ASSERT(sizeof(MojoWaitSetAddOptions) == 8,
                    "MojoWaitSetAddOptions has wrong size");
 
-// |MojoWaitSetResult|: returned by |MojoWaitSetWait()| to indicate the
-// state of entries. See |MojoWaitSetWait()| for the values of these fields.
+// |MojoWaitSetResult|: Returned by |MojoWaitSetWait()| to indicate the state of
+// entries. See |MojoWaitSetWait()| for the values of these fields.
+
 struct MOJO_ALIGNAS(8) MojoWaitSetResult {
   uint64_t cookie;
   MojoResult wait_result;
@@ -100,9 +98,9 @@ MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions*
 //       set, |cookie| is not a unique value within this wait set, or |options|
 //       is not null and |*options| is not a valid options structure.
 //   |MOJO_RESULT_BUSY| if |wait_set_handle| or |handle| are currently in use in
-//       some transaction
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the handle could not be
-//       added due to hitting a system or quota limitation.
+//       some transaction.
+//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the handle could not be added due to
+//       hitting a system or quota limitation.
 MojoResult MojoWaitSetAdd(const struct MojoWaitSetAddOptions* MOJO_RESTRICT
                               options,                 // Optional in.
                           MojoHandle wait_set_handle,  // In.
@@ -120,20 +118,20 @@ MojoResult MojoWaitSetAdd(const struct MojoWaitSetAddOptions* MOJO_RESTRICT
 MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
                              uint64_t cookie);            // In.
 
-// |MojoWaitSetWait()|:
-//   Waits on all entries in the wait set for at least one of the following:
-//     - at least one entry's handle satisfies a signal in that entry's signal
+// |MojoWaitSetWait()|: Waits on all entries in the wait set for at least one of
+// the following:
+//   - At least one entry's handle satisfies a signal in that entry's signal
 //     set.
-//     - at least one entry's handle can never satisfy a signal in that entry's
+//   - At least one entry's handle can never satisfy a signal in that entry's
 //     signal set.
-//     - |deadline| expires.
-//     - the wait set is closed.
+//   - |deadline| expires.
+//   - The wait set is closed.
 //
 // On success, sets |*max_results| to the total number of possible results at
 // the time of the call. Also returns information for up to |*num_results|
 // entries in |*results| and sets |*num_results| to the number of entries the
-// system populated. In particular,
-// |results[0]...results[*num_results-1]| will be populated as follows:
+// system populated. In particular, |results[0]|, ..., |results[*num_results-1]|
+// will be populated as follows:
 //   - |cookie| is the cookie value specified when the entry was added
 //   - |wait_result| is set to one of the following:
 //     - |MOJO_RESULT_OK| if the handle referred to by the entry satisfies one
@@ -145,7 +143,7 @@ MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
 //     - |MOJO_RESULT_FAILED_PRECONDITION| if it becomes impossible that the
 //         handle referred to by the entry will ever satisfy any of entry's
 //         signals
-//  - |reserved| is set to 0
+//   - |reserved| is set to 0
 //
 //   When the |wait_result| is |MOJO_RESULT_OK| or
 //   |MOJO_RESULT_FAILED_PRECONDITION| the |satisfied_signals| and

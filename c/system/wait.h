@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// This file contains basic functions common to different Mojo system APIs.
+// This file contains functions for waiting on handles (directly).
 //
 // Note: This header should be compilable as C.
 
