@@ -53,8 +53,9 @@ def _ParseCLIArgs():
   return parser.parse_known_args()
 
 # We assume this script is located in the Mojo SDK in tools/bindings.
-THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-SDK_ROOT = os.path.abspath(os.path.join(THIS_DIR, os.pardir, os.pardir))
+# If __file__ is a link, we look for the real location of the script.
+BINDINGS_DIR = os.path.dirname(os.path.realpath(os.path.abspath(__file__)))
+SDK_ROOT = os.path.abspath(os.path.join(BINDINGS_DIR, os.pardir, os.pardir))
 PYTHON_SDK_DIR = os.path.abspath(os.path.join(SDK_ROOT, "python"))
 
 sys.path.insert(0, PYTHON_SDK_DIR)
@@ -62,7 +63,7 @@ sys.path.insert(0, PYTHON_SDK_DIR)
 # can be found on the python path.
 sys.path.insert(0, os.path.join(PYTHON_SDK_DIR, "dummy_mojo_system"))
 
-sys.path.insert(0, os.path.join(THIS_DIR, "pylib"))
+sys.path.insert(0, os.path.join(BINDINGS_DIR, "pylib"))
 
 
 from mojom.generate.generated import mojom_files_mojom
@@ -75,7 +76,7 @@ def LoadGenerators(generators_string):
   if not generators_string:
     return []  # No generators.
 
-  generators_dir = os.path.join(THIS_DIR, "generators")
+  generators_dir = os.path.join(BINDINGS_DIR, "generators")
   generators = []
   for generator_name in [s.strip() for s in generators_string.split(",")]:
     generator_name_lower = generator_name.lower()

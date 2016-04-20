@@ -53,9 +53,9 @@ template("mojom") {
   cpp_sync_sources_target_name = "${target_name}_${cpp_sources_suffix}_sync"
   if (defined(invoker.sources)) {
     generator_root = rebase_path("mojo/public/tools/bindings", ".", mojo_root)
-    generator_script = "$generator_root/mojom_bindings_generator.py"
+    mojom_tool = "$generator_root/mojom_tool.py"
     generator_sources = [
-      generator_script,
+      mojom_tool,
       "$generator_root/run_code_generators.py",
       "$generator_root/generators/cpp_templates/enum_macros.tmpl",
       "$generator_root/generators/cpp_templates/interface_declaration.tmpl",
@@ -180,7 +180,7 @@ template("mojom") {
   if (defined(invoker.sources)) {
     generator_target_name = target_name + "__generator"
     action_foreach(generator_target_name) {
-      script = generator_script
+      script = mojom_tool
       inputs = generator_sources
       if (defined(invoker.generate_type_info) && invoker.generate_type_info) {
         deps = [
@@ -192,23 +192,30 @@ template("mojom") {
                 generator_go_outputs + generator_java_outputs +
                 generator_js_outputs + generator_python_outputs
       args = [
-        "{{source}}",
-        "--use_bundled_pylibs",
-        "-d",
+        "gen",
+        "--src-root-path",
         rebase_path("//", root_build_dir),
         "-I",
         rebase_path("//", root_build_dir),
         "-I",
         rebase_path(mojo_root, root_build_dir),
-        "-o",
+        "--output-dir",
         rebase_path(root_gen_dir),
         "--no-gen-imports",
+        "--generators",
+        "legacy",
       ]
 
       if (defined(invoker.generate_type_info) && invoker.generate_type_info) {
-        args += [ "--generate-type-info" ]
+        args += [
+          "--gen-arg",
+          "generate-type-info",
+        ]
       } else {
-        args += [ "--no-generate-type-info" ]
+        args += [
+          "--gen-arg",
+          "no-generate-type-info",
+        ]
       }
 
       if (defined(invoker.import_dirs)) {
@@ -219,6 +226,8 @@ template("mojom") {
           ]
         }
       }
+
+      args += [ "{{source}}" ]
     }
   }
 
