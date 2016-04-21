@@ -13,9 +13,9 @@ group("gpu") {
   public_configs = [ ":gpu_configs" ]
 
   deps = [
+    ":GLES2",
     ":MGL",
     ":MGL_signal_sync_point",
-    ":GLES2",
     "../../platform/native:gles2",
   ]
   if (!is_nacl) {
@@ -48,6 +48,16 @@ mojo_sdk_source_set("MGL") {
 mojo_sdk_source_set("MGL_onscreen") {
   sources = [
     "MGL/mgl_onscreen.h",
+  ]
+
+  public_deps = [
+    ":MGL",
+  ]
+}
+
+mojo_sdk_source_set("MGL_echo") {
+  sources = [
+    "MGL/mgl_echo.h",
   ]
 
   public_deps = [

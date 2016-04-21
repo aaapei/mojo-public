@@ -106,6 +106,8 @@ mojo_sdk_source_set("gpu_thunks") {
 
 mojo_sdk_source_set("mgl_thunks") {
   sources = [
+    "mgl_echo_thunks.c",
+    "mgl_echo_thunks.h",
     "mgl_signal_sync_point_thunks.c",
     "mgl_signal_sync_point_thunks.h",
     "mgl_thunks.c",
@@ -115,6 +117,7 @@ mojo_sdk_source_set("mgl_thunks") {
   mojo_sdk_deps = [
     "mojo/public/c/gpu:MGL",
     "mojo/public/c/gpu:MGL_signal_sync_point",
+    "mojo/public/c/gpu:MGL_echo",
   ]
 }
 
