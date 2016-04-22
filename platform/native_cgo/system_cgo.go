@@ -59,7 +59,6 @@ package native_cgo
 //
 import "C"
 import (
-	"reflect"
 	"unsafe"
 )
 
@@ -262,15 +261,6 @@ func (c *CGoSystem) ReadMessage(handle uint32, flags uint32) (result uint32, buf
 	return uint32(r), buf, handles
 }
 
-func newUnsafeSlice(ptr unsafe.Pointer, length int) unsafe.Pointer {
-	header := &reflect.SliceHeader{
-		Data: uintptr(ptr),
-		Len:  length,
-		Cap:  length,
-	}
-	return unsafe.Pointer(header)
-}
-
 func unsafeByteSlice(ptr unsafe.Pointer, length int) []byte {
-	return *(*[]byte)(newUnsafeSlice(ptr, length))
+	return (*[^uint32(0) / 8]byte)(ptr)[:length:length]
 }

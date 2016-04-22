@@ -4,11 +4,6 @@
 
 package system
 
-import (
-	"reflect"
-	"unsafe"
-)
-
 // SharedBufferHandle is a handle for a buffer that can be shared between
 // applications.
 type SharedBufferHandle interface {
@@ -76,17 +71,4 @@ func (h *sharedBuffer) GetBufferInformation() (MojoResult, MojoBufferInformation
 	return MojoResult(r), MojoBufferInformation{
 		Flags:    MojoBufferInformationFlags(flags),
 		NumBytes: numBytes}
-}
-
-func newUnsafeSlice(ptr unsafe.Pointer, length int) unsafe.Pointer {
-	header := &reflect.SliceHeader{
-		Data: uintptr(ptr),
-		Len:  length,
-		Cap:  length,
-	}
-	return unsafe.Pointer(header)
-}
-
-func unsafeByteSlice(ptr unsafe.Pointer, length int) []byte {
-	return *(*[]byte)(newUnsafeSlice(ptr, length))
 }
