@@ -21,8 +21,8 @@ class VersioningApplicationTest : public ApplicationTestBase {
   void SetUp() override {
     ApplicationTestBase::SetUp();
 
-    application_impl()->ConnectToService("mojo:versioning_test_service",
-                                         &database_);
+    application_impl()->ConnectToServiceDeprecated(
+        "mojo:versioning_test_service", &database_);
   }
 
   HumanResourceDatabasePtr database_;

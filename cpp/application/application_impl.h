@@ -63,21 +63,24 @@ class ApplicationImpl : public Application {
   // passing it to another thread.)
   InterfaceHandle<ApplicationConnector> CreateApplicationConnector();
 
+  // DEPRECATED.
   // Requests a new connection to an application. Returns a pointer to the
   // connection if the connection is permitted by this application's delegate,
   // or nullptr otherwise. Caller does not take ownership. The pointer remains
   // valid until an error occurs on the connection with the Shell, or until the
   // ApplicationImpl is destroyed, whichever occurs first.
   // TODO(vtl): Deprecate/remove this.
-  ApplicationConnection* ConnectToApplication(const String& application_url);
+  ApplicationConnection* ConnectToApplicationDeprecated(
+      const String& application_url);
 
+  // DEPRECATED. (You should probably use something from connect.h instead.)
   // Connect to application identified by |application_url| and connect to the
   // service implementation of the interface identified by |Interface|.
   // TODO(vtl): Deprecate/remove this.
   template <typename Interface>
-  void ConnectToService(const std::string& application_url,
-                        InterfacePtr<Interface>* ptr) {
-    ConnectToApplication(application_url)->ConnectToService(ptr);
+  void ConnectToServiceDeprecated(const std::string& application_url,
+                                  InterfacePtr<Interface>* ptr) {
+    ConnectToApplicationDeprecated(application_url)->ConnectToService(ptr);
   }
 
   // Blocks until the |Application| is initialized (i.e., |Initialize()| is

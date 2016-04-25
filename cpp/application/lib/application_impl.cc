@@ -33,7 +33,7 @@ ApplicationImpl::CreateApplicationConnector() {
   return application_connector;
 }
 
-ApplicationConnection* ApplicationImpl::ConnectToApplication(
+ApplicationConnection* ApplicationImpl::ConnectToApplicationDeprecated(
     const String& application_url) {
   MOJO_CHECK(shell_);
   InterfaceHandle<ServiceProvider> local_services;
