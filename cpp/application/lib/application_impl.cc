@@ -28,10 +28,9 @@ bool ApplicationImpl::HasArg(const std::string& arg) const {
 InterfaceHandle<ApplicationConnector>
 ApplicationImpl::CreateApplicationConnector() {
   MOJO_CHECK(shell_);
-  MessagePipe pipe;
-  shell_->CreateApplicationConnector(
-      MakeRequest<ApplicationConnector>(pipe.handle1.Pass()));
-  return InterfaceHandle<ApplicationConnector>(pipe.handle0.Pass(), 0u);
+  InterfaceHandle<ApplicationConnector> application_connector;
+  shell_->CreateApplicationConnector(GetProxy(&application_connector));
+  return application_connector;
 }
 
 ApplicationConnection* ApplicationImpl::ConnectToApplication(
