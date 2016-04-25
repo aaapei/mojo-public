@@ -5,7 +5,7 @@ On supported systems
 the appropriate architecture-specific subdirectory will contain a file named
 _mojom_ after `gclient sync` is executed. The file _mojom_
 is an executable built from (some version of) the Go code in
-https://github.com/domokit/mojo/tree/master/mojom/mojom_parser.
+https://github.com/domokit/mojo/tree/master/mojom/mojom_tool.
 
 The file _mojom_ is downloaded by `gclient sync` from Google Cloud
 Storage from a file named _mojo/mojom_tool/`arch`/`sha1`_ where `arch`
@@ -23,4 +23,4 @@ https://console.developers.google.com/storage/browser/mojo/mojom_parser/.
 ### Updating the File
 To update the version of _mojom_ that will be downloaded by
 `gclient sync,` see
-https://github.com/domokit/mojo/blob/master/mojom/mojom_parser/tools/build_mojom_tool.py.
+https://github.com/domokit/mojo/blob/master/mojom/tools/build_mojom_tool.py.
