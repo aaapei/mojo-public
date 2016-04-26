@@ -73,16 +73,6 @@ class ApplicationImpl : public Application {
   ApplicationConnection* ConnectToApplicationDeprecated(
       const String& application_url);
 
-  // DEPRECATED. (You should probably use something from connect.h instead.)
-  // Connect to application identified by |application_url| and connect to the
-  // service implementation of the interface identified by |Interface|.
-  // TODO(vtl): Deprecate/remove this.
-  template <typename Interface>
-  void ConnectToServiceDeprecated(const std::string& application_url,
-                                  InterfacePtr<Interface>* ptr) {
-    ConnectToApplicationDeprecated(application_url)->ConnectToService(ptr);
-  }
-
   // Blocks until the |Application| is initialized (i.e., |Initialize()| is
   // received), if it is not already.
   void WaitForInitialize();
