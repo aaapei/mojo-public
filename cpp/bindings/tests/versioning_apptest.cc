@@ -4,6 +4,7 @@
 
 #include "mojo/public/cpp/application/application_impl.h"
 #include "mojo/public/cpp/application/application_test_base.h"
+#include "mojo/public/cpp/application/connect.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/bindings/tests/versioning_test_client.mojom.h"
 
@@ -21,8 +22,8 @@ class VersioningApplicationTest : public ApplicationTestBase {
   void SetUp() override {
     ApplicationTestBase::SetUp();
 
-    application_impl()->ConnectToServiceDeprecated(
-        "mojo:versioning_test_service", &database_);
+    ConnectToService(application_impl()->shell(),
+                     "mojo:versioning_test_service", GetProxy(&database_));
   }
 
   HumanResourceDatabasePtr database_;
