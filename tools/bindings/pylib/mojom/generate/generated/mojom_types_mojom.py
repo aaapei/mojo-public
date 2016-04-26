@@ -250,20 +250,11 @@ class ContainedDeclarations(object):
     ],
   }
 
-class ServiceTypeInfo(object):
-  __metaclass__ = _reflection.MojoStructType
-  DESCRIPTOR = {
-    'fields': [
-      _descriptor.SingleFieldGroup('top_level_interface', _descriptor.TYPE_STRING, 0, 0),
-      _descriptor.SingleFieldGroup('complete_type_set', _descriptor.GenericArrayType(_descriptor.TYPE_STRING), 1, 0),
-    ],
-  }
-
 class RuntimeTypeInfo(object):
   __metaclass__ = _reflection.MojoStructType
   DESCRIPTOR = {
     'fields': [
-      _descriptor.SingleFieldGroup('services_by_name', _descriptor.MapType(_descriptor.TYPE_STRING, _descriptor.StructType(lambda: ServiceTypeInfo)), 0, 0),
+      _descriptor.SingleFieldGroup('services', _descriptor.MapType(_descriptor.TYPE_STRING, _descriptor.TYPE_STRING), 0, 0),
       _descriptor.SingleFieldGroup('type_map', _descriptor.MapType(_descriptor.TYPE_STRING, _descriptor.UnionType(lambda: UserDefinedType)), 1, 0),
     ],
   }

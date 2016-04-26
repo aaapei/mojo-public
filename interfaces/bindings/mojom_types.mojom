@@ -462,31 +462,9 @@ struct ContainedDeclarations {
 
 ///////////////// Runtime Type Information //////////////////////
 
-// This structure is a component of RuntimeTypeInfo.
-// It contains the information necessary to extract the types corresponding
-// to a single service. See the comments on RuntimeTypeInfo for a fuller
-// explanation.
-struct ServiceTypeInfo {
-  // The type_key of the top-level interface for the service. This is the
-  // type_key of the interface that was annotated with the "ServiceName"
-  // annotation.
-  string top_level_interface;
-
-  // All of the type_keys of the types in the complete type set of the serive.
-  // Note that this set is not restricted to the types from a single .mojom
-  // file.
-  // Note(rudominer) Currently this array is not being populated by the Mojom
-  // parser because it is expensive to do so and the value is not being used.
-  // This field is deprecated and may be removed in the future.
-  array<string> complete_type_set;
-};
-
 // This structure contains the information necessary for an implementation of
 // |ServiceDescription| (see service_describer.mojom), but restricted to a
-// single .mojom file and not restricted to a single service. At runtime an
-// implementation of |ServiceDescription| needs to merge the |RuntimeTypeInfo|
-// from all of the generated modules in the file graph and then filter on only
-// those types in the complete type set of a single service.
+// single .mojom file and not restricted to a single service.
 //
 // Note that this structure is not literally a component of a MojomFileGraph.
 // Instead, at compile time an instance of this structure is created and
@@ -497,22 +475,22 @@ struct ServiceTypeInfo {
 // is deserialized into an instance of RuntimeTypeInfo that may be used by
 // an implementation of |ServiceDescription|.
 struct RuntimeTypeInfo {
-  // All of the services contained in a single .mojom file. A "service" is an
+  // Maps a service name to the type key of the associated interface for all of
+  // the services contained in a single .mojom file. A "service" is an
   // interface that has been annoted with the "ServiceName" annotation.
   // This indicates that it can be returned from
   // ServiceProvider.ProvideService() and its description can be returned
-  // from ServiceDescriber.DescribeService(). The keys are the service names
-  // (as specified in the "ServiceName" annotation) and the values are instances
-  // of |ServiceTypeInfo| for that service.
-  //
-  // Note that the |type_map| field below is scoped to a single .mojom file and
-  // so some of the keys in the |complete_type_set| field of each
-  // |ServiceTypeInfo| struct may not occur in |type_map|. At runtime the
-  // |type_map|s from multiple files may need to be combined in order to
-  // get all of the types listed in the |complete_type_set| of a single service.
-  map<string, ServiceTypeInfo> services_by_name;
+  // from ServiceDescriber.DescribeService().
+  map<string, string> services;
 
   // All of the resolved user-defined-types contained in a single .mojom File.
-  // The keys are the |type_key|s.
+  // The keys are the |type_key|s. Note that the complete set of types
+  // referenced (recursively) from a single Mojom service is not necessarily
+  // restricted to a single .mojom file. Thus this map does not necessarily
+  // contain all of the types necessary to completely describe a service listed
+  // in the |services| map above.  At runtime an implementation of
+  // |ServiceDescription| needs to merge the |RuntimeTypeInfo|
+  // from all of the generated modules in the file graph and then filter on only
+  // those types in the complete type set of a single service.
   map<string, UserDefinedType> type_map;
 };

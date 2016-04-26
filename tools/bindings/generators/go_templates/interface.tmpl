@@ -199,7 +199,7 @@ type {{interface|name}}_ServiceDescription struct{}
 
 {% if should_gen_mojom_types and interface.service_name-%}
 func (sd *{{interface|name}}_ServiceDescription) GetTopLevelInterface() (outMojomInterface {{typepkg}}MojomInterface, err error) {
-	interfaceTypeKey := getRuntimeTypeInfo().ServicesByName["{{interface.service_name}}"].TopLevelInterface
+	interfaceTypeKey := getRuntimeTypeInfo().Services["{{interface.service_name}}"]
 	userDefinedType := getRuntimeTypeInfo().TypeMap[interfaceTypeKey].(*{{typepkg}}UserDefinedTypeInterfaceType)
 	return userDefinedType.Value, nil
 }
