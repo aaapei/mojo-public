@@ -33,21 +33,6 @@ ApplicationImpl::CreateApplicationConnector() {
   return application_connector;
 }
 
-ApplicationConnection* ApplicationImpl::ConnectToApplicationDeprecated(
-    const String& application_url) {
-  MOJO_CHECK(shell_);
-  InterfaceHandle<ServiceProvider> local_services;
-  InterfaceRequest<ServiceProvider> local_request = GetProxy(&local_services);
-  ServiceProviderPtr remote_services;
-  shell_->ConnectToApplication(application_url, GetProxy(&remote_services),
-                               std::move(local_services));
-  internal::ServiceRegistry* registry = new internal::ServiceRegistry(
-      this, application_url, application_url, remote_services.Pass(),
-      local_request.Pass());
-  outgoing_service_registries_.emplace_back(registry);
-  return registry;
-}
-
 void ApplicationImpl::WaitForInitialize() {
   if (!shell_)
     binding_.WaitForIncomingMethodCall();
@@ -67,7 +52,6 @@ void ApplicationImpl::Initialize(InterfaceHandle<Shell> shell,
   shell_.set_connection_error_handler([this]() {
     delegate_->Quit();
     incoming_service_registries_.clear();
-    outgoing_service_registries_.clear();
     Terminate();
   });
   url_ = url;

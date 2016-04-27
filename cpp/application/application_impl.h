@@ -63,16 +63,6 @@ class ApplicationImpl : public Application {
   // passing it to another thread.)
   InterfaceHandle<ApplicationConnector> CreateApplicationConnector();
 
-  // DEPRECATED.
-  // Requests a new connection to an application. Returns a pointer to the
-  // connection if the connection is permitted by this application's delegate,
-  // or nullptr otherwise. Caller does not take ownership. The pointer remains
-  // valid until an error occurs on the connection with the Shell, or until the
-  // ApplicationImpl is destroyed, whichever occurs first.
-  // TODO(vtl): Deprecate/remove this.
-  ApplicationConnection* ConnectToApplicationDeprecated(
-      const String& application_url);
-
   // Blocks until the |Application| is initialized (i.e., |Initialize()| is
   // received), if it is not already.
   void WaitForInitialize();
@@ -97,7 +87,6 @@ class ApplicationImpl : public Application {
   using ServiceRegistryList =
       std::vector<std::unique_ptr<internal::ServiceRegistry>>;
   ServiceRegistryList incoming_service_registries_;
-  ServiceRegistryList outgoing_service_registries_;
   ApplicationDelegate* delegate_;
   Binding<Application> binding_;
   ShellPtr shell_;
