@@ -49,7 +49,7 @@ MojoResult ApplicationRunner::Run(MojoHandle app_request_handle) {
   {
     RunLoop loop;
     ApplicationImpl app(delegate_.get(),
-                        MakeRequest<Application>(MakeScopedHandle(
+                        InterfaceRequest<Application>(MakeScopedHandle(
                             MessagePipeHandle(app_request_handle))));
     loop.Run();
   }

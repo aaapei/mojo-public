@@ -27,10 +27,15 @@ class InterfaceHandle;
 template <typename Interface>
 class InterfaceRequest {
  public:
-  // Constructs an empty InterfaceRequest, representing that the client is not
+  // Constructs an "empty" InterfaceRequest, representing that the client is not
   // requesting an implementation of Interface.
   InterfaceRequest() {}
   InterfaceRequest(std::nullptr_t) {}
+
+  // Constructs an InterfaceRequest from a message pipe handle (if |handle| is
+  // not set, then this constructs an "empty" InterfaceRequest).
+  explicit InterfaceRequest(ScopedMessagePipeHandle handle)
+      : handle_(handle.Pass()) {}
 
   // Takes the message pipe from another InterfaceRequest.
   InterfaceRequest(InterfaceRequest&& other) { handle_ = other.handle_.Pass(); }
@@ -63,16 +68,6 @@ class InterfaceRequest {
   MOJO_MOVE_ONLY_TYPE(InterfaceRequest);
 };
 
-// Makes an InterfaceRequest bound to the specified message pipe. If |handle|
-// is empty or invalid, the resulting InterfaceRequest will represent the
-// absence of a request.
-template <typename Interface>
-InterfaceRequest<Interface> MakeRequest(ScopedMessagePipeHandle handle) {
-  InterfaceRequest<Interface> request;
-  request.Bind(handle.Pass());
-  return request;
-}
-
 // Creates a new message pipe over which Interface is to be served, and one end
 // into the supplied |handle| and the returns the other inside an
 // InterfaceRequest<>. The InterfaceHandle<> can be used to create a client
@@ -85,7 +80,7 @@ template <typename Interface>
 InterfaceRequest<Interface> GetProxy(InterfaceHandle<Interface>* handle) {
   MessagePipe pipe;
   *handle = InterfaceHandle<Interface>(pipe.handle0.Pass(), 0u);
-  return MakeRequest<Interface>(pipe.handle1.Pass());
+  return InterfaceRequest<Interface>(pipe.handle1.Pass());
 }
 
 // Creates a new message pipe over which Interface is to be served. Binds the

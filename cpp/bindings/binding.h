@@ -172,7 +172,8 @@ class Binding {
   // implementation. Put this object into a state where it can be rebound to a
   // new pipe.
   InterfaceRequest<Interface> Unbind() {
-    auto request = MakeRequest<Interface>(internal_router_->PassMessagePipe());
+    auto request =
+        InterfaceRequest<Interface>(internal_router_->PassMessagePipe());
     internal_router_.reset();
     return request;
   }

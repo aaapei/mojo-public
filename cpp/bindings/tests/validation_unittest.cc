@@ -459,7 +459,7 @@ TEST_F(ValidationIntegrationTest, Binding) {
   IntegrationTestInterfaceImpl interface_impl;
   Binding<IntegrationTestInterface> binding(
       &interface_impl,
-      MakeRequest<IntegrationTestInterface>(testee_endpoint().Pass()));
+      InterfaceRequest<IntegrationTestInterface>(testee_endpoint().Pass()));
   binding.internal_router()->EnableTestingMode();
 
   mojo::internal::MessageValidatorList validators;

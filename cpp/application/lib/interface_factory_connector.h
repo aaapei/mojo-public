@@ -23,7 +23,7 @@ class InterfaceFactoryConnector : public ServiceConnector {
                         const std::string& interface_name,
                         ScopedMessagePipeHandle client_handle) override {
     factory_->Create(application_connection,
-                     MakeRequest<Interface>(client_handle.Pass()));
+                     InterfaceRequest<Interface>(client_handle.Pass()));
   }
 
  private:

@@ -91,7 +91,7 @@ MojoResult RunAllTests(MojoHandle application_request_handle) {
     //   --args-for='mojo:example_apptests arg1 --gtest_filter=foo arg2'
     Array<String> args;
     ShellAndArgumentGrabber grabber(
-        &args, MakeRequest<Application>(MakeScopedHandle(
+        &args, InterfaceRequest<Application>(MakeScopedHandle(
                    MessagePipeHandle(application_request_handle))));
     grabber.WaitForInitialize();
     MOJO_CHECK(g_shell);

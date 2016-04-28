@@ -27,9 +27,6 @@
 
 namespace mojo {
 
-template <typename Interface>
-InterfaceRequest<Interface> MakeRequest(ScopedMessagePipeHandle handle);
-
 namespace internal {
 
 // The ArraySerializer template contains static methods for serializing |Array|s
@@ -235,7 +232,8 @@ struct ArraySerializer<InterfaceRequest<I>, MessagePipeHandle, false> {
     auto result = Array<InterfaceRequest<I>>::New(input->size());
     for (size_t i = 0; i < input->size(); ++i)
       result.at(i) =
-          MakeRequest<I>(MakeScopedHandle(FetchAndReset(&input->at(i)))).Pass();
+          InterfaceRequest<I>(MakeScopedHandle(FetchAndReset(&input->at(i))))
+              .Pass();
     output->Swap(&result);
   }
 };
