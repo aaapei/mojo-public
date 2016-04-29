@@ -368,28 +368,42 @@ union UserDefinedValue {
 struct DeclaredConstant {
   DeclarationData decl_data;
 
-  // The type must be a string, bool, or numeric type.
+  // The type must be a StringType, BOOL, a numeric type or a TypeReference
+  // whose resolved type is a MojomEnum.
   Type type;
 
   // This is the value specified in the right-hand-side of the constant
-  // declaration. The value must be a literal value or a built-in constant of
-  // the same type as |type| or a UserValueReference whose
-  // |resolved_concrete_value| is one of those.
+  // declaration. The value must be one of the following:
+  // (a) a LiteralValue or a BuiltinConstantValue of the same type as |type|
+  // (b) a UserValueReference whose resolved value is an EnumValue of the same
+  // type as |type|, or
+  // (c) a UserValueReference whose resolved value is a different
+  // DeclaredConstant whose |resolved_concrete_value| is one of (a) or (b)
   Value value;
+
 
   // The resolved concrete value. This must be a LiteralValue, a
   // BuiltinConstantValue, or UserValueReference that resolves to an
   // EnumValue. It may not be a UserValueReference that resolves
-  // to a DeclaredConstant. The resolved concrete value is defined as follows:
+  // to a DeclaredConstant.
+  //
+  // The resolved concrete value is defined as follows:
   // If |value| is a LiteralValue, a BuiltinConstantValue or a
-  // UserValueReference that refers to an EnumValue then
-  // |resolved_concrete_value| is equal to |value|. Otherwise |value|
-  // is a UserValueReference that refers to a different DeclaredConstant
-  // and |resolved_concrete_value| is defined to be the
-  // |resolved_concrete_value| of that other DeclaredConstant. This chain
-  // of references must terminate in well-formed Mojom.
-  // TODO(rudominer) Add this field when we have a real need for it.
-  // Value? resolved_concrete_value;
+  // UserValueReference that refers to an EnumValue then the resolved
+  // concrete value is conceptually equal to |value| and this will
+  // be indicated by setting the |resolved_concrete_value| field to null.
+  //
+  // Otherwise |value| is a UserValueReference that refers to a different
+  // DeclaredConstant and in this case |resolved_concrete_value| will be
+  // non-null. It will be set to the conceptual resolved concrete value of that
+  // other DeclaredConstant (even if that other declared constant has its own
+  // |resolved_concrete_value| field set to null.) This chain of references
+  // must terminate in well-formed Mojom.
+  //
+  // In the case that |resolved_concrete_value| is set to a UserValueReference,
+  // only the |value_key| field of the UserValueReference is meaningful. The
+  // other fields should be ignored.
+  Value? resolved_concrete_value;
 };
 
 ////////////////////////////////////////////////////////////////////////////

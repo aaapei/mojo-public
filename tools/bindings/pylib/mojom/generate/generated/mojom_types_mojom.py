@@ -204,6 +204,7 @@ class DeclaredConstant(object):
       _descriptor.SingleFieldGroup('decl_data', _descriptor.StructType(lambda: DeclarationData), 0, 0),
       _descriptor.SingleFieldGroup('type', _descriptor.UnionType(lambda: Type), 1, 0),
       _descriptor.SingleFieldGroup('value', _descriptor.UnionType(lambda: Value), 2, 0),
+      _descriptor.SingleFieldGroup('resolved_concrete_value', _descriptor.UnionType(lambda: Value, nullable=True), 3, 0),
     ],
   }
 
