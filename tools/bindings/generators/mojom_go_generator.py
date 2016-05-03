@@ -370,7 +370,7 @@ class Generator(generator.Generator):
           all_structs.append(self._GetResponseStructFromMethod(method))
 
     if (len(all_structs) > 0 or len(self.module.interfaces) > 0
-        or len(self.module.unions) > 0):
+        or len(self.module.unions) > 0 or len(self.module.enums) > 0):
       imports['fmt'] = 'fmt'
       imports['mojo/public/go/bindings'] = 'bindings'
     if len(self.module.interfaces) > 0:

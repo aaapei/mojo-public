@@ -9,13 +9,17 @@ type {{enum|name}} int32
 
 const (
 {% for field in enum.fields %}
-{%   if field.value %}
+{%   if loop.first %}
+{%     if field.value %}
+	{{enum|name}}_{{field|name}} {{enum|name}} = {{field.value|expression_to_text}}
+{%     else %}
+	{{enum|name}}_{{field|name}} {{enum|name}} = 0
+{%     endif %}
+{%   elif field.value %}
 	{{enum|name}}_{{field|name}} = {{field.value|expression_to_text}}
-{%   elif loop.first %}
-	{{enum|name}}_{{field|name}} = 0
 {%   else %}
 	{{enum|name}}_{{field|name}} = {{enum|name}}_{{enum.fields[loop.index0 - 1]|name}} + 1;
-{%   endif %}
+{%   endif%}
 {% endfor %}
 )
 

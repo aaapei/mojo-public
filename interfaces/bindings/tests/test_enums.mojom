@@ -7,3 +7,10 @@ enum TestEnum {
   FOO = 2,
   BAR = 3,
 };
+
+enum TestEnum2 {
+  TEST,
+  V = 1,
+  FOO = 2,
+  BAR = 3,
+};
