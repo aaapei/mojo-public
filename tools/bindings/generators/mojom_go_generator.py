@@ -370,7 +370,7 @@ class Generator(generator.Generator):
           all_structs.append(self._GetResponseStructFromMethod(method))
 
     if (len(all_structs) > 0 or len(self.module.interfaces) > 0
-        or len(self.module.unions) > 0 or len(self.module.enums) > 0):
+        or len(self.module.unions) > 0):
       imports['fmt'] = 'fmt'
       imports['mojo/public/go/bindings'] = 'bindings'
     if len(self.module.interfaces) > 0:
@@ -403,7 +403,9 @@ class Generator(generator.Generator):
       imports['bytes'] = 'bytes'
       imports['compress/gzip'] = 'gzip'
       imports['encoding/base64'] = 'base64'
+      imports['fmt'] = 'fmt'
       imports['io/ioutil'] = 'ioutil'
+      imports['mojo/public/go/bindings'] = 'bindings'
 
     if GetPackageName(self.module) != _mojom_types_pkg_short:
       if defInterface:
