@@ -231,14 +231,19 @@ class {{interface|name}}Proxy implements bindings.ProxyBase {
 
 
 class {{interface|name}}Stub extends bindings.Stub {
-  {{interface|name}} _impl = null;
+  {{interface|name}} _impl;
 
   {{interface|name}}Stub.fromEndpoint(
-      core.MojoMessagePipeEndpoint endpoint, [this._impl])
-      : super.fromEndpoint(endpoint);
+      core.MojoMessagePipeEndpoint endpoint, [{{interface|name}} impl])
+      : super.fromEndpoint(endpoint, autoBegin: impl != null) {
+    _impl = impl;
+  }
 
-  {{interface|name}}Stub.fromHandle(core.MojoHandle handle, [this._impl])
-      : super.fromHandle(handle);
+  {{interface|name}}Stub.fromHandle(
+      core.MojoHandle handle, [{{interface|name}} impl])
+      : super.fromHandle(handle, autoBegin: impl != null) {
+    _impl = impl;
+  }
 
   {{interface|name}}Stub.unbound() : super.unbound();
 
@@ -271,7 +276,9 @@ class {{interface|name}}Stub extends bindings.Stub {
                                                           {{interface.version}},
                                                           message);
     }
-    assert(_impl != null);
+    if (_impl == null) {
+      throw new core.MojoApiError("$this has no implementation set");
+    }
     switch (message.header.type) {
 {%- for method in interface.methods %}
 {%- set request_struct = method.param_struct %}
@@ -322,8 +329,21 @@ class {{interface|name}}Stub extends bindings.Stub {
 
   {{interface|name}} get impl => _impl;
   set impl({{interface|name}} d) {
-    assert(_impl == null);
+    if (d == null) {
+      throw new core.MojoApiError("$this: Cannot set a null implementation");
+    }
+    if (isBound && (_impl == null)) {
+      beginHandlingEvents();
+    }
     _impl = d;
+  }
+
+  @override
+  void bind(core.MojoMessagePipeEndpoint endpoint) {
+    super.bind(endpoint);
+    if (!isOpen && (_impl != null)) {
+      beginHandlingEvents();
+    }
   }
 
   String toString() {
