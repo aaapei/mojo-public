@@ -245,7 +245,7 @@ class {{interface|name}}Stub extends bindings.Stub {
     _impl = impl;
   }
 
-  {{interface|name}}Stub.unbound() : super.unbound();
+  {{interface|name}}Stub.unbound([this._impl]) : super.unbound();
 
   static {{interface|name}}Stub newFromEndpoint(
       core.MojoMessagePipeEndpoint endpoint) {
