@@ -25,9 +25,9 @@ class AutoCloseableRouter implements Router {
     private final Executor mExecutor;
 
     /**
-     * Flags to keep track if this router has been correctly closed.
+     * Flags to keep track if this router owns an unclosed handle.
      */
-    private boolean mClosed;
+    private boolean mOwnsHandle;
 
     /**
      * Constructor.
@@ -35,6 +35,7 @@ class AutoCloseableRouter implements Router {
     public AutoCloseableRouter(Core core, Router router) {
         mRouter = router;
         mExecutor = ExecutorFactory.getExecutorForCurrentThread(core);
+        mOwnsHandle = true;
     }
 
     /**
@@ -50,6 +51,7 @@ class AutoCloseableRouter implements Router {
      */
     @Override
     public MessagePipeHandle passHandle() {
+        mOwnsHandle = false;
         return mRouter.passHandle();
     }
 
@@ -92,7 +94,7 @@ class AutoCloseableRouter implements Router {
     @Override
     public void close() {
         mRouter.close();
-        mClosed = true;
+        mOwnsHandle = false;
     }
 
     /**
@@ -100,7 +102,7 @@ class AutoCloseableRouter implements Router {
      */
     @Override
     protected void finalize() throws Throwable {
-        if (!mClosed) {
+        if (mOwnsHandle) {
             mExecutor.execute(new Runnable() {
 
                 @Override
