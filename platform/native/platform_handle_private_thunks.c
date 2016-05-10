@@ -10,16 +10,19 @@
 
 static struct MojoPlatformHandlePrivateThunks g_thunks = {0};
 
-MojoResult MojoCreatePlatformHandleWrapper(MojoPlatformHandle platform_handle,
-                                           MojoHandle* wrapper) {
+MojoResult MojoCreatePlatformHandleWrapper(
+    MojoPlatformHandle platform_handle,
+    MojoHandle* platform_handle_wrapper_handle) {
   assert(g_thunks.CreatePlatformHandleWrapper);
-  return g_thunks.CreatePlatformHandleWrapper(platform_handle, wrapper);
+  return g_thunks.CreatePlatformHandleWrapper(platform_handle,
+                                              platform_handle_wrapper_handle);
 }
 
-MojoResult MojoExtractPlatformHandle(MojoHandle wrapper,
+MojoResult MojoExtractPlatformHandle(MojoHandle platform_handle_wrapper_handle,
                                      MojoPlatformHandle* platform_handle) {
   assert(g_thunks.ExtractPlatformHandle);
-  return g_thunks.ExtractPlatformHandle(wrapper, platform_handle);
+  return g_thunks.ExtractPlatformHandle(platform_handle_wrapper_handle,
+                                        platform_handle);
 }
 
 THUNK_EXPORT size_t MojoSetPlatformHandlePrivateThunks(
