@@ -38,14 +38,11 @@ module mojo.bindings.types;
  * We refer to this higher-layer context as the *owning context.*
  *
  * In addition to types, Mojom values are also representd by structures in this
- * file. A |Value| may be a LiteralValue, a UserValueReference or a
- * BuiltinConstantValue. Similarly to the situation with TypeReferences,
- * UserValueReferences contain a |value_key| which may be used to lookup
- * a UserDefinedValue (an EnumValue or a DeclaredConstant) in
- * the owning context. For example the |MojomFileGraph| struct in
- * mojom_files.mojom contains the map:
- *     map<string, UserDefinedValue> resolved_values;
- * for this purpose.
+ * file. A |Value| may be a LiteralValue, a ConstantReference, 
+ * an EnumValueReference or a BuiltinConstantValue. Similarly to the situation 
+ * with TypeReferences, ConstantReferences and EnumValueReferences contain a 
+ * key which may be used to lookup user-defined value (an EnumValue or a
+ * DeclaredConstant) in the owning context. 
  */
 
 // The different kinds of types. We divide the types into five categories:
@@ -239,14 +236,11 @@ struct MojomUnion {
 struct EnumValue {
   DeclarationData? decl_data;
 
-  // The type key of the enum that this value belongs to.
-  string enum_type_key;
-
   // This is the value specified in the right-hand-side of the optional
   // initializer of an enum value declaration. The value must be a literal value
-  // of integer type or a UserValueReference that resolves to a different
-  // EnumValue from the same enum that was defined earlier lexically,
-  // or a UserValueReference that resolves to
+  // of integer type or an EnumValueReference that resolves to a different
+  // EnumValue from the same MojomEnum that was defined earlier lexically,
+  // or a ConstantReference that resolves to
   // a DeclaredConstant whose |resolved_concrete_value| is one of those.
   Value? initializer_value;
 
@@ -259,6 +253,7 @@ struct EnumValue {
 struct MojomEnum {
   DeclarationData? decl_data;  // Some implementations may not provide this.
 
+  // The enum values in declaration order.
   array<EnumValue> values;
 };
 
@@ -316,8 +311,11 @@ union Value {
   // A literal number, boolean or string
   LiteralValue literal_value;
 
-  // A reference to a user-defined value (a declared constant or enum value.)
-  UserValueReference user_value_reference;
+  // A reference to a DeclaredConstant.
+  ConstantReference constant_reference;
+
+  // A reference to an EnumValue
+  EnumValueReference enum_value_reference;
 
   // A built-in numeric constant.
   BuiltinConstantValue builtin_value;
@@ -348,20 +346,29 @@ enum BuiltinConstantValue {
   FLOAT_NAN,
 };
 
-// A reference to a user-defined value (a declared constant or enum value.)
-struct UserValueReference {
+// A reference to a DeclaredConstant.
+struct ConstantReference {
   // The identifier, as it appears at the reference site.
   string identifier;
 
-  // The key to the resolved value of this identifier. It refers to
-  // an instance of |UserDefinedValue| and so an EnumValue or
-  // DeclaredConstant.
-  string? value_key;
+  // The DeclaredConstant to which this reference has resolved can be looked up 
+  // using this key in the appropriate map in the owning context.
+  string constant_key;
 };
 
-union UserDefinedValue {
-  EnumValue enum_value;
-  DeclaredConstant declared_constant;
+// A reference to an EnumValue
+struct EnumValueReference {
+  // The identifier, as it appears at the reference site.
+  string identifier;
+
+  // The type key of the MojomEnum containing the EnumValue to which this
+  // reference has resolved. The MojomEnum can be looked up using this key in
+  // the appropriate map in the owning context. 
+  string enum_type_key;
+
+  // The 0-based index into the |values| array within the MojomEnum specified 
+  // by |enum_type_key| of the EnumValue to which this reference has resolved.
+  uint32 enum_value_index;
 };
 
 // This represents a Mojom constant declaration.
@@ -375,34 +382,33 @@ struct DeclaredConstant {
   // This is the value specified in the right-hand-side of the constant
   // declaration. The value must be one of the following:
   // (a) a LiteralValue or a BuiltinConstantValue of the same type as |type|
-  // (b) a UserValueReference whose resolved value is an EnumValue of the same
-  // type as |type|, or
-  // (c) a UserValueReference whose resolved value is a different
+  // (b) an EnumValueReference that resolves to an EnumValue of the same
+  // enum type as |type|, or
+  // (c) a ConstantReference that resolves to a different
   // DeclaredConstant whose |resolved_concrete_value| is one of (a) or (b)
   Value value;
 
 
   // The resolved concrete value. This must be a LiteralValue, a
-  // BuiltinConstantValue, or UserValueReference that resolves to an
-  // EnumValue. It may not be a UserValueReference that resolves
-  // to a DeclaredConstant.
+  // BuiltinConstantValue, or an EnumValueReference. It may not be a 
+  // ConstantReference.
   //
   // The resolved concrete value is defined as follows:
-  // If |value| is a LiteralValue, a BuiltinConstantValue or a
-  // UserValueReference that refers to an EnumValue then the resolved
+  // If |value| is a LiteralValue, a BuiltinConstantValue or an
+  // EnunValueReference then the resolved
   // concrete value is conceptually equal to |value| and this will
   // be indicated by setting the |resolved_concrete_value| field to null.
   //
-  // Otherwise |value| is a UserValueReference that refers to a different
+  // Otherwise |value| is a ConstantReference that refers to a different
   // DeclaredConstant and in this case |resolved_concrete_value| will be
   // non-null. It will be set to the conceptual resolved concrete value of that
   // other DeclaredConstant (even if that other declared constant has its own
   // |resolved_concrete_value| field set to null.) This chain of references
   // must terminate in well-formed Mojom.
   //
-  // In the case that |resolved_concrete_value| is set to a UserValueReference,
-  // only the |value_key| field of the UserValueReference is meaningful. The
-  // other fields should be ignored.
+  // In the case that |resolved_concrete_value| is set to an EnumValueReference
+  // only the |enum_type_key| and |enum_value_index| fields of the 
+  // EnumValueReference are meaningful. The other fields should be ignored.
   Value? resolved_concrete_value;
 };
 

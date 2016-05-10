@@ -73,7 +73,7 @@ class FileTranslator(object):
     if mojom_file.declared_mojom_objects:
       if mojom_file.declared_mojom_objects.top_level_constants:
         mod.constants = [
-            self.ConstantFromValueKey(key)
+            self.ConstantFromKey(key)
             for key in mojom_file.declared_mojom_objects.top_level_constants]
 
       user_defined_types = ['interfaces', 'structs', 'unions']
@@ -336,7 +336,7 @@ class FileTranslator(object):
 
     if contained_declarations.constants:
       for const_key in contained_declarations.constants:
-        const = self.ConstantFromValueKey(const_key)
+        const = self.ConstantFromKey(const_key)
         parent_kind.constants.append(const)
 
   def EnumFromMojom(self, enum, mojom_type):
@@ -511,22 +511,23 @@ class FileTranslator(object):
 
     return method
 
-  def ConstantFromValueKey(self, value_key):
-    """Takes a value key into a graph.resolved_values referring to a constant
-    and returns the module equivalent.
+  def ConstantFromKey(self, constant_key):
+    """Takes a key into the map graph.resolved_constants and returns the module
+    equivalent constant.
 
     Args:
-      value_key: {str} the value key referring to the value to be returned.
+      constant_key: {str} the key referring to the constant whose translation
+        is to be returned.
 
     Returns:
       {module.Constant} translated.
     """
-    if value_key in self._constant_cache:
-      return self._constant_cache[value_key]
+    if constant_key in self._constant_cache:
+      return self._constant_cache[constant_key]
 
-    mojom_const = self._graph.resolved_values[value_key].declared_constant
+    mojom_const = self._graph.resolved_constants[constant_key]
     const = module.Constant()
-    self._constant_cache[value_key] = const
+    self._constant_cache[constant_key] = const
 
     self.ConstantFromMojom(const, mojom_const)
     return const
@@ -598,75 +599,82 @@ class FileTranslator(object):
         mojom_types_mojom.BuiltinConstantValue.FLOAT_NAN: 'float.NAN',
           }
       return module.BuiltinValue(mojom_to_builtin[value.builtin_value])
+    return self.FromUserValueReference(value)
 
-    assert value.tag == mojom_types_mojom.Value.Tags.user_value_reference
-    return self.UserDefinedFromValueKey(value.user_value_reference.value_key)
-
-  def UserDefinedFromValueKey(self, value_key):
-    """Takes a value key into graph.resolved_values and returns the module
-    equivalent.
+  def FromUserValueReference(self, value):
+    """Translates a mojom_types.EnumValueReference or ConstantReference into the
+    module equivalent.
 
     Args:
-      value_key: {str} the value key referring to the value to be returned.
+      value: {mojom_types_mojom.Value} the value ref to be translated. It
+      must be of type EnumValueReference or ConstantReference.
 
     Returns:
       {module.EnumValue|module.ConstantValue} translated.
     """
-    if value_key in self._value_cache:
-      return self._value_cache[value_key]
+    if value.tag == mojom_types_mojom.Value.Tags.constant_reference:
+      return self.ConstantValueFromKey(value.constant_reference.constant_key)
+    assert value.tag == mojom_types_mojom.Value.Tags.enum_value_reference
+    return self.EnumValueFromKey(value.enum_value_reference.enum_type_key,
+        value.enum_value_reference.enum_value_index)
 
-    value = self._graph.resolved_values[value_key]
-    if value.tag == mojom_types_mojom.UserDefinedValue.Tags.enum_value:
-      return self.EnumValueFromMojom(value.enum_value)
-    return self.ConstantValueFromValueKey(value_key)
-
-  def ConstantValueFromValueKey(self, value_key):
-    """Takes a value key into graph.resolved_values referring to a declared
-    constant and returns the module equivalent.
+  def ConstantValueFromKey(self, constant_key):
+    """Takes a key into graph.resolved_constants referring to a
+    mojom declared_constant and returns a module.ConstantValue referring to the
+    module equivalent constant.
 
     Args:
-      value_key: {str} the value key referring to the value to be returned.
+      constant_key: {str} the constant key referring to a constant.
 
     Returns:
       {module.ConstantValue} translated.
     """
-    const_value = module.ConstantValue()
-    self._value_cache[value_key] = const_value
+    if constant_key in self._value_cache:
+      return self._value_cache[constant_key]
 
-    const = self.ConstantFromValueKey(value_key)
+    const_value = module.ConstantValue()
+    self._value_cache[constant_key] = const_value
+
+    const = self.ConstantFromKey(constant_key)
     const_value.constant = const
     const_value.name = const.name
     const_value.parent_kind = const.parent_kind
     self.PopulateModuleOrImportedFrom(const_value,
-        self._graph.resolved_values[value_key].declared_constant)
+        self._graph.resolved_constants[constant_key])
     const_value.namespace = const_value.module.namespace
     return const_value
 
-  def EnumValueFromMojom(self, mojom_enum_value):
-    """Translates an mojom_types_mojom.EnumValue to a module.EnumValue.
+  def EnumValueFromKey(self, enum_type_key, enum_value_index):
+    """Takes an enum type key and an enum value index (together these
+    form a key to a mojom_enum_value) and returns a module.EnumValue referring
+    the module equivalent enum value
 
-    mojom_enum_value: {mojom_types_mojom.EnumValue} to be translated.
+    Args:
+      enum_type_key: {str} the type key of a mojom_enum
+      enum_value_index: {int} the 0-based index into the |values| array of
+        the mojom_enum
 
     Returns:
       {module.EnumValue} translated from mojom_enum_value.
     """
-    enum_type_key = mojom_enum_value.enum_type_key
-    name = mojom_enum_value.decl_data.short_name
-    value_key = (enum_type_key, name)
-    if value_key in self._value_cache:
-      return self._value_cache[value_key]
+    enum_value_key = (enum_type_key, enum_value_index)
+    if enum_value_key in self._value_cache:
+      return self._value_cache[enum_value_key]
+
+    mojom_enum = self._graph.resolved_types[enum_type_key].enum_type
+    mojom_enum_value = mojom_enum.values[enum_value_index]
 
     # We need to create and cache the EnumValue object just in case later calls
     # require the creation of that same EnumValue object.
     enum_value = module.EnumValue()
-    self._value_cache[value_key] = enum_value
+    self._value_cache[enum_value_key] = enum_value
 
     enum = self.UserDefinedFromTypeKey(enum_type_key)
     enum_value.enum = enum
     self.PopulateModuleOrImportedFrom(enum_value, mojom_enum_value)
     enum_value.namespace = enum_value.module.namespace
     enum_value.parent_kind = enum.parent_kind
-    enum_value.name = name
+    enum_value.name = mojom_enum_value.decl_data.short_name
 
     return enum_value
 

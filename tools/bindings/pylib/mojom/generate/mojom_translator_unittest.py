@@ -115,16 +115,14 @@ class TestTranslateFile(unittest.TestCase):
         value=mojom_types_mojom.Value(
           literal_value=mojom_types_mojom.LiteralValue(
             int64_value=30)))
-    user_defined_value = mojom_types_mojom.UserDefinedValue()
-    user_defined_value.declared_constant = mojom_const
-    graph.resolved_values = {'value_key': user_defined_value}
+    graph.resolved_constants = {'constant_key': mojom_const}
 
     mojom_file.declared_mojom_objects = mojom_files_mojom.KeysByType(
         interfaces=['interface_key'],
         structs=['struct_key'],
         unions=['union_key'],
         top_level_enums=['enum_key'],
-        top_level_constants=['value_key']
+        top_level_constants=['constant_key']
         )
 
     mod = mojom_translator.FileTranslator(graph, file_name).Translate()
@@ -367,13 +365,11 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         source_file_info=mojom_types_mojom.SourceFileInfo(file_name=file_name))
     value1 = mojom_types_mojom.EnumValue(
         decl_data=mojom_types_mojom.DeclarationData(short_name='val1'),
-        enum_type_key='AnEnum',
         initializer_value=mojom_types_mojom.Value(
             literal_value=mojom_types_mojom.LiteralValue(uint64_value=20)),
         int_value=20)
     value2 = mojom_types_mojom.EnumValue(
         decl_data=mojom_types_mojom.DeclarationData(short_name='val2'),
-        enum_type_key='AnEnum',
         int_value=70)
     mojom_enum.values = [value1, value2]
 
@@ -757,12 +753,10 @@ class TestUserDefinedTypeFromMojom(unittest.TestCase):
         value=mojom_types_mojom.Value(
           literal_value=mojom_types_mojom.LiteralValue(
             int64_value=30)))
-    user_defined_value = mojom_types_mojom.UserDefinedValue()
-    user_defined_value.declared_constant = mojom_const
-    graph.resolved_values = {'value_key': user_defined_value}
+    graph.resolved_constants = {'constant_key': mojom_const}
 
     contained_declarations = mojom_types_mojom.ContainedDeclarations(
-        enums=['enum_key'], constants=['value_key'])
+        enums=['enum_key'], constants=['constant_key'])
 
     translator = mojom_translator.FileTranslator(graph, file_name)
     struct = module.Struct(name='parent')
@@ -838,28 +832,23 @@ class TestValueFromMojom(unittest.TestCase):
           short_name='val1',
           source_file_info=mojom_types_mojom.SourceFileInfo(
             file_name=file_name)),
-        enum_type_key='enum_key',
         initializer_value=mojom_types_mojom.Value(
             literal_value=mojom_types_mojom.LiteralValue(uint64_value=20)),
         int_value=20)
     value2 = mojom_types_mojom.EnumValue(
         decl_data=mojom_types_mojom.DeclarationData(short_name='val2'),
-        enum_type_key='enum_key',
         int_value=70)
     mojom_enum.values = [value1, value2]
 
     graph = mojom_files_mojom.MojomFileGraph()
     graph.resolved_types = {
         'enum_key': mojom_types_mojom.UserDefinedType(enum_type=mojom_enum)}
-    graph.resolved_values = {
-        'enum_value1': mojom_types_mojom.UserDefinedValue(enum_value=value1),
-        'enum_value2': mojom_types_mojom.UserDefinedValue(enum_value=value2),
-        }
 
     mojom = mojom_types_mojom.Value(
-        user_value_reference=mojom_types_mojom.UserValueReference(
+        enum_value_reference=mojom_types_mojom.EnumValueReference(
           identifier='SOMEID',
-          value_key='enum_value1'))
+          enum_type_key='enum_key',
+          enum_value_index=0))
 
     translator = mojom_translator.FileTranslator(graph, file_name)
     enum_value = translator.ValueFromMojom(mojom)
@@ -880,21 +869,19 @@ class TestValueFromMojom(unittest.TestCase):
         value=mojom_types_mojom.Value(
           literal_value=mojom_types_mojom.LiteralValue(
             int64_value=30)))
-    user_defined_value = mojom_types_mojom.UserDefinedValue()
-    user_defined_value.declared_constant = mojom_const
 
     graph = mojom_files_mojom.MojomFileGraph()
-    graph.resolved_values = {'value_key': user_defined_value}
+    graph.resolved_constants = {'constant_key': mojom_const}
 
     mojom = mojom_types_mojom.Value(
-        user_value_reference=mojom_types_mojom.UserValueReference(
+        constant_reference=mojom_types_mojom.ConstantReference(
           identifier='SOMEID',
-          value_key='value_key'))
+          constant_key='constant_key'))
 
     translator = mojom_translator.FileTranslator(graph, file_name)
     const_value = translator.ValueFromMojom(mojom)
     self.assertIs(
-        translator.ConstantFromValueKey('value_key'), const_value.constant)
+        translator.ConstantFromKey('constant_key'), const_value.constant)
     self.assertIs(mojom_const.decl_data.short_name, const_value.name)
 
 

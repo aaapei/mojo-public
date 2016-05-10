@@ -27,7 +27,7 @@ class MojomFileGraph(object):
     'fields': [
       _descriptor.SingleFieldGroup('files', _descriptor.MapType(_descriptor.TYPE_STRING, _descriptor.StructType(lambda: MojomFile)), 0, 0),
       _descriptor.SingleFieldGroup('resolved_types', _descriptor.MapType(_descriptor.TYPE_STRING, _descriptor.UnionType(lambda: mojom_types_mojom.UserDefinedType)), 1, 0),
-      _descriptor.SingleFieldGroup('resolved_values', _descriptor.MapType(_descriptor.TYPE_STRING, _descriptor.UnionType(lambda: mojom_types_mojom.UserDefinedValue)), 2, 0),
+      _descriptor.SingleFieldGroup('resolved_constants', _descriptor.MapType(_descriptor.TYPE_STRING, _descriptor.StructType(lambda: mojom_types_mojom.DeclaredConstant)), 2, 0),
     ],
   }
 

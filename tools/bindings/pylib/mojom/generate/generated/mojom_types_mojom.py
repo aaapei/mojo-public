@@ -150,9 +150,8 @@ class EnumValue(object):
   DESCRIPTOR = {
     'fields': [
       _descriptor.SingleFieldGroup('decl_data', _descriptor.StructType(lambda: DeclarationData, nullable=True), 0, 0),
-      _descriptor.SingleFieldGroup('enum_type_key', _descriptor.TYPE_STRING, 1, 0),
-      _descriptor.SingleFieldGroup('initializer_value', _descriptor.UnionType(lambda: Value, nullable=True), 2, 0),
-      _descriptor.SingleFieldGroup('int_value', _descriptor.TYPE_INT32, 3, 0),
+      _descriptor.SingleFieldGroup('initializer_value', _descriptor.UnionType(lambda: Value, nullable=True), 1, 0),
+      _descriptor.SingleFieldGroup('int_value', _descriptor.TYPE_INT32, 2, 0),
     ],
   }
 
@@ -188,12 +187,22 @@ class MojomInterface(object):
     ],
   }
 
-class UserValueReference(object):
+class ConstantReference(object):
   __metaclass__ = _reflection.MojoStructType
   DESCRIPTOR = {
     'fields': [
       _descriptor.SingleFieldGroup('identifier', _descriptor.TYPE_STRING, 0, 0),
-      _descriptor.SingleFieldGroup('value_key', _descriptor.TYPE_NULLABLE_STRING, 1, 0),
+      _descriptor.SingleFieldGroup('constant_key', _descriptor.TYPE_STRING, 1, 0),
+    ],
+  }
+
+class EnumValueReference(object):
+  __metaclass__ = _reflection.MojoStructType
+  DESCRIPTOR = {
+    'fields': [
+      _descriptor.SingleFieldGroup('identifier', _descriptor.TYPE_STRING, 0, 0),
+      _descriptor.SingleFieldGroup('enum_type_key', _descriptor.TYPE_STRING, 1, 0),
+      _descriptor.SingleFieldGroup('enum_value_index', _descriptor.TYPE_UINT32, 2, 0),
     ],
   }
 
@@ -298,8 +307,9 @@ class Value(object):
   DESCRIPTOR = {
     'fields': [
       _descriptor.SingleFieldGroup('literal_value', _descriptor.UnionType(lambda: LiteralValue), 0, 0),
-      _descriptor.SingleFieldGroup('user_value_reference', _descriptor.StructType(lambda: UserValueReference), 1, 0),
-      _descriptor.SingleFieldGroup('builtin_value', _descriptor.TYPE_INT32, 2, 0),
+      _descriptor.SingleFieldGroup('constant_reference', _descriptor.StructType(lambda: ConstantReference), 1, 0),
+      _descriptor.SingleFieldGroup('enum_value_reference', _descriptor.StructType(lambda: EnumValueReference), 2, 0),
+      _descriptor.SingleFieldGroup('builtin_value', _descriptor.TYPE_INT32, 3, 0),
     ],
    }
 
@@ -319,15 +329,6 @@ class LiteralValue(object):
       _descriptor.SingleFieldGroup('uint16_value', _descriptor.TYPE_UINT16, 9, 0),
       _descriptor.SingleFieldGroup('uint32_value', _descriptor.TYPE_UINT32, 10, 0),
       _descriptor.SingleFieldGroup('uint64_value', _descriptor.TYPE_UINT64, 11, 0),
-    ],
-   }
-
-class UserDefinedValue(object):
-  __metaclass__ = _reflection.MojoUnionType
-  DESCRIPTOR = {
-    'fields': [
-      _descriptor.SingleFieldGroup('enum_value', _descriptor.StructType(lambda: EnumValue), 0, 0),
-      _descriptor.SingleFieldGroup('declared_constant', _descriptor.StructType(lambda: DeclaredConstant), 1, 0),
     ],
    }
 
