@@ -5,34 +5,25 @@
 #include "mojo/public/cpp/application/lib/service_registry.h"
 
 #include "mojo/public/cpp/application/application_connection.h"
-#include "mojo/public/cpp/application/application_impl.h"
 #include "mojo/public/cpp/application/service_connector.h"
 
 namespace mojo {
 namespace internal {
 
+ServiceRegistry::ServiceRegistry() : local_binding_(this) {}
+
 ServiceRegistry::ServiceRegistry(
-    ApplicationImpl* application_impl,
     const std::string& connection_url,
     const std::string& remote_url,
-    InterfaceHandle<ServiceProvider> remote_services,
     InterfaceRequest<ServiceProvider> local_services)
-    : application_impl_(application_impl),
-      connection_url_(connection_url),
+    : connection_url_(connection_url),
       remote_url_(remote_url),
-      local_binding_(this),
-      remote_service_provider_(
-          ServiceProviderPtr::Create(std::move(remote_services))) {
+      local_binding_(this) {
   if (local_services.is_pending())
     local_binding_.Bind(local_services.Pass());
 }
 
-ServiceRegistry::ServiceRegistry()
-    : application_impl_(nullptr), local_binding_(this) {
-}
-
-ServiceRegistry::~ServiceRegistry() {
-}
+ServiceRegistry::~ServiceRegistry() {}
 
 void ServiceRegistry::SetServiceConnectorForName(
     ServiceConnector* service_connector,
@@ -44,8 +35,6 @@ void ServiceRegistry::SetServiceConnectorForName(
 void ServiceRegistry::RemoveServiceConnectorForName(
     const std::string& interface_name) {
   service_connector_registry_.RemoveServiceConnectorForName(interface_name);
-  if (service_connector_registry_.empty())
-    remote_service_provider_.reset();
 }
 
 const std::string& ServiceRegistry::GetConnectionURL() {
@@ -56,7 +45,7 @@ const std::string& ServiceRegistry::GetRemoteApplicationURL() {
   return remote_url_;
 }
 
-void ServiceRegistry::ConnectToService(const mojo::String& service_name,
+void ServiceRegistry::ConnectToService(const String& service_name,
                                        ScopedMessagePipeHandle client_handle) {
   service_connector_registry_.ConnectToService(this, service_name,
                                                &client_handle);

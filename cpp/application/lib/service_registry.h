@@ -13,10 +13,6 @@
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
 
 namespace mojo {
-
-class Application;
-class ApplicationImpl;
-
 namespace internal {
 
 // A ServiceRegistry represents each half of a connection between two
@@ -25,10 +21,8 @@ namespace internal {
 class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
  public:
   ServiceRegistry();
-  ServiceRegistry(ApplicationImpl* application_impl,
-                  const std::string& connection_url,
+  ServiceRegistry(const std::string& connection_url,
                   const std::string& remote_url,
-                  InterfaceHandle<ServiceProvider> remote_services,
                   InterfaceRequest<ServiceProvider> local_services);
   ~ServiceRegistry() override;
 
@@ -42,19 +36,12 @@ class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
 
  private:
   // ServiceProvider method.
-  void ConnectToService(const mojo::String& service_name,
+  void ConnectToService(const String& service_name,
                         ScopedMessagePipeHandle client_handle) override;
 
-  ApplicationImpl* application_impl_;
   const std::string connection_url_;
   const std::string remote_url_;
-
- private:
-  void RemoveServiceConnectorForNameInternal(const std::string& interface_name);
-
-  Application* application_;
   Binding<ServiceProvider> local_binding_;
-  ServiceProviderPtr remote_service_provider_;
   ServiceConnectorRegistry service_connector_registry_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(ServiceRegistry);

@@ -64,12 +64,13 @@ void ApplicationImpl::AcceptConnection(
     InterfaceRequest<ServiceProvider> services,
     InterfaceHandle<ServiceProvider> exposed_services,
     const String& url) {
-  MOJO_LOG_IF(WARNING, exposed_services)
-      << "DEPRECATION WARNING: exposed_services will soon go away";
+  // Note: The shell no longer actually connects |exposed_services|, so a) we
+  // never actually get valid |exposed_services| here, b) it should be OK to
+  // drop it on the floor.
+  MOJO_LOG_IF(ERROR, exposed_services)
+      << "DEPRECATED: exposed_services is going away";
   std::unique_ptr<internal::ServiceRegistry> registry(
-      new internal::ServiceRegistry(this, url, requestor_url,
-                                    std::move(exposed_services),
-                                    services.Pass()));
+      new internal::ServiceRegistry(url, requestor_url, services.Pass()));
   if (!delegate_->ConfigureIncomingConnection(registry.get()))
     return;
   incoming_service_registries_.push_back(std::move(registry));
