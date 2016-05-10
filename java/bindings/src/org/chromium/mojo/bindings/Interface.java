@@ -17,9 +17,12 @@ import java.io.Closeable;
  * Base class for mojo generated interfaces.
  */
 public interface Interface extends ConnectionErrorHandler, Closeable {
-
     /**
-     * The close method is called when the connection to the interface is closed.
+     * If the interface is an implementation, the close method is called when the connection to the
+     * implementation is closed.
+     * <p>
+     * If the interface is a proxy, the close method closes the connection to the implementation.
+     * This method must be called before the proxy is released.
      *
      * @see java.io.Closeable#close()
      */
