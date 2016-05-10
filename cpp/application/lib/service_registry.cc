@@ -56,10 +56,6 @@ const std::string& ServiceRegistry::GetRemoteApplicationURL() {
   return remote_url_;
 }
 
-ServiceProvider* ServiceRegistry::GetServiceProvider() {
-  return remote_service_provider_.get();
-}
-
 void ServiceRegistry::ConnectToService(const mojo::String& service_name,
                                        ScopedMessagePipeHandle client_handle) {
   service_connector_registry_.ConnectToService(this, service_name,

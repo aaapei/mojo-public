@@ -62,11 +62,6 @@ class ApplicationConnection {
   // Returns the URL identifying the remote application on this connection.
   virtual const std::string& GetRemoteApplicationURL() = 0;
 
-  // Returns the raw proxy to the remote application's ServiceProvider
-  // interface. Most applications will just use ConnectToService() instead.
-  // Caller does not take ownership.
-  virtual ServiceProvider* GetServiceProvider() = 0;
-
  private:
   virtual void SetServiceConnectorForName(ServiceConnector* service_connector,
                                           const std::string& name) = 0;
