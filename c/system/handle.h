@@ -35,6 +35,12 @@ typedef uint32_t MojoHandle;
 //       message).
 //   |MOJO_HANDLE_RIGHT_GET_OPTIONS| - Right to get a handle's options.
 //   |MOJO_HANDLE_RIGHT_SET_OPTIONS| - Right to set a handle's options.
+//   |MOJO_HANDLE_RIGHT_MAP_READABLE| - Right to "map" a (e.g., buffer) handle
+//       as readable memory.
+//   |MOJO_HANDLE_RIGHT_MAP_WRITABLE| - Right to "map" a (e.g., buffer) handle
+//       as writable memory.
+//   |MOJO_HANDLE_RIGHT_MAP_EXECUTABLE| - Right to "map" a (e.g., buffer) handle
+//       as executable memory.
 //
 // TODO(vtl): Add rights support/checking to existing handle types.
 
@@ -47,6 +53,9 @@ typedef uint32_t MojoHandleRights;
 #define MOJO_HANDLE_RIGHT_WRITE ((MojoHandleRights)1 << 3)
 #define MOJO_HANDLE_RIGHT_GET_OPTIONS ((MojoHandleRights)1 << 4)
 #define MOJO_HANDLE_RIGHT_SET_OPTIONS ((MojoHandleRights)1 << 5)
+#define MOJO_HANDLE_RIGHT_MAP_READABLE ((MojoHandleRights)1 << 6)
+#define MOJO_HANDLE_RIGHT_MAP_WRITABLE ((MojoHandleRights)1 << 7)
+#define MOJO_HANDLE_RIGHT_MAP_EXECUTABLE ((MojoHandleRights)1 << 8)
 
 // |MojoHandleSignals|: Used to specify signals that can be waited on for a
 // handle (and which can be triggered), e.g., the ability to read or write to
@@ -79,6 +88,7 @@ typedef uint32_t MojoHandleSignals;
 //         determine which, if any, of the signals can still be satisfied.
 // Note: This struct is not extensible (and only has 32-bit quantities), so it's
 // 32-bit-aligned.
+
 MOJO_STATIC_ASSERT(MOJO_ALIGNOF(uint32_t) == 4, "uint32_t has weird alignment");
 struct MOJO_ALIGNAS(4) MojoHandleSignalsState {
   MojoHandleSignals satisfied_signals;
