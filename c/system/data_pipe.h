@@ -135,7 +135,12 @@ MOJO_BEGIN_EXTERN_C
 //
 // On success, |*data_pipe_producer_handle| will be set to the handle for the
 // producer and |*data_pipe_consumer_handle| will be set to the handle for the
-// consumer. (On failure, they are not modified.)
+// consumer. (On failure, they are not modified.) The producer handle will have
+// (at least) the following rights: |MOJO_HANDLE_RIGHT_TRANSFER|,
+// |MOJO_HANDLE_RIGHT_WRITE|, |MOJO_HANDLE_RIGHT_GET_OPTIONS|, and
+// |MOJO_HANDLE_RIGHT_SET_OPTIONS|. The consumer handle will have (at least) the
+// following rights: |MOJO_HANDLE_RIGHT_TRANSFER|, |MOJO_HANDLE_RIGHT_READ|,
+// |MOJO_HANDLE_RIGHT_GET_OPTIONS|, and |MOJO_HANDLE_RIGHT_SET_OPTIONS|
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
@@ -156,7 +161,8 @@ MojoResult MojoCreateDataPipe(
 // from either handle as well.
 
 // |MojoSetDataPipeProducerOptions()|: Sets options for the data pipe producer
-// handle |data_pipe_producer_handle|.
+// handle |data_pipe_producer_handle| (which must have the
+// |MOJO_HANDLE_RIGHT_SET_OPTIONS| right).
 //
 // |options| may be set to null to reset back to the default options.
 //
@@ -169,6 +175,8 @@ MojoResult MojoCreateDataPipe(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a valid data pipe producer handle or
 //       |*options| is invalid).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_SET_OPTIONS| right.
 //   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
 //       some transaction (that, e.g., may result in it being invalidated, such
 //       as being sent in a message).
@@ -177,9 +185,10 @@ MojoResult MojoSetDataPipeProducerOptions(
     const struct MojoDataPipeProducerOptions* options);  // Optional in.
 
 // |MojoGetDataPipeProducerOptions()|: Gets options for the data pipe producer
-// handle |data_pipe_producer_handle|. |options| should be non-null and point to
-// a buffer of size |options_num_bytes|; |options_num_bytes| should be at least
-// 8 (the size of the first, and currently only, version of
+// handle |data_pipe_producer_handle| (which must have the
+// |MOJO_HANDLE_RIGHT_GET_OPTIONS| right). |options| should be non-null and
+// point to a buffer of size |options_num_bytes|; |options_num_bytes| should be
+// at least 8 (the size of the first, and currently only, version of
 // |MojoDataPipeProducerOptions|).
 //
 // On success, |*options| will be filled with information about the given
@@ -194,6 +203,8 @@ MojoResult MojoSetDataPipeProducerOptions(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a valid data pipe producer handle,
 //       |*options| is null, or |options_num_bytes| is too small).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_GET_OPTIONS| right.
 //   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
 //       some transaction (that, e.g., may result in it being invalidated, such
 //       as being sent in a message).
@@ -203,8 +214,9 @@ MojoResult MojoGetDataPipeProducerOptions(
     uint32_t options_num_bytes);                  // In.
 
 // |MojoWriteData()|: Writes the given data to the data pipe producer given by
-// |data_pipe_producer_handle|. |elements| points to data of size |*num_bytes|;
-// |*num_bytes| should be a multiple of the data pipe's element size. If
+// |data_pipe_producer_handle| (which must have the |MOJO_HANDLE_RIGHT_WRITE|
+// right). |elements| points to data of size |*num_bytes|; |*num_bytes| should
+// be a multiple of the data pipe's element size. If
 // |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| is set in |flags|, either all the data
 // will be written or none is.
 //
@@ -214,9 +226,10 @@ MojoResult MojoGetDataPipeProducerOptions(
 // Returns:
 //   |MOJO_RESULT_OK| on success.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
-//       |data_pipe_producer_dispatcher| is not a handle to a data pipe
-//       producer or |*num_bytes| is not a multiple of the data pipe's element
-//       size).
+//       |data_pipe_producer_handle| is not a handle to a data pipe producer or
+//       |*num_bytes| is not a multiple of the data pipe's element size).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_WRITE| right.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle has been
 //       closed.
 //   |MOJO_RESULT_OUT_OF_RANGE| if |flags| has
@@ -238,8 +251,9 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
                          MojoWriteDataFlags flags);             // In.
 
 // |MojoBeginWriteData()|: Begins a two-phase write to the data pipe producer
-// given by |data_pipe_producer_handle|. On success, |*buffer| will be a pointer
-// to which the caller can write |*buffer_num_bytes| bytes of data. There are
+// given by |data_pipe_producer_handle| (which must have the
+// |MOJO_HANDLE_RIGHT_WRITE| right). On success, |*buffer| will be a pointer to
+// which the caller can write |*buffer_num_bytes| bytes of data. There are
 // currently no flags allowed, so |flags| should be |MOJO_WRITE_DATA_FLAG_NONE|.
 //
 // During a two-phase write, |data_pipe_producer_handle| is *not* writable.
@@ -257,6 +271,8 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a handle to a data pipe producer or
 //       flags has |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_WRITE| right.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle has been
 //       closed.
 //   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
@@ -272,13 +288,13 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
                               MojoWriteDataFlags flags);                 // In.
 
 // |MojoEndWriteData()|: Ends a two-phase write to the data pipe producer given
-// by |data_pipe_producer_handle| that was begun by a call to
-// |MojoBeginWriteData()| on the same handle. |num_bytes_written| should
-// indicate the amount of data actually written; it must be less than or equal
-// to the value of |*buffer_num_bytes| output by |MojoBeginWriteData()| and must
-// be a multiple of the element size. The buffer given by |*buffer| from
-// |MojoBeginWriteData()| must have been filled with exactly |num_bytes_written|
-// bytes of data.
+// by |data_pipe_producer_handle| (which must have the |MOJO_HANDLE_RIGHT_WRITE|
+// right) that was begun by a call to |MojoBeginWriteData()| on the same handle.
+// |num_bytes_written| should indicate the amount of data actually written; it
+// must be less than or equal to the value of |*buffer_num_bytes| output by
+// |MojoBeginWriteData()| and must be a multiple of the element size. The buffer
+// given by |*buffer| from |MojoBeginWriteData()| must have been filled with
+// exactly |num_bytes_written| bytes of data.
 //
 // On failure, the two-phase write (if any) is ended (so the handle may become
 // writable again, if there's space available) but no data written to |*buffer|
@@ -290,6 +306,8 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
 //       |data_pipe_producer_handle| is not a handle to a data pipe producer or
 //       |num_bytes_written| is invalid (greater than the maximum value provided
 //       by |MojoBeginWriteData()| or not a multiple of the element size).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_WRITE| right.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer is not in a
 //       two-phase write (e.g., |MojoBeginWriteData()| was not called or
 //       |MojoEndWriteData()| has already been called).
@@ -300,7 +318,8 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
                             uint32_t num_bytes_written);           // In.
 
 // |MojoSetDataPipeConsumerOptions()|: Sets options for the data pipe consumer
-// handle |data_pipe_consumer_handle|.
+// handle |data_pipe_consumer_handle| (which must have the
+// |MOJO_HANDLE_RIGHT_SET_OPTIONS| right).
 //
 // |options| may be set to null to reset back to the default options.
 //
@@ -313,6 +332,8 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a valid data pipe consumer handle or
 //       |*options| is invalid).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_SET_OPTIONS| right.
 //   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
 //       some transaction (that, e.g., may result in it being invalidated, such
 //       as being sent in a message).
@@ -321,9 +342,10 @@ MojoResult MojoSetDataPipeConsumerOptions(
     const struct MojoDataPipeConsumerOptions* options);  // Optional in.
 
 // |MojoGetDataPipeConsumerOptions()|: Gets options for the data pipe consumer
-// handle |data_pipe_consumer_handle|. |options| should be non-null and point to
-// a buffer of size |options_num_bytes|; |options_num_bytes| should be at least
-// 8 (the size of the first, and currently only, version of
+// handle |data_pipe_consumer_handle| (which must have the
+// |MOJO_HANDLE_RIGHT_GET_OPTIONS| right). |options| should be non-null and
+// point to a buffer of size |options_num_bytes|; |options_num_bytes| should be
+// at least 8 (the size of the first, and currently only, version of
 // |MojoDataPipeConsumerOptions|).
 //
 // On success, |*options| will be filled with information about the given
@@ -338,6 +360,8 @@ MojoResult MojoSetDataPipeConsumerOptions(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a valid data pipe consumer handle,
 //       |*options| is null, or |options_num_bytes| is too small).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_GET_OPTIONS| right.
 //   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
 //       some transaction (that, e.g., may result in it being invalidated, such
 //       as being sent in a message).
@@ -347,8 +371,9 @@ MojoResult MojoGetDataPipeConsumerOptions(
     uint32_t options_num_bytes);                  // In.
 
 // |MojoReadData()|: Reads data from the data pipe consumer given by
-// |data_pipe_consumer_handle|. May also be used to discard data or query the
-// amount of data available.
+// |data_pipe_consumer_handle| (which must have the |MOJO_HANDLE_RIGHT_READ|
+// right). May also be used to discard data or query the amount of data
+// available.
 //
 // If |flags| has neither |MOJO_READ_DATA_FLAG_DISCARD| nor
 // |MOJO_READ_DATA_FLAG_QUERY| set, this tries to read up to |*num_bytes| (which
@@ -379,6 +404,8 @@ MojoResult MojoGetDataPipeConsumerOptions(
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is invalid, the combination of flags in
 //       |flags| is invalid, etc.).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_READ| right.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer handle has been
 //       closed and data (or the required amount of data) was not available to
 //       be read or discarded.
@@ -399,8 +426,9 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
                         MojoReadDataFlags flags);              // In.
 
 // |MojoBeginReadData()|: Begins a two-phase read from the data pipe consumer
-// given by |data_pipe_consumer_handle|. On success, |*buffer| will be a pointer
-// from which the caller can read |*buffer_num_bytes| bytes of data. There are
+// given by |data_pipe_consumer_handle| (which must have the
+// |MOJO_HANDLE_RIGHT_READ| right). On success, |*buffer| will be a pointer from
+// which the caller can read |*buffer_num_bytes| bytes of data. There are
 // currently no valid flags, so |flags| must be |MOJO_READ_DATA_FLAG_NONE|.
 //
 // During a two-phase read, |data_pipe_consumer_handle| is *not* readable.
@@ -417,6 +445,8 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a handle to a data pipe consumer,
 //       or |flags| has invalid flags set).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_READ| right.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer handle has been
 //       closed.
 //   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
@@ -432,11 +462,11 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,      // In.
                              MojoReadDataFlags flags);                  // In.
 
 // |MojoEndReadData()|: Ends a two-phase read from the data pipe consumer given
-// by |data_pipe_consumer_handle| that was begun by a call to
-// |MojoBeginReadData()| on the same handle. |num_bytes_read| should indicate
-// the amount of data actually read; it must be less than or equal to the value
-// of |*buffer_num_bytes| output by |MojoBeginReadData()| and must be a multiple
-// of the element size.
+// by |data_pipe_consumer_handle| (which must have the |MOJO_HANDLE_RIGHT_READ|
+// right) that was begun by a call to |MojoBeginReadData()| on the same handle.
+// |num_bytes_read| should indicate the amount of data actually read; it must be
+// less than or equal to the value of |*buffer_num_bytes| output by
+// |MojoBeginReadData()| and must be a multiple of the element size.
 //
 // On failure, the two-phase read (if any) is ended (so the handle may become
 // readable again) but no data is "removed" from the data pipe.
@@ -447,6 +477,8 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,      // In.
 //       |data_pipe_consumer_handle| is not a handle to a data pipe consumer or
 //       |num_bytes_written| is greater than the maximum value provided by
 //       |MojoBeginReadData()| or not a multiple of the element size).
+//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_READ| right.
 //   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer is not in a
 //       two-phase read (e.g., |MojoBeginReadData()| was not called or
 //       |MojoEndReadData()| has already been called).

@@ -33,8 +33,8 @@ typedef uint32_t MojoHandle;
 //       message).
 //   |MOJO_HANDLE_RIGHT_WRITE| - Right to "write" to the handle (e.g., write a
 //       message).
-//   |MOJO_HANDLE_RIGHT_EXECUTE| - Right to "execute" using the handle (e.g.,
-//       map a buffer as executable code).
+//   |MOJO_HANDLE_RIGHT_GET_OPTIONS| - Right to get a handle's options.
+//   |MOJO_HANDLE_RIGHT_SET_OPTIONS| - Right to set a handle's options.
 //
 // TODO(vtl): Add rights support/checking to existing handle types.
 
@@ -45,7 +45,8 @@ typedef uint32_t MojoHandleRights;
 #define MOJO_HANDLE_RIGHT_TRANSFER ((MojoHandleRights)1 << 1)
 #define MOJO_HANDLE_RIGHT_READ ((MojoHandleRights)1 << 2)
 #define MOJO_HANDLE_RIGHT_WRITE ((MojoHandleRights)1 << 3)
-#define MOJO_HANDLE_RIGHT_EXECUTE ((MojoHandleRights)1 << 4)
+#define MOJO_HANDLE_RIGHT_GET_OPTIONS ((MojoHandleRights)1 << 4)
+#define MOJO_HANDLE_RIGHT_SET_OPTIONS ((MojoHandleRights)1 << 5)
 
 // |MojoHandleSignals|: Used to specify signals that can be waited on for a
 // handle (and which can be triggered), e.g., the ability to read or write to
