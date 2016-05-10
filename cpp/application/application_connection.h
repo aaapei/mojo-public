@@ -47,18 +47,6 @@ class ApplicationConnection {
         Interface::Name_);
   }
 
-  // Binds |ptr| to an implemention of Interface in the remote application.
-  // |ptr| can immediately be used to start sending requests to the remote
-  // service.
-  template <typename Interface>
-  void ConnectToService(InterfacePtr<Interface>* ptr) {
-    if (ServiceProvider* sp = GetServiceProvider()) {
-      MessagePipe pipe;
-      ptr->Bind(InterfaceHandle<Interface>(pipe.handle0.Pass(), 0u));
-      sp->ConnectToService(Interface::Name_, pipe.handle1.Pass());
-    }
-  }
-
   // Returns the URL that was used by the source application to establish a
   // connection to the destination application.
   //

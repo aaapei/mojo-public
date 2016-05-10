@@ -18,8 +18,6 @@
 
 namespace mojo {
 
-class ApplicationConnection;
-
 // Implements the Application interface, which the shell uses for basic
 // communication with an application (e.g., to connect clients to services
 // provided by an application). Also provides the application access to the
