@@ -34,6 +34,10 @@ void ServiceRegistry::RemoveServiceConnectorForName(
   service_connector_registry_.RemoveServiceConnectorForName(interface_name);
 }
 
+const ConnectionContext& ServiceRegistry::GetConnectionContext() const {
+  return connection_context_;
+}
+
 const std::string& ServiceRegistry::GetConnectionURL() {
   return connection_context_.connection_url;
 }

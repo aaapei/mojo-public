@@ -14,15 +14,15 @@ ServiceProviderImpl::ServiceProviderImpl()
 }
 
 ServiceProviderImpl::ServiceProviderImpl(
-    InterfaceRequest<ServiceProvider> request)
-    : binding_(this, request.Pass()), fallback_service_provider_(nullptr) {
-}
+    InterfaceRequest<ServiceProvider> service_provider_request)
+    : binding_(this, service_provider_request.Pass()),
+      fallback_service_provider_(nullptr) {}
 
-ServiceProviderImpl::~ServiceProviderImpl() {
-}
+ServiceProviderImpl::~ServiceProviderImpl() {}
 
-void ServiceProviderImpl::Bind(InterfaceRequest<ServiceProvider> request) {
-  binding_.Bind(request.Pass());
+void ServiceProviderImpl::Bind(
+    InterfaceRequest<ServiceProvider> service_provider_request) {
+  binding_.Bind(service_provider_request.Pass());
 }
 
 void ServiceProviderImpl::Close() {

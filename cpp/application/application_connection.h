@@ -12,6 +12,7 @@
 
 namespace mojo {
 
+struct ConnectionContext;
 class ServiceConnector;
 
 // Represents a connection to another application. An instance of this class is
@@ -34,6 +35,8 @@ class ServiceConnector;
 //   connection->AddService<Bar>(&my_foo_and_bar_factory_);
 //
 // The InterfaceFactory must outlive the ApplicationConnection.
+//
+// TODO(vtl): Don't get too attached to this class. I'm going to remove it.
 class ApplicationConnection {
  public:
   virtual ~ApplicationConnection();
@@ -46,6 +49,8 @@ class ApplicationConnection {
         new internal::InterfaceFactoryConnector<Interface>(factory),
         Interface::Name_);
   }
+
+  virtual const ConnectionContext& GetConnectionContext() const = 0;
 
   // Returns the URL that was used by the source application to establish a
   // connection to the destination application.

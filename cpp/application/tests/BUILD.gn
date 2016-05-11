@@ -8,6 +8,7 @@ mojo_sdk_source_set("tests") {
   testonly = true
 
   sources = [
+    "service_provider_impl_unittest.cc",
     "service_registry_unittest.cc",
   ]
 
@@ -18,6 +19,9 @@ mojo_sdk_source_set("tests") {
   mojo_sdk_deps = [
     "mojo/public/cpp/application:standalone",
     "mojo/public/cpp/environment:standalone",
+    "mojo/public/cpp/system",
     "mojo/public/cpp/utility",
+    "mojo/public/interfaces/application",
+    "mojo/public/interfaces/bindings/tests:test_interfaces",
   ]
 }
