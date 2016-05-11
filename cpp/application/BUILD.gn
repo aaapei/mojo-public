@@ -11,6 +11,7 @@ mojo_sdk_source_set("application") {
     "application_delegate.h",
     "application_impl.h",
     "connect.h",
+    "connection_context.h",
     "interface_factory.h",
     "lib/application_connection.cc",
     "lib/application_delegate.cc",

@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "mojo/public/cpp/application/application_delegate.h"
+#include "mojo/public/cpp/application/connection_context.h"
 #include "mojo/public/cpp/application/lib/service_registry.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
@@ -70,7 +71,10 @@ void ApplicationImpl::AcceptConnection(
   MOJO_LOG_IF(ERROR, exposed_services)
       << "DEPRECATED: exposed_services is going away";
   std::unique_ptr<internal::ServiceRegistry> registry(
-      new internal::ServiceRegistry(url, requestor_url, services.Pass()));
+      new internal::ServiceRegistry(
+          ConnectionContext(ConnectionContext::Type::INCOMING, requestor_url,
+                            url),
+          services.Pass()));
   if (!delegate_->ConfigureIncomingConnection(registry.get()))
     return;
   incoming_service_registries_.push_back(std::move(registry));

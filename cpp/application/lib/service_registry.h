@@ -8,6 +8,7 @@
 #include <string>
 
 #include "mojo/public/cpp/application/application_connection.h"
+#include "mojo/public/cpp/application/connection_context.h"
 #include "mojo/public/cpp/application/lib/service_connector_registry.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
@@ -21,8 +22,7 @@ namespace internal {
 class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
  public:
   ServiceRegistry();
-  ServiceRegistry(const std::string& connection_url,
-                  const std::string& remote_url,
+  ServiceRegistry(const ConnectionContext& connection_context,
                   InterfaceRequest<ServiceProvider> local_services);
   ~ServiceRegistry() override;
 
@@ -39,8 +39,7 @@ class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
   void ConnectToService(const String& service_name,
                         ScopedMessagePipeHandle client_handle) override;
 
-  const std::string connection_url_;
-  const std::string remote_url_;
+  ConnectionContext connection_context_;
   Binding<ServiceProvider> local_binding_;
   ServiceConnectorRegistry service_connector_registry_;
 

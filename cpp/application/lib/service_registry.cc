@@ -13,12 +13,9 @@ namespace internal {
 ServiceRegistry::ServiceRegistry() : local_binding_(this) {}
 
 ServiceRegistry::ServiceRegistry(
-    const std::string& connection_url,
-    const std::string& remote_url,
+    const ConnectionContext& connection_context,
     InterfaceRequest<ServiceProvider> local_services)
-    : connection_url_(connection_url),
-      remote_url_(remote_url),
-      local_binding_(this) {
+    : connection_context_(connection_context), local_binding_(this) {
   if (local_services.is_pending())
     local_binding_.Bind(local_services.Pass());
 }
@@ -38,11 +35,11 @@ void ServiceRegistry::RemoveServiceConnectorForName(
 }
 
 const std::string& ServiceRegistry::GetConnectionURL() {
-  return connection_url_;
+  return connection_context_.connection_url;
 }
 
 const std::string& ServiceRegistry::GetRemoteApplicationURL() {
-  return remote_url_;
+  return connection_context_.remote_url;
 }
 
 void ServiceRegistry::ConnectToService(const String& service_name,
