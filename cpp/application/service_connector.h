@@ -11,7 +11,7 @@
 
 namespace mojo {
 
-class ApplicationConnection;
+struct ConnectionContext;
 
 class ServiceConnector {
  public:
@@ -20,7 +20,7 @@ class ServiceConnector {
   // Asks the ServiceConnector to connect to the specified service. If the
   // ServiceConnector connects to the service it should take ownership of
   // the handle in |handle|.
-  virtual void ConnectToService(ApplicationConnection* application_connection,
+  virtual void ConnectToService(const ConnectionContext& connection_context,
                                 const std::string& interface_name,
                                 ScopedMessagePipeHandle handle) = 0;
 };

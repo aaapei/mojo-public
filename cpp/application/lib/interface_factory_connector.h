@@ -19,10 +19,10 @@ class InterfaceFactoryConnector : public ServiceConnector {
       : factory_(factory) {}
   ~InterfaceFactoryConnector() override {}
 
-  void ConnectToService(ApplicationConnection* application_connection,
+  void ConnectToService(const ConnectionContext& connection_context,
                         const std::string& interface_name,
                         ScopedMessagePipeHandle client_handle) override {
-    factory_->Create(application_connection,
+    factory_->Create(connection_context,
                      InterfaceRequest<Interface>(client_handle.Pass()));
   }
 

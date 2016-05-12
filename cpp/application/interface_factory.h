@@ -9,9 +9,7 @@
 
 namespace mojo {
 
-class ApplicationConnection;
-template <typename Interface>
-class InterfaceRequest;
+struct ConnectionContext;
 
 // Implement this class to provide implementations of a given interface and
 // bind them to incoming requests. The implementation of this class is
@@ -21,7 +19,7 @@ template <typename Interface>
 class InterfaceFactory {
  public:
   virtual ~InterfaceFactory() {}
-  virtual void Create(ApplicationConnection* connection,
+  virtual void Create(const ConnectionContext& connection_context,
                       InterfaceRequest<Interface> request) = 0;
 };
 

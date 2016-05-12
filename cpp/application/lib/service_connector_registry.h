@@ -13,7 +13,7 @@
 
 namespace mojo {
 
-class ApplicationConnection;
+struct ConnectionContext;
 class ServiceConnector;
 
 namespace internal {
@@ -40,7 +40,7 @@ class ServiceConnectorRegistry {
   // |interface_name|. In that case, the |client_handle| is passed along
   // to the |ServiceConnector|. Otherwise, this function returns false and
   // |client_handle| is untouched.
-  bool ConnectToService(ApplicationConnection* application_connection,
+  bool ConnectToService(const ConnectionContext& connection_context,
                         const std::string& interface_name,
                         ScopedMessagePipeHandle* client_handle);
 

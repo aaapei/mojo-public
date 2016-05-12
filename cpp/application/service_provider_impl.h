@@ -37,18 +37,16 @@ class ServiceProviderImpl : public ServiceProvider {
 
   // Constructs this service provider implementation, binding it to the given
   // interface request.
-  // TODO(vtl): This should take a |ConnectionContext|, to provide
-  // |InterfaceRequestHandler<I>|s.
   explicit ServiceProviderImpl(
+      const ConnectionContext& connection_context,
       InterfaceRequest<ServiceProvider> service_provider_request);
 
   ~ServiceProviderImpl() override;
 
   // Binds this service provider implementation to the given interface request.
   // This may only be called if this object is unbound.
-  // TODO(vtl): This should take a |ConnectionContext|, to provide
-  // |InterfaceRequestHandler<I>|s.
-  void Bind(InterfaceRequest<ServiceProvider> service_provider_request);
+  void Bind(const ConnectionContext& connection_context,
+            InterfaceRequest<ServiceProvider> service_provider_request);
 
   // Disconnect this service provider implementation and put it in a state where
   // it can be rebound to a new request (i.e., restores this object to an
@@ -110,15 +108,11 @@ class ServiceProviderImpl : public ServiceProvider {
         : interface_request_handler_(std::move(interface_request_handler)) {}
     ~ServiceConnectorImpl() override {}
 
-    void ConnectToService(ApplicationConnection* application_connection,
+    void ConnectToService(const mojo::ConnectionContext& connection_context,
                           const std::string& interface_name,
                           ScopedMessagePipeHandle client_handle) override {
-      // TODO(vtl): This should be given a |const ConnectionContext&|, instead
-      // of an |ApplicationConnection*| -- which may be null!
       interface_request_handler_(
-          application_connection
-              ? application_connection->GetConnectionContext()
-              : ConnectionContext(),
+          connection_context,
           InterfaceRequest<Interface>(client_handle.Pass()));
     }
 
@@ -132,6 +126,7 @@ class ServiceProviderImpl : public ServiceProvider {
   void ConnectToService(const String& service_name,
                         ScopedMessagePipeHandle client_handle) override;
 
+  ConnectionContext connection_context_;
   Binding<ServiceProvider> binding_;
 
   internal::ServiceConnectorRegistry service_connector_registry_;

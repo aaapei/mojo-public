@@ -48,8 +48,8 @@ const std::string& ServiceRegistry::GetRemoteApplicationURL() {
 
 void ServiceRegistry::ConnectToService(const String& service_name,
                                        ScopedMessagePipeHandle client_handle) {
-  service_connector_registry_.ConnectToService(this, service_name,
-                                               &client_handle);
+  service_connector_registry_.ConnectToService(connection_context_,
+                                               service_name, &client_handle);
 }
 
 }  // namespace internal

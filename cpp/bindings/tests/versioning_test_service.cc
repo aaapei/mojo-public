@@ -106,7 +106,7 @@ class HumanResourceSystemServer
   }
 
   // InterfaceFactory<HumanResourceDatabase> implementation.
-  void Create(ApplicationConnection* connection,
+  void Create(const ConnectionContext& connection_context,
               InterfaceRequest<HumanResourceDatabase> request) override {
     // It will be deleted automatically when the underlying pipe encounters a
     // connection error.

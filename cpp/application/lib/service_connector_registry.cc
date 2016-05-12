@@ -6,6 +6,8 @@
 
 #include <utility>
 
+#include "mojo/public/cpp/application/application_connection.h"
+#include "mojo/public/cpp/application/connection_context.h"
 #include "mojo/public/cpp/application/service_connector.h"
 
 namespace mojo {
@@ -31,12 +33,12 @@ void ServiceConnectorRegistry::RemoveServiceConnectorForName(
 }
 
 bool ServiceConnectorRegistry::ConnectToService(
-    ApplicationConnection* application_connection,
+    const ConnectionContext& connection_context,
     const std::string& interface_name,
     ScopedMessagePipeHandle* client_handle) {
   auto iter = name_to_service_connector_.find(interface_name);
   if (iter != name_to_service_connector_.end()) {
-    iter->second->ConnectToService(application_connection, interface_name,
+    iter->second->ConnectToService(connection_context, interface_name,
                                    client_handle->Pass());
     return true;
   }

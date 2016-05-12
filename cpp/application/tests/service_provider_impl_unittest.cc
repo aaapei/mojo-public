@@ -54,23 +54,36 @@ class PingServiceImpl : public test::PingService {
 };
 
 TEST_F(ServiceProviderImplTest, Basic) {
+  const char kRemoteUrl[] = "https://example.com/remote.mojo";
+  const char kConnectionUrl[] = "https://example.com/me.mojo";
+
   const char kPing1[] = "Ping1";
   const char kPing2[] = "Ping2";
   const char kPing3[] = "Ping3";
 
   ServiceProviderPtr sp;
-  ServiceProviderImpl impl(GetProxy(&sp));
+  ServiceProviderImpl impl(ConnectionContext(ConnectionContext::Type::INCOMING,
+                                             kRemoteUrl, kConnectionUrl),
+                           GetProxy(&sp));
 
   impl.AddServiceNew<test::PingService>(
-      [](const ConnectionContext& connection_context,
-         InterfaceRequest<test::PingService> ping_service_request) {
+      [&kRemoteUrl, &kConnectionUrl](
+          const ConnectionContext& connection_context,
+          InterfaceRequest<test::PingService> ping_service_request) {
+        EXPECT_EQ(ConnectionContext::Type::INCOMING, connection_context.type);
+        EXPECT_EQ(kRemoteUrl, connection_context.remote_url);
+        EXPECT_EQ(kConnectionUrl, connection_context.connection_url);
         new PingServiceImpl(std::move(ping_service_request));
       },
       kPing1);
 
   impl.AddServiceNew<test::PingService>(
-      [](const ConnectionContext& connection_context,
-         InterfaceRequest<test::PingService> ping_service_request) {
+      [&kRemoteUrl, &kConnectionUrl](
+          const ConnectionContext& connection_context,
+          InterfaceRequest<test::PingService> ping_service_request) {
+        EXPECT_EQ(ConnectionContext::Type::INCOMING, connection_context.type);
+        EXPECT_EQ(kRemoteUrl, connection_context.remote_url);
+        EXPECT_EQ(kConnectionUrl, connection_context.connection_url);
         new PingServiceImpl(std::move(ping_service_request));
       },
       kPing2);
@@ -108,14 +121,24 @@ TEST_F(ServiceProviderImplTest, Basic) {
 }
 
 TEST_F(ServiceProviderImplTest, CloseAndRebind) {
+  const char kRemoteUrl1[] = "https://example.com/remote1.mojo";
+  const char kRemoteUrl2[] = "https://example.com/remote2.mojo";
+  const char kConnectionUrl[] = "https://example.com/me.mojo";
   const char kPing[] = "Ping";
 
   ServiceProviderPtr sp1;
-  ServiceProviderImpl impl(GetProxy(&sp1));
+  ServiceProviderImpl impl(ConnectionContext(ConnectionContext::Type::INCOMING,
+                                             kRemoteUrl1, kConnectionUrl),
+                           GetProxy(&sp1));
 
   impl.AddServiceNew<test::PingService>(
-      [](const ConnectionContext& connection_context,
-         InterfaceRequest<test::PingService> ping_service_request) {
+      [&kRemoteUrl1, &kRemoteUrl2, &kConnectionUrl](
+          const ConnectionContext& connection_context,
+          InterfaceRequest<test::PingService> ping_service_request) {
+        EXPECT_EQ(ConnectionContext::Type::INCOMING, connection_context.type);
+        EXPECT_TRUE(connection_context.remote_url == kRemoteUrl1 ||
+                    connection_context.remote_url == kRemoteUrl2);
+        EXPECT_EQ(kConnectionUrl, connection_context.connection_url);
         new PingServiceImpl(std::move(ping_service_request));
       },
       kPing);
@@ -134,7 +157,9 @@ TEST_F(ServiceProviderImplTest, CloseAndRebind) {
   loop().RunUntilIdle();
 
   ServiceProviderPtr sp2;
-  impl.Bind(GetProxy(&sp2));
+  impl.Bind(ConnectionContext(ConnectionContext::Type::INCOMING, kRemoteUrl2,
+                              kConnectionUrl),
+            GetProxy(&sp2));
 
   {
     test::PingServicePtr ping;
@@ -153,16 +178,24 @@ TEST_F(ServiceProviderImplTest, CloseAndRebind) {
 }
 
 TEST_F(ServiceProviderImplTest, Bind) {
+  const char kRemoteUrl[] = "https://example.com/remote.mojo";
+  const char kConnectionUrl[] = "https://example.com/me.mojo";
   const char kPing[] = "Ping";
 
   ServiceProviderPtr sp;
   ServiceProviderImpl impl;
 
-  impl.Bind(GetProxy(&sp));
+  impl.Bind(ConnectionContext(ConnectionContext::Type::INCOMING, kRemoteUrl,
+                              kConnectionUrl),
+            GetProxy(&sp));
 
   impl.AddServiceNew<test::PingService>(
-      [](const ConnectionContext& connection_context,
-         InterfaceRequest<test::PingService> request) {
+      [&kRemoteUrl, &kConnectionUrl](
+          const ConnectionContext& connection_context,
+          InterfaceRequest<test::PingService> request) {
+        EXPECT_EQ(ConnectionContext::Type::INCOMING, connection_context.type);
+        EXPECT_EQ(kRemoteUrl, connection_context.remote_url);
+        EXPECT_EQ(kConnectionUrl, connection_context.connection_url);
         new PingServiceImpl(std::move(request));
       },
       kPing);
@@ -204,7 +237,10 @@ TEST_F(ServiceProviderImplTest, FallbackServiceProvider) {
   const char kWhatever[] = "Whatever";
 
   ServiceProviderPtr sp;
-  ServiceProviderImpl impl(GetProxy(&sp));
+  ServiceProviderImpl impl(ConnectionContext(ConnectionContext::Type::INCOMING,
+                                             "https://example.com/remote.mojo",
+                                             "https://example.com/me.mojo"),
+                           GetProxy(&sp));
 
   {
     test::PingServicePtr ping;
