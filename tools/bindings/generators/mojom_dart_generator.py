@@ -20,12 +20,12 @@ from mojom.generate.template_expander import UseJinja
 GENERATOR_PREFIX = 'dart'
 
 # CAUTION: To generate Dart-style names, and to avoid generating reserved words
-# for identifiers. The template files should generate names using
+# for identifiers, the template files should generate names using
 # {{element|name}}, not {{element.name}}.
 
 # Dart reserved words from:
 # http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-408.pdf
-# We must not generated reserved words for identifiers.
+# We must not generate reserved words for identifiers.
 # NB: async, await, and yield are not technically reserved words, but since
 # they are not valid identifiers in all contexts, we include them here as well.
 _dart_reserved_words = [
@@ -67,8 +67,20 @@ _dart_reserved_words = [
   "yield",
 ]
 
+# These names are the class fields and methods of the Proxy class in
+# lib/src/proxy.dart of Dart's mojo package. If these names appear in a .mojom
+# they must be mangled to avoid name conflicts. They are mangled by appending
+# an underscore ('_'), which is banned on names in mojom interfaces.
 _reserved_words = _dart_reserved_words + [
+  "close",
+  "connectToService",
+  "ctrl",
+  "fromEndpoint",
+  "fromHandle",
+  "newFromEndpoint",
+  "responseOrError",
   "serviceName",
+  "unbound",
 ]
 
 _kind_to_dart_default_value = {

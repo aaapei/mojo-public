@@ -63,24 +63,22 @@ abstract class {{interface|name}} {
 }
 
 
-class _{{interface|name}}ProxyImpl extends bindings.Proxy {
-  _{{interface|name}}ProxyImpl.fromEndpoint(
+class _{{interface|name}}ProxyControl extends bindings.ProxyMessageHandler
+                                      implements bindings.ProxyControl {
+  _{{interface|name}}ProxyControl.fromEndpoint(
       core.MojoMessagePipeEndpoint endpoint) : super.fromEndpoint(endpoint);
 
-  _{{interface|name}}ProxyImpl.fromHandle(core.MojoHandle handle) :
-      super.fromHandle(handle);
+  _{{interface|name}}ProxyControl.fromHandle(
+      core.MojoHandle handle) : super.fromHandle(handle);
 
-  _{{interface|name}}ProxyImpl.unbound() : super.unbound();
-
-  static _{{interface|name}}ProxyImpl newFromEndpoint(
-      core.MojoMessagePipeEndpoint endpoint) {
-    assert(endpoint.setDescription("For _{{interface|name}}ProxyImpl"));
-    return new _{{interface|name}}ProxyImpl.fromEndpoint(endpoint);
-  }
+  _{{interface|name}}ProxyControl.unbound() : super.unbound();
 
   {{descpkg}}ServiceDescription get serviceDescription =>
-    new _{{interface|name}}ServiceDescription();
+      new _{{interface|name}}ServiceDescription();
 
+  String get serviceName => {{interface|name}}.serviceName;
+
+  @override
   void handleResponse(bindings.ServiceMessage message) {
     switch (message.header.type) {
 {%- for method in interface.methods %}
@@ -115,84 +113,30 @@ class _{{interface|name}}ProxyImpl extends bindings.Proxy {
     }
   }
 
+  @override
   String toString() {
     var superString = super.toString();
-    return "_{{interface|name}}ProxyImpl($superString)";
+    return "_{{interface|name}}ProxyControl($superString)";
   }
 }
 
 
-class _{{interface|name}}ProxyCalls implements {{interface|name}} {
-  {%- if interface.methods %}
-  _{{interface|name}}ProxyImpl _proxyImpl;
-
-  _{{interface|name}}ProxyCalls(this._proxyImpl);
-  {%- else %}
-  _{{interface|name}}ProxyCalls(_{{interface|name}}ProxyImpl _);
-  {%- endif %}
-
-  {%- for method in interface.methods %}
-  {%- if method.response_parameters == None %}
-    void {{method|name}}(
-  {%- for parameter in method.parameters -%}
-      {{parameter.kind|dart_type}} {{parameter|name}}{% if not loop.last %}, {% endif %}
-  {%- endfor -%}
-  {%- set request_struct = method.param_struct -%}
-    ) {
-      if (!_proxyImpl.isBound) {
-        _proxyImpl.proxyError("The Proxy is closed.");
-        return;
-      }
-      var params = new {{request_struct|name}}();
-  {%- for parameter in method.parameters %}
-      params.{{parameter|name}} = {{parameter|name}};
-  {%- endfor %}
-      _proxyImpl.sendMessage(params, _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name);
-    }
-  {%- else %}
-  {%- set request_struct = method.param_struct %}
-    dynamic {{method|name}}(
-  {%- for parameter in method.parameters -%}
-      {{parameter.kind|dart_type}} {{parameter|name}},
-  {%- endfor -%}
-      [Function responseFactory = null]) {
-      var params = new {{request_struct|name}}();
-  {%- for parameter in method.parameters %}
-      params.{{parameter|name}} = {{parameter|name}};
-  {%- endfor %}
-      return _proxyImpl.sendMessageWithRequestId(
-          params,
-          _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name,
-          -1,
-          bindings.MessageHeader.kMessageExpectsResponse);
-    }
-  {%- endif %}
-  {%- endfor %}
-}
-
-
-class {{interface|name}}Proxy implements bindings.ProxyBase {
-  final bindings.Proxy impl;
-  {{interface|name}} ptr;
-
-  {{interface|name}}Proxy(_{{interface|name}}ProxyImpl proxyImpl) :
-      impl = proxyImpl,
-      ptr = new _{{interface|name}}ProxyCalls(proxyImpl);
-
+class {{interface|name}}Proxy extends bindings.Proxy
+                              implements {{interface|name}} {
   {{interface|name}}Proxy.fromEndpoint(
-      core.MojoMessagePipeEndpoint endpoint) :
-      impl = new _{{interface|name}}ProxyImpl.fromEndpoint(endpoint) {
-    ptr = new _{{interface|name}}ProxyCalls(impl);
-  }
+      core.MojoMessagePipeEndpoint endpoint)
+      : super(new _{{interface|name}}ProxyControl.fromEndpoint(endpoint));
 
-  {{interface|name}}Proxy.fromHandle(core.MojoHandle handle) :
-      impl = new _{{interface|name}}ProxyImpl.fromHandle(handle) {
-    ptr = new _{{interface|name}}ProxyCalls(impl);
-  }
+  {{interface|name}}Proxy.fromHandle(core.MojoHandle handle)
+      : super(new _{{interface|name}}ProxyControl.fromHandle(handle));
 
-  {{interface|name}}Proxy.unbound() :
-      impl = new _{{interface|name}}ProxyImpl.unbound() {
-    ptr = new _{{interface|name}}ProxyCalls(impl);
+  {{interface|name}}Proxy.unbound()
+      : super(new _{{interface|name}}ProxyControl.unbound());
+
+  static {{interface|name}}Proxy newFromEndpoint(
+      core.MojoMessagePipeEndpoint endpoint) {
+    assert(endpoint.setDescription("For {{interface|name}}Proxy"));
+    return new {{interface|name}}Proxy.fromEndpoint(endpoint);
   }
 
   factory {{interface|name}}Proxy.connectToService(
@@ -202,31 +146,44 @@ class {{interface|name}}Proxy implements bindings.ProxyBase {
     return p;
   }
 
-  static {{interface|name}}Proxy newFromEndpoint(
-      core.MojoMessagePipeEndpoint endpoint) {
-    assert(endpoint.setDescription("For {{interface|name}}Proxy"));
-    return new {{interface|name}}Proxy.fromEndpoint(endpoint);
+{% for method in interface.methods %}
+{%- if method.response_parameters == None %}
+  void {{method|name}}(
+{%- for parameter in method.parameters -%}
+    {{parameter.kind|dart_type}} {{parameter|name}}{% if not loop.last %}, {% endif %}
+{%- endfor -%}
+{%- set request_struct = method.param_struct -%}
+  ) {
+    if (!ctrl.isBound) {
+      ctrl.proxyError("The Proxy is closed.");
+      return;
+    }
+    var params = new {{request_struct|name}}();
+{%- for parameter in method.parameters %}
+    params.{{parameter|name}} = {{parameter|name}};
+{%- endfor %}
+    ctrl.sendMessage(params,
+        _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name);
   }
-
-  String get serviceName => {{interface|name}}.serviceName;
-
-  Future close({bool immediate: false}) => impl.close(immediate: immediate);
-
-  Future responseOrError(Future f) => impl.responseOrError(f);
-
-  Future get errorFuture => impl.errorFuture;
-
-  int get version => impl.version;
-
-  Future<int> queryVersion() => impl.queryVersion();
-
-  void requireVersion(int requiredVersion) {
-    impl.requireVersion(requiredVersion);
+{%- else %}
+{%- set request_struct = method.param_struct %}
+  dynamic {{method|name}}(
+{%- for parameter in method.parameters -%}
+    {{parameter.kind|dart_type}} {{parameter|name}},
+{%- endfor -%}
+    [Function responseFactory = null]) {
+    var params = new {{request_struct|name}}();
+{%- for parameter in method.parameters %}
+    params.{{parameter|name}} = {{parameter|name}};
+{%- endfor %}
+    return ctrl.sendMessageWithRequestId(
+        params,
+        _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name,
+        -1,
+        bindings.MessageHeader.kMessageExpectsResponse);
   }
-
-  String toString() {
-    return "{{interface|name}}Proxy($impl)";
-  }
+{%- endif %}
+{%- endfor %}
 }
 
 
