@@ -26,11 +26,10 @@ namespace mojo {
 //
 // Typically, you create one or more classes implementing your APIs (e.g.,
 // FooImpl implementing Foo). See bindings/binding.h for more information. Then
-// you implement an mojo::ApplicationDelegate that either is or owns a
-// mojo::InterfaceFactory<Foo> and whose ConfigureIncomingConnection() adds that
-// factory to each connection. Finally, you instantiate your delegate and pass
-// it to an ApplicationRunner, which will create the ApplicationImpl and then
-// run a message (or run) loop.
+// you implement an mojo::ApplicationDelegate whose
+// ConfigureIncomingConnection() adds services to each connection. Finally, you
+// instantiate your delegate and pass it to an ApplicationRunner, which will
+// create the ApplicationImpl and then run a message (or run) loop.
 class ApplicationImpl : public Application {
  public:
   // Does not take ownership of |delegate|, which must remain valid for the
