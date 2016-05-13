@@ -12,7 +12,6 @@
 
 namespace mojo {
 
-class ApplicationConnection;
 class ApplicationImpl;
 
 // An abstract class that the application may subclass to control various
