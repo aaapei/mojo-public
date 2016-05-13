@@ -75,7 +75,8 @@ void ApplicationImpl::AcceptConnection(
           ConnectionContext(ConnectionContext::Type::INCOMING, requestor_url,
                             url),
           services.Pass()));
-  if (!delegate_->ConfigureIncomingConnection(registry.get()))
+  if (!delegate_->ConfigureIncomingConnection(
+          &registry->GetServiceProviderImpl()))
     return;
   incoming_service_registries_.push_back(std::move(registry));
 }

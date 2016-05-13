@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "mojo/public/cpp/application/service_provider_impl.h"
 #include "mojo/public/cpp/system/macros.h"
 
 namespace mojo {
@@ -25,9 +26,10 @@ class ApplicationDelegate {
   virtual void Initialize(ApplicationImpl* app);
 
   // Override this method to configure what services a connection supports when
-  // being connected to from an app.
-  // Return false to reject the connection entirely.
-  virtual bool ConfigureIncomingConnection(ApplicationConnection* connection);
+  // being connected to from an app (|service_provider_impl| will never be
+  // null). Return false to reject the connection entirely.
+  virtual bool ConfigureIncomingConnection(
+      ServiceProviderImpl* service_provider_impl);
 
   // Called before ApplicationImpl::Terminate(). After returning from this call
   // the delegate can no longer rely on the main run loop still running.

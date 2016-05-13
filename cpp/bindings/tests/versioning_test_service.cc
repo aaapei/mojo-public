@@ -97,8 +97,9 @@ class HumanResourceSystemServer : public ApplicationDelegate {
   HumanResourceSystemServer() {}
 
   // ApplicationDelegate implementation.
-  bool ConfigureIncomingConnection(ApplicationConnection* connection) override {
-    connection->GetServiceProviderImpl().AddService<HumanResourceDatabase>(
+  bool ConfigureIncomingConnection(
+      ServiceProviderImpl* service_provider_impl) override {
+    service_provider_impl->AddService<HumanResourceDatabase>(
         [](const ConnectionContext& connection_context,
            InterfaceRequest<HumanResourceDatabase> hr_db_request) {
           // It will be deleted automatically when the underlying pipe

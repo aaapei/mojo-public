@@ -6,20 +6,17 @@
 
 namespace mojo {
 
-ApplicationDelegate::ApplicationDelegate() {
-}
-ApplicationDelegate::~ApplicationDelegate() {
-}
+ApplicationDelegate::ApplicationDelegate() {}
 
-void ApplicationDelegate::Initialize(ApplicationImpl* app) {
-}
+ApplicationDelegate::~ApplicationDelegate() {}
+
+void ApplicationDelegate::Initialize(ApplicationImpl* app) {}
 
 bool ApplicationDelegate::ConfigureIncomingConnection(
-    ApplicationConnection* connection) {
+    ServiceProviderImpl* service_provider_impl) {
   return true;
 }
 
-void ApplicationDelegate::Quit() {
-}
+void ApplicationDelegate::Quit() {}
 
 }  // namespace mojo
