@@ -7,10 +7,9 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 
-#include "mojo/public/cpp/application/application_connection.h"
 #include "mojo/public/cpp/application/connection_context.h"
-#include "mojo/public/cpp/application/lib/interface_factory_connector.h"
 #include "mojo/public/cpp/application/lib/service_connector_registry.h"
 #include "mojo/public/cpp/application/service_connector.h"
 #include "mojo/public/cpp/bindings/binding.h"
@@ -53,14 +52,12 @@ class ServiceProviderImpl : public ServiceProvider {
   // unbound state). This may be called even if this object is already unbound.
   void Close();
 
-  // TODO(vtl): Remove this.
-  template <typename Interface>
-  void AddService(InterfaceFactory<Interface>* factory,
-                  const std::string& interface_name = Interface::Name_) {
+  // Adds a supported service with the given |name|, using the given
+  // |service_connector|.
+  void AddServiceForName(std::unique_ptr<ServiceConnector> service_connector,
+                         const std::string& interface_name) {
     service_connector_registry_.SetServiceConnectorForName(
-        std::unique_ptr<ServiceConnector>(
-            new internal::InterfaceFactoryConnector<Interface>(factory)),
-        interface_name);
+        std::move(service_connector), interface_name);
   }
 
   // Adds a supported service with the given |name|, using the given
@@ -70,21 +67,32 @@ class ServiceProviderImpl : public ServiceProvider {
   //
   // A typical usage may be:
   //
-  //   service_provider_impl_->AddServiceNew<Foobar>(
+  //   service_provider_impl_->AddService<Foobar>(
   //       [](const ConnectionContext& connection_context,
   //          InterfaceRequest<FooBar> foobar_request) {
   //         // |FoobarImpl| owns itself.
   //         new FoobarImpl(std::move(foobar_request));
   //       });
-  // TODO(vtl): Remove the AddService() above and rename this to AddService().
   template <typename Interface>
-  void AddServiceNew(
-      InterfaceRequestHandler<Interface> interface_request_handler,
-      const std::string& name = Interface::Name_) {
-    service_connector_registry_.SetServiceConnectorForName(
+  void AddService(InterfaceRequestHandler<Interface> interface_request_handler,
+                  const std::string& name = Interface::Name_) {
+    AddServiceForName(
         std::unique_ptr<ServiceConnector>(new ServiceConnectorImpl<Interface>(
             std::move(interface_request_handler))),
         name);
+  }
+
+  // Removes support for the service with the given |name|.
+  void RemoveServiceForName(const std::string& name) {
+    service_connector_registry_.RemoveServiceConnectorForName(name);
+  }
+
+  // Like |RemoveServiceForName()| (above), but designed so that it can be used
+  // like |RemoveService<Interface>()| or even |RemoveService<Interface>(name)|
+  // (to parallel |AddService<Interface>()|).
+  template <typename Interface>
+  void RemoveService(const std::string& name = Interface::Name_) {
+    RemoveServiceForName(name);
   }
 
   // This uses the provided |fallback_service_provider| for connection requests
@@ -94,6 +102,12 @@ class ServiceProviderImpl : public ServiceProvider {
   void set_fallback_service_provider(
       ServiceProvider* fallback_service_provider) {
     fallback_service_provider_ = fallback_service_provider;
+  }
+
+  // Gets the context for the connection that this object is bound to (if not
+  // bound, the context is just a default-initialized |ConnectionContext|).
+  const ConnectionContext& connection_context() const {
+    return connection_context_;
   }
 
  private:

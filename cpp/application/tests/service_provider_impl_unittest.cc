@@ -65,8 +65,11 @@ TEST_F(ServiceProviderImplTest, Basic) {
   ServiceProviderImpl impl(ConnectionContext(ConnectionContext::Type::INCOMING,
                                              kRemoteUrl, kConnectionUrl),
                            GetProxy(&sp));
+  EXPECT_EQ(ConnectionContext::Type::INCOMING, impl.connection_context().type);
+  EXPECT_EQ(kRemoteUrl, impl.connection_context().remote_url);
+  EXPECT_EQ(kConnectionUrl, impl.connection_context().connection_url);
 
-  impl.AddServiceNew<test::PingService>(
+  impl.AddService<test::PingService>(
       [&kRemoteUrl, &kConnectionUrl](
           const ConnectionContext& connection_context,
           InterfaceRequest<test::PingService> ping_service_request) {
@@ -77,7 +80,7 @@ TEST_F(ServiceProviderImplTest, Basic) {
       },
       kPing1);
 
-  impl.AddServiceNew<test::PingService>(
+  impl.AddService<test::PingService>(
       [&kRemoteUrl, &kConnectionUrl](
           const ConnectionContext& connection_context,
           InterfaceRequest<test::PingService> ping_service_request) {
@@ -116,6 +119,40 @@ TEST_F(ServiceProviderImplTest, Basic) {
   }
   loop().RunUntilIdle();  // Run stuff caused by destructors.
 
+  impl.RemoveService<test::PingService>(kPing2);
+
+  // "Ping2" should no longer work.
+  {
+    test::PingServicePtr ping2;
+    ConnectToService(sp.get(), GetProxy(&ping2), kPing2);
+    ping2.set_connection_error_handler([this] { QuitLoop(true); });
+    ping2->Ping([this] { QuitLoop(false); });
+    loop().Run();
+  }
+  loop().RunUntilIdle();  // Run stuff caused by destructors.
+
+  // But "Ping1" should still work.
+  {
+    test::PingServicePtr ping1;
+    ConnectToService(sp.get(), GetProxy(&ping1), kPing1);
+    ping1.set_connection_error_handler([this] { QuitLoop(false); });
+    ping1->Ping([this] { QuitLoop(true); });
+    loop().Run();
+  }
+  loop().RunUntilIdle();  // Run stuff caused by destructors.
+
+  impl.RemoveServiceForName(kPing1);
+
+  // "Ping1" should no longer work.
+  {
+    test::PingServicePtr ping1;
+    ConnectToService(sp.get(), GetProxy(&ping1), kPing1);
+    ping1.set_connection_error_handler([this] { QuitLoop(true); });
+    ping1->Ping([this] { QuitLoop(false); });
+    loop().Run();
+  }
+  loop().RunUntilIdle();  // Run stuff caused by destructors.
+
   sp.reset();
   loop().RunUntilIdle();
 }
@@ -130,8 +167,11 @@ TEST_F(ServiceProviderImplTest, CloseAndRebind) {
   ServiceProviderImpl impl(ConnectionContext(ConnectionContext::Type::INCOMING,
                                              kRemoteUrl1, kConnectionUrl),
                            GetProxy(&sp1));
+  EXPECT_EQ(ConnectionContext::Type::INCOMING, impl.connection_context().type);
+  EXPECT_EQ(kRemoteUrl1, impl.connection_context().remote_url);
+  EXPECT_EQ(kConnectionUrl, impl.connection_context().connection_url);
 
-  impl.AddServiceNew<test::PingService>(
+  impl.AddService<test::PingService>(
       [&kRemoteUrl1, &kRemoteUrl2, &kConnectionUrl](
           const ConnectionContext& connection_context,
           InterfaceRequest<test::PingService> ping_service_request) {
@@ -153,6 +193,9 @@ TEST_F(ServiceProviderImplTest, CloseAndRebind) {
   loop().RunUntilIdle();  // Run stuff caused by destructors.
 
   impl.Close();
+  EXPECT_EQ(ConnectionContext::Type::UNKNOWN, impl.connection_context().type);
+  EXPECT_EQ(std::string(), impl.connection_context().remote_url);
+  EXPECT_EQ(std::string(), impl.connection_context().connection_url);
   sp1.reset();
   loop().RunUntilIdle();
 
@@ -160,6 +203,9 @@ TEST_F(ServiceProviderImplTest, CloseAndRebind) {
   impl.Bind(ConnectionContext(ConnectionContext::Type::INCOMING, kRemoteUrl2,
                               kConnectionUrl),
             GetProxy(&sp2));
+  EXPECT_EQ(ConnectionContext::Type::INCOMING, impl.connection_context().type);
+  EXPECT_EQ(kRemoteUrl2, impl.connection_context().remote_url);
+  EXPECT_EQ(kConnectionUrl, impl.connection_context().connection_url);
 
   {
     test::PingServicePtr ping;
@@ -184,12 +230,15 @@ TEST_F(ServiceProviderImplTest, Bind) {
 
   ServiceProviderPtr sp;
   ServiceProviderImpl impl;
+  EXPECT_EQ(ConnectionContext::Type::UNKNOWN, impl.connection_context().type);
+  EXPECT_EQ(std::string(), impl.connection_context().remote_url);
+  EXPECT_EQ(std::string(), impl.connection_context().connection_url);
 
   impl.Bind(ConnectionContext(ConnectionContext::Type::INCOMING, kRemoteUrl,
                               kConnectionUrl),
             GetProxy(&sp));
 
-  impl.AddServiceNew<test::PingService>(
+  impl.AddService<test::PingService>(
       [&kRemoteUrl, &kConnectionUrl](
           const ConnectionContext& connection_context,
           InterfaceRequest<test::PingService> request) {
@@ -288,6 +337,8 @@ TEST_F(ServiceProviderImplTest, FallbackServiceProvider) {
 
   EXPECT_FALSE(was_run);
 }
+
+// TODO(vtl): Explicitly test |AddServiceForName()|?
 
 }  // namespace
 }  // namespace mojo
