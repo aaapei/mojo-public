@@ -9,7 +9,6 @@
 #include "mojo/public/cpp/application/application_connection.h"
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/application/application_runner.h"
-#include "mojo/public/cpp/application/interface_factory.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/bindings/tests/versioning_test_service.mojom.h"
@@ -93,24 +92,20 @@ class HumanResourceDatabaseImpl : public HumanResourceDatabase {
   StrongBinding<HumanResourceDatabase> strong_binding_;
 };
 
-class HumanResourceSystemServer
-    : public ApplicationDelegate,
-      public InterfaceFactory<HumanResourceDatabase> {
+class HumanResourceSystemServer : public ApplicationDelegate {
  public:
   HumanResourceSystemServer() {}
 
   // ApplicationDelegate implementation.
   bool ConfigureIncomingConnection(ApplicationConnection* connection) override {
-    connection->AddService<HumanResourceDatabase>(this);
+    connection->GetServiceProviderImpl().AddService<HumanResourceDatabase>(
+        [](const ConnectionContext& connection_context,
+           InterfaceRequest<HumanResourceDatabase> hr_db_request) {
+          // It will be deleted automatically when the underlying pipe
+          // encounters a connection error.
+          new HumanResourceDatabaseImpl(hr_db_request.Pass());
+        });
     return true;
-  }
-
-  // InterfaceFactory<HumanResourceDatabase> implementation.
-  void Create(const ConnectionContext& connection_context,
-              InterfaceRequest<HumanResourceDatabase> request) override {
-    // It will be deleted automatically when the underlying pipe encounters a
-    // connection error.
-    new HumanResourceDatabaseImpl(request.Pass());
   }
 };
 
