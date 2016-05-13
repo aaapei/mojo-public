@@ -16,9 +16,10 @@ ServiceProviderImpl::ServiceProviderImpl()
 ServiceProviderImpl::ServiceProviderImpl(
     const ConnectionContext& connection_context,
     InterfaceRequest<ServiceProvider> service_provider_request)
-    : connection_context_(connection_context),
-      binding_(this, service_provider_request.Pass()),
-      fallback_service_provider_(nullptr) {}
+    : binding_(this), fallback_service_provider_(nullptr) {
+  if (service_provider_request.is_pending())
+    Bind(connection_context, service_provider_request.Pass());
+}
 
 ServiceProviderImpl::~ServiceProviderImpl() {}
 

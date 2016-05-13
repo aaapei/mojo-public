@@ -35,7 +35,8 @@ class ServiceProviderImpl : public ServiceProvider {
   ServiceProviderImpl();
 
   // Constructs this service provider implementation, binding it to the given
-  // interface request.
+  // interface request. Note: If |service_provider_request| is not valid
+  // ("pending"), then the object will be put into an unbound state.
   explicit ServiceProviderImpl(
       const ConnectionContext& connection_context,
       InterfaceRequest<ServiceProvider> service_provider_request);

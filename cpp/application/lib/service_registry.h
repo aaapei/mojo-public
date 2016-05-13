@@ -8,10 +8,7 @@
 #include <string>
 
 #include "mojo/public/cpp/application/application_connection.h"
-#include "mojo/public/cpp/application/connection_context.h"
-#include "mojo/public/cpp/application/lib/service_connector_registry.h"
-#include "mojo/public/cpp/bindings/binding.h"
-#include "mojo/public/interfaces/application/service_provider.mojom.h"
+#include "mojo/public/cpp/application/service_provider_impl.h"
 
 namespace mojo {
 namespace internal {
@@ -19,7 +16,7 @@ namespace internal {
 // A ServiceRegistry represents each half of a connection between two
 // applications, allowing customization of which services are published to the
 // other.
-class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
+class ServiceRegistry : public ApplicationConnection {
  public:
   ServiceRegistry();
   ServiceRegistry(const ConnectionContext& connection_context,
@@ -29,6 +26,7 @@ class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
   // ApplicationConnection overrides.
   void SetServiceConnectorForName(ServiceConnector* service_connector,
                                   const std::string& interface_name) override;
+  ServiceProviderImpl& GetServiceProviderImpl() override;
   const ConnectionContext& GetConnectionContext() const override;
   const std::string& GetConnectionURL() override;
   const std::string& GetRemoteApplicationURL() override;
@@ -36,13 +34,7 @@ class ServiceRegistry : public ServiceProvider, public ApplicationConnection {
   void RemoveServiceConnectorForName(const std::string& interface_name);
 
  private:
-  // ServiceProvider method.
-  void ConnectToService(const String& service_name,
-                        ScopedMessagePipeHandle client_handle) override;
-
-  ConnectionContext connection_context_;
-  Binding<ServiceProvider> local_binding_;
-  ServiceConnectorRegistry service_connector_registry_;
+  ServiceProviderImpl service_provider_impl_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(ServiceRegistry);
 };

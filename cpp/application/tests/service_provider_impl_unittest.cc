@@ -338,6 +338,16 @@ TEST_F(ServiceProviderImplTest, FallbackServiceProvider) {
   EXPECT_FALSE(was_run);
 }
 
+TEST_F(ServiceProviderImplTest, ConstructRequestNotPending) {
+  ServiceProviderImpl impl(ConnectionContext(ConnectionContext::Type::INCOMING,
+                                             "https://example.com/remote.mojo",
+                                             "https://example.com/me.mojo"),
+                           InterfaceRequest<ServiceProvider>());
+  EXPECT_EQ(ConnectionContext::Type::UNKNOWN, impl.connection_context().type);
+  EXPECT_EQ(std::string(), impl.connection_context().remote_url);
+  EXPECT_EQ(std::string(), impl.connection_context().connection_url);
+}
+
 // TODO(vtl): Explicitly test |AddServiceForName()|?
 
 }  // namespace

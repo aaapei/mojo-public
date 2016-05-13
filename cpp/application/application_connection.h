@@ -8,6 +8,7 @@
 #include <string>
 
 #include "mojo/public/cpp/application/lib/interface_factory_connector.h"
+#include "mojo/public/cpp/application/service_provider_impl.h"
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
 
 namespace mojo {
@@ -49,6 +50,8 @@ class ApplicationConnection {
         new internal::InterfaceFactoryConnector<Interface>(factory),
         Interface::Name_);
   }
+
+  virtual ServiceProviderImpl& GetServiceProviderImpl() = 0;
 
   virtual const ConnectionContext& GetConnectionContext() const = 0;
 
