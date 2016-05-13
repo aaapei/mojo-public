@@ -41,15 +41,6 @@ namespace mojo {
 //     Binding<Foo> binding_;
 //   };
 //
-//   class MyFooFactory : public InterfaceFactory<Foo> {
-//    public:
-//     void Create(..., InterfaceRequest<Foo> request) override {
-//       auto f = new FooImpl(request.Pass());
-//       // Do something to manage the lifetime of |f|. Use StrongBinding<> to
-//       // delete FooImpl on connection errors.
-//     }
-//   };
-//
 // The caller may specify a |MojoAsyncWaiter| to be used by the connection when
 // waiting for calls to arrive. Normally it is fine to use the default waiter.
 // However, the caller may provide their own implementation if needed. The
