@@ -6,7 +6,6 @@
 
 #include <utility>
 
-#include "mojo/public/cpp/application/application_connection.h"
 #include "mojo/public/cpp/application/connection_context.h"
 #include "mojo/public/cpp/application/service_connector.h"
 

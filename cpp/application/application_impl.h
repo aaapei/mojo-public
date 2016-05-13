@@ -10,13 +10,14 @@
 #include <vector>
 
 #include "mojo/public/cpp/application/application_delegate.h"
-#include "mojo/public/cpp/application/lib/service_registry.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/application/application.mojom.h"
 #include "mojo/public/interfaces/application/application_connector.mojom.h"
 #include "mojo/public/interfaces/application/shell.mojom.h"
 
 namespace mojo {
+
+class ServiceProviderImpl;
 
 // Implements the Application interface, which the shell uses for basic
 // communication with an application (e.g., to connect clients to services
@@ -81,9 +82,7 @@ class ApplicationImpl : public Application {
   void RequestQuit() override;
 
  private:
-  using ServiceRegistryList =
-      std::vector<std::unique_ptr<internal::ServiceRegistry>>;
-  ServiceRegistryList incoming_service_registries_;
+  std::vector<std::unique_ptr<ServiceProviderImpl>> service_provider_impls_;
   ApplicationDelegate* delegate_;
   Binding<Application> binding_;
   ShellPtr shell_;

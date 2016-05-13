@@ -8,7 +8,7 @@
 
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/application/connection_context.h"
-#include "mojo/public/cpp/application/lib/service_registry.h"
+#include "mojo/public/cpp/application/service_provider_impl.h"
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/cpp/environment/logging.h"
@@ -52,7 +52,7 @@ void ApplicationImpl::Initialize(InterfaceHandle<Shell> shell,
   shell_ = ShellPtr::Create(std::move(shell));
   shell_.set_connection_error_handler([this]() {
     delegate_->Quit();
-    incoming_service_registries_.clear();
+    service_provider_impls_.clear();
     Terminate();
   });
   url_ = url;
@@ -70,15 +70,14 @@ void ApplicationImpl::AcceptConnection(
   // drop it on the floor.
   MOJO_LOG_IF(ERROR, exposed_services)
       << "DEPRECATED: exposed_services is going away";
-  std::unique_ptr<internal::ServiceRegistry> registry(
-      new internal::ServiceRegistry(
+  std::unique_ptr<ServiceProviderImpl> service_provider_impl(
+      new ServiceProviderImpl(
           ConnectionContext(ConnectionContext::Type::INCOMING, requestor_url,
                             url),
           services.Pass()));
-  if (!delegate_->ConfigureIncomingConnection(
-          &registry->GetServiceProviderImpl()))
+  if (!delegate_->ConfigureIncomingConnection(service_provider_impl.get()))
     return;
-  incoming_service_registries_.push_back(std::move(registry));
+  service_provider_impls_.push_back(std::move(service_provider_impl));
 }
 
 void ApplicationImpl::RequestQuit() {
