@@ -5,6 +5,7 @@
 #ifndef MOJO_PUBLIC_APPLICATION_APPLICATION_CONNECTION_H_
 #define MOJO_PUBLIC_APPLICATION_APPLICATION_CONNECTION_H_
 
+#include <memory>
 #include <string>
 
 #include "mojo/public/cpp/application/lib/interface_factory_connector.h"
@@ -46,33 +47,13 @@ class ApplicationConnection {
   // |factory| will create implementations of Interface on demand.
   template <typename Interface>
   void AddService(InterfaceFactory<Interface>* factory) {
-    SetServiceConnectorForName(
-        new internal::InterfaceFactoryConnector<Interface>(factory),
+    GetServiceProviderImpl().AddServiceForName(
+        std::unique_ptr<ServiceConnector>(
+            new internal::InterfaceFactoryConnector<Interface>(factory)),
         Interface::Name_);
   }
 
   virtual ServiceProviderImpl& GetServiceProviderImpl() = 0;
-
-  virtual const ConnectionContext& GetConnectionContext() const = 0;
-
-  // Returns the URL that was used by the source application to establish a
-  // connection to the destination application.
-  //
-  // When ApplicationConnection is representing an incoming connection this can
-  // be different than the URL the application was initially loaded from, if the
-  // application handles multiple URLs. Note that this is the URL after all
-  // URL rewriting and HTTP redirects have been performed.
-  //
-  // When ApplicationConnection is representing and outgoing connection, this
-  // will be the same as the value returned by GetRemoveApplicationURL().
-  virtual const std::string& GetConnectionURL() = 0;
-
-  // Returns the URL identifying the remote application on this connection.
-  virtual const std::string& GetRemoteApplicationURL() = 0;
-
- private:
-  virtual void SetServiceConnectorForName(ServiceConnector* service_connector,
-                                          const std::string& name) = 0;
 };
 
 }  // namespace mojo

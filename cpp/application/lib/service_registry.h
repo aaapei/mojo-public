@@ -24,12 +24,7 @@ class ServiceRegistry : public ApplicationConnection {
   ~ServiceRegistry() override;
 
   // ApplicationConnection overrides.
-  void SetServiceConnectorForName(ServiceConnector* service_connector,
-                                  const std::string& interface_name) override;
   ServiceProviderImpl& GetServiceProviderImpl() override;
-  const ConnectionContext& GetConnectionContext() const override;
-  const std::string& GetConnectionURL() override;
-  const std::string& GetRemoteApplicationURL() override;
 
   void RemoveServiceConnectorForName(const std::string& interface_name);
 

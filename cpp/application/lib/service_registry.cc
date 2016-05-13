@@ -19,13 +19,6 @@ ServiceRegistry::ServiceRegistry(
 
 ServiceRegistry::~ServiceRegistry() {}
 
-void ServiceRegistry::SetServiceConnectorForName(
-    ServiceConnector* service_connector,
-    const std::string& interface_name) {
-  service_provider_impl_.AddServiceForName(
-      std::unique_ptr<ServiceConnector>(service_connector), interface_name);
-}
-
 void ServiceRegistry::RemoveServiceConnectorForName(
     const std::string& interface_name) {
   service_provider_impl_.RemoveServiceForName(interface_name);
@@ -33,18 +26,6 @@ void ServiceRegistry::RemoveServiceConnectorForName(
 
 ServiceProviderImpl& ServiceRegistry::GetServiceProviderImpl() {
   return service_provider_impl_;
-}
-
-const ConnectionContext& ServiceRegistry::GetConnectionContext() const {
-  return service_provider_impl_.connection_context();
-}
-
-const std::string& ServiceRegistry::GetConnectionURL() {
-  return service_provider_impl_.connection_context().connection_url;
-}
-
-const std::string& ServiceRegistry::GetRemoteApplicationURL() {
-  return service_provider_impl_.connection_context().remote_url;
 }
 
 }  // namespace internal

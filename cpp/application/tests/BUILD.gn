@@ -9,7 +9,6 @@ mojo_sdk_source_set("tests") {
 
   sources = [
     "service_provider_impl_unittest.cc",
-    "service_registry_unittest.cc",
   ]
 
   deps = [
