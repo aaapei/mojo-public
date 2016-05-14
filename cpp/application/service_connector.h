@@ -13,15 +13,16 @@ namespace mojo {
 
 struct ConnectionContext;
 
+// |ServiceConnector| is the generic, type-unsafe interface for objects used by
+// |ServiceProviderImpl| to connect generic "interface requests" (i.e., just
+// message pipes) specified by service name to service implementations.
 class ServiceConnector {
  public:
   virtual ~ServiceConnector() {}
 
-  // Asks the ServiceConnector to connect to the specified service. If the
-  // ServiceConnector connects to the service it should take ownership of
-  // the handle in |handle|.
+  // Connects to the |ServiceConnector|'s service (if the |ServiceConnector|
+  // wishes to refuse the connection, it should simply drop |handle|).
   virtual void ConnectToService(const ConnectionContext& connection_context,
-                                const std::string& interface_name,
                                 ScopedMessagePipeHandle handle) = 0;
 };
 

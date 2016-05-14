@@ -6,11 +6,11 @@
 #define MOJO_PUBLIC_APPLICATION_SERVICE_PROVIDER_IMPL_H_
 
 #include <functional>
+#include <map>
 #include <string>
 #include <utility>
 
 #include "mojo/public/cpp/application/connection_context.h"
-#include "mojo/public/cpp/application/lib/service_connector_registry.h"
 #include "mojo/public/cpp/application/service_connector.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
@@ -53,15 +53,12 @@ class ServiceProviderImpl : public ServiceProvider {
   // unbound state). This may be called even if this object is already unbound.
   void Close();
 
-  // Adds a supported service with the given |name|, using the given
+  // Adds a supported service with the given |service_name|, using the given
   // |service_connector|.
   void AddServiceForName(std::unique_ptr<ServiceConnector> service_connector,
-                         const std::string& interface_name) {
-    service_connector_registry_.SetServiceConnectorForName(
-        std::move(service_connector), interface_name);
-  }
+                         const std::string& service_name);
 
-  // Adds a supported service with the given |name|, using the given
+  // Adds a supported service with the given |service_name|, using the given
   // |interface_request_handler| (see above for information about
   // |InterfaceRequestHandler<Interface>|). |interface_request_handler| should
   // remain valid for the lifetime of this object.
@@ -76,24 +73,23 @@ class ServiceProviderImpl : public ServiceProvider {
   //       });
   template <typename Interface>
   void AddService(InterfaceRequestHandler<Interface> interface_request_handler,
-                  const std::string& name = Interface::Name_) {
+                  const std::string& service_name = Interface::Name_) {
     AddServiceForName(
         std::unique_ptr<ServiceConnector>(new ServiceConnectorImpl<Interface>(
             std::move(interface_request_handler))),
-        name);
+        service_name);
   }
 
-  // Removes support for the service with the given |name|.
-  void RemoveServiceForName(const std::string& name) {
-    service_connector_registry_.RemoveServiceConnectorForName(name);
-  }
+  // Removes support for the service with the given |service_name|.
+  void RemoveServiceForName(const std::string& service_name);
 
   // Like |RemoveServiceForName()| (above), but designed so that it can be used
-  // like |RemoveService<Interface>()| or even |RemoveService<Interface>(name)|
-  // (to parallel |AddService<Interface>()|).
+  // like |RemoveService<Interface>()| or even
+  // |RemoveService<Interface>(service_name)| (to parallel
+  // |AddService<Interface>()|).
   template <typename Interface>
-  void RemoveService(const std::string& name = Interface::Name_) {
-    RemoveServiceForName(name);
+  void RemoveService(const std::string& service_name = Interface::Name_) {
+    RemoveServiceForName(service_name);
   }
 
   // This uses the provided |fallback_service_provider| for connection requests
@@ -124,7 +120,6 @@ class ServiceProviderImpl : public ServiceProvider {
     ~ServiceConnectorImpl() override {}
 
     void ConnectToService(const mojo::ConnectionContext& connection_context,
-                          const std::string& interface_name,
                           ScopedMessagePipeHandle client_handle) override {
       interface_request_handler_(
           connection_context,
@@ -144,7 +139,9 @@ class ServiceProviderImpl : public ServiceProvider {
   ConnectionContext connection_context_;
   Binding<ServiceProvider> binding_;
 
-  internal::ServiceConnectorRegistry service_connector_registry_;
+  std::map<std::string, std::unique_ptr<ServiceConnector>>
+      name_to_service_connector_;
+
   ServiceProvider* fallback_service_provider_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(ServiceProviderImpl);

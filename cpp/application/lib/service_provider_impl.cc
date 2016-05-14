@@ -4,8 +4,7 @@
 
 #include "mojo/public/cpp/application/service_provider_impl.h"
 
-#include "mojo/public/cpp/application/service_connector.h"
-#include "mojo/public/cpp/environment/logging.h"
+#include <utility>
 
 namespace mojo {
 
@@ -37,12 +36,26 @@ void ServiceProviderImpl::Close() {
   }
 }
 
+void ServiceProviderImpl::AddServiceForName(
+    std::unique_ptr<ServiceConnector> service_connector,
+    const std::string& service_name) {
+  name_to_service_connector_[service_name] = std::move(service_connector);
+}
+
+void ServiceProviderImpl::RemoveServiceForName(
+    const std::string& service_name) {
+  auto it = name_to_service_connector_.find(service_name);
+  if (it != name_to_service_connector_.end())
+    name_to_service_connector_.erase(it);
+}
+
 void ServiceProviderImpl::ConnectToService(
     const String& service_name,
     ScopedMessagePipeHandle client_handle) {
-  bool service_found = service_connector_registry_.ConnectToService(
-      connection_context_, service_name, &client_handle);
-  if (!service_found && fallback_service_provider_) {
+  auto it = name_to_service_connector_.find(service_name);
+  if (it != name_to_service_connector_.end()) {
+    it->second->ConnectToService(connection_context_, client_handle.Pass());
+  } else if (fallback_service_provider_) {
     fallback_service_provider_->ConnectToService(service_name,
                                                  client_handle.Pass());
   }
