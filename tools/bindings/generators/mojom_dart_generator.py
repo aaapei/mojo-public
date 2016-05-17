@@ -77,8 +77,10 @@ _reserved_words = _dart_reserved_words + [
   "ctrl",
   "fromEndpoint",
   "fromHandle",
+  "impl",
   "newFromEndpoint",
   "responseOrError",
+  "serviceDescription",
   "serviceName",
   "unbound",
 ]

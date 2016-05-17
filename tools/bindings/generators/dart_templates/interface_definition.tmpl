@@ -62,9 +62,9 @@ abstract class {{interface|name}} {
 {%-   endfor %}
 }
 
-
-class _{{interface|name}}ProxyControl extends bindings.ProxyMessageHandler
-                                      implements bindings.ProxyControl {
+class _{{interface|name}}ProxyControl
+    extends bindings.ProxyMessageHandler
+    implements bindings.ProxyControl {
   _{{interface|name}}ProxyControl.fromEndpoint(
       core.MojoMessagePipeEndpoint endpoint) : super.fromEndpoint(endpoint);
 
@@ -78,7 +78,6 @@ class _{{interface|name}}ProxyControl extends bindings.ProxyMessageHandler
 
   String get serviceName => {{interface|name}}.serviceName;
 
-  @override
   void handleResponse(bindings.ServiceMessage message) {
     switch (message.header.type) {
 {%- for method in interface.methods %}
@@ -120,9 +119,9 @@ class _{{interface|name}}ProxyControl extends bindings.ProxyMessageHandler
   }
 }
 
-
-class {{interface|name}}Proxy extends bindings.Proxy
-                              implements {{interface|name}} {
+class {{interface|name}}Proxy
+    extends bindings.Proxy
+    implements {{interface|name}} {
   {{interface|name}}Proxy.fromEndpoint(
       core.MojoMessagePipeEndpoint endpoint)
       : super(new _{{interface|name}}ProxyControl.fromEndpoint(endpoint));
@@ -186,29 +185,24 @@ class {{interface|name}}Proxy extends bindings.Proxy
 {%- endfor %}
 }
 
-
-class {{interface|name}}Stub extends bindings.Stub {
+class _{{interface|name}}StubControl
+    extends bindings.StubMessageHandler
+    implements bindings.StubControl<{{interface|name}}> {
   {{interface|name}} _impl;
 
-  {{interface|name}}Stub.fromEndpoint(
+  _{{interface|name}}StubControl.fromEndpoint(
       core.MojoMessagePipeEndpoint endpoint, [{{interface|name}} impl])
       : super.fromEndpoint(endpoint, autoBegin: impl != null) {
     _impl = impl;
   }
 
-  {{interface|name}}Stub.fromHandle(
+  _{{interface|name}}StubControl.fromHandle(
       core.MojoHandle handle, [{{interface|name}} impl])
       : super.fromHandle(handle, autoBegin: impl != null) {
     _impl = impl;
   }
 
-  {{interface|name}}Stub.unbound([this._impl]) : super.unbound();
-
-  static {{interface|name}}Stub newFromEndpoint(
-      core.MojoMessagePipeEndpoint endpoint) {
-    assert(endpoint.setDescription("For {{interface|name}}Stub"));
-    return new {{interface|name}}Stub.fromEndpoint(endpoint);
-  }
+  _{{interface|name}}StubControl.unbound([this._impl]) : super.unbound();
 
 {% for method in interface.methods %}
 {%- if method.response_parameters != None %}
@@ -303,9 +297,10 @@ class {{interface|name}}Stub extends bindings.Stub {
     }
   }
 
+  @override
   String toString() {
     var superString = super.toString();
-    return "{{interface|name}}Stub($superString)";
+    return "_{{interface|name}}StubControl($superString)";
   }
 
   int get version => {{interface.version}};
@@ -317,4 +312,56 @@ class {{interface|name}}Stub extends bindings.Stub {
     }
     return _cachedServiceDescription;
   }
+}
+
+class {{interface|name}}Stub
+    extends bindings.Stub<{{interface|name}}>
+    implements {{interface|name}} {
+  {{interface|name}}Stub.fromEndpoint(
+      core.MojoMessagePipeEndpoint endpoint, [{{interface|name}} impl])
+      : super(new _{{interface|name}}StubControl.fromEndpoint(endpoint, impl));
+
+  {{interface|name}}Stub.fromHandle(
+      core.MojoHandle handle, [{{interface|name}} impl])
+      : super(new _{{interface|name}}StubControl.fromHandle(handle, impl));
+
+  {{interface|name}}Stub.unbound([{{interface|name}} impl])
+      : super(new _{{interface|name}}StubControl.unbound(impl));
+
+  static {{interface|name}}Stub newFromEndpoint(
+      core.MojoMessagePipeEndpoint endpoint) {
+    assert(endpoint.setDescription("For {{interface|name}}Stub"));
+    return new {{interface|name}}Stub.fromEndpoint(endpoint);
+  }
+
+  static {{descpkg}}ServiceDescription get serviceDescription =>
+      _{{interface|name}}StubControl.serviceDescription;
+
+{% for method in interface.methods %}
+{%- if method.response_parameters == None %}
+  void {{method|name}}(
+{%- for parameter in method.parameters -%}
+    {{parameter.kind|dart_type}} {{parameter|name}}{% if not loop.last %}, {% endif %}
+{%- endfor -%}
+  ) {
+    return impl.{{method|name}}(
+{%- for parameter in method.parameters -%}
+    {{parameter|name}}{% if not loop.last %}, {% endif %}
+{%- endfor -%}
+    );
+  }
+{%- else %}
+  dynamic {{method|name}}(
+{%- for parameter in method.parameters -%}
+    {{parameter.kind|dart_type}} {{parameter|name}},
+{%- endfor -%}
+    [Function responseFactory = null]) {
+    return impl.{{method|name}}(
+{%- for parameter in method.parameters -%}
+    {{parameter|name}},
+{%- endfor -%}
+    responseFactory);
+  }
+{%- endif %}
+{%- endfor %}
 }
