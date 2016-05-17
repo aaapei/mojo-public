@@ -12,7 +12,6 @@
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/application/application.mojom.h"
-#include "mojo/public/interfaces/application/application_connector.mojom.h"
 #include "mojo/public/interfaces/application/shell.mojom.h"
 
 namespace mojo {
@@ -55,12 +54,6 @@ class ApplicationImpl : public Application {
   const std::vector<std::string>& args() const { return args_; }
   bool HasArg(const std::string& arg) const;
 
-  // Creates a new |ApplicationConnector|. The result can be bound to an
-  // |ApplicationConnectorPtr| and used to connect to other applications. (It
-  // returns an |InterfaceHandle| instead of an |InterfacePtr| to facilitate
-  // passing it to another thread.)
-  InterfaceHandle<ApplicationConnector> CreateApplicationConnector();
-
   // Blocks until the |Application| is initialized (i.e., |Initialize()| is
   // received), if it is not already.
   void WaitForInitialize();
@@ -84,7 +77,7 @@ class ApplicationImpl : public Application {
  private:
   std::vector<std::unique_ptr<ServiceProviderImpl>> service_provider_impls_;
   ApplicationDelegate* delegate_;
-  Binding<Application> binding_;
+  Binding<Application> application_binding_;
   ShellPtr shell_;
   std::string url_;
   std::vector<std::string> args_;

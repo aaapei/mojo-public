@@ -12,13 +12,12 @@
 #include "mojo/public/cpp/bindings/interface_ptr.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/cpp/environment/logging.h"
-#include "mojo/public/cpp/system/message_pipe.h"
 
 namespace mojo {
 
 ApplicationImpl::ApplicationImpl(ApplicationDelegate* delegate,
                                  InterfaceRequest<Application> request)
-    : delegate_(delegate), binding_(this, request.Pass()) {}
+    : delegate_(delegate), application_binding_(this, request.Pass()) {}
 
 ApplicationImpl::~ApplicationImpl() {}
 
@@ -26,23 +25,15 @@ bool ApplicationImpl::HasArg(const std::string& arg) const {
   return std::find(args_.begin(), args_.end(), arg) != args_.end();
 }
 
-InterfaceHandle<ApplicationConnector>
-ApplicationImpl::CreateApplicationConnector() {
-  MOJO_CHECK(shell_);
-  InterfaceHandle<ApplicationConnector> application_connector;
-  shell_->CreateApplicationConnector(GetProxy(&application_connector));
-  return application_connector;
-}
-
 void ApplicationImpl::WaitForInitialize() {
   if (!shell_)
-    binding_.WaitForIncomingMethodCall();
+    application_binding_.WaitForIncomingMethodCall();
 }
 
 void ApplicationImpl::UnbindConnections(
     InterfaceRequest<Application>* application_request,
     ShellPtr* shell) {
-  *application_request = binding_.Unbind();
+  *application_request = application_binding_.Unbind();
   shell->Bind(shell_.PassInterfaceHandle());
 }
 

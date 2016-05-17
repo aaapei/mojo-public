@@ -16,6 +16,7 @@ namespace mojo {
 namespace test {
 
 namespace {
+
 // Share the application command-line arguments with multiple application tests.
 Array<String> g_args;
 
@@ -31,11 +32,11 @@ InterfaceRequest<Application> g_application_request;
 // calls so we can (re-)initialize new ApplicationImpls.
 ShellPtr g_shell;
 
-void InitializeArgs(int argc, std::vector<const char*> argv) {
+void InitializeArgs(int argc, const char** argv) {
   MOJO_CHECK(g_args.is_null());
-  for (const char* arg : argv) {
-    if (arg)
-      g_args.push_back(arg);
+  for (int i = 0; i < argc; i++) {
+    MOJO_CHECK(argv[i]);
+    g_args.push_back(argv[i]);
   }
 }
 
@@ -107,8 +108,9 @@ MojoResult RunAllTests(MojoHandle application_request_handle) {
       argv[i] = args[i].get().c_str();
     argv[argc] = nullptr;
 
-    testing::InitGoogleTest(&argc, const_cast<char**>(&(argv[0])));
-    InitializeArgs(argc, argv);
+    // Note: |InitGoogleTest()| will modify |argc| and |argv[...]|.
+    testing::InitGoogleTest(&argc, const_cast<char**>(&argv[0]));
+    InitializeArgs(argc, &argv[0]);
 
     Environment::DestroyDefaultRunLoop();
   }

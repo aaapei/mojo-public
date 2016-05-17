@@ -7,6 +7,7 @@
 #ifndef MOJO_PUBLIC_CPP_APPLICATION_CONNECT_H_
 #define MOJO_PUBLIC_CPP_APPLICATION_CONNECT_H_
 
+#include "mojo/public/cpp/bindings/interface_handle.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/interfaces/application/application_connector.mojom.h"
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
@@ -57,6 +58,10 @@ inline void ConnectToService(ApplicationConnector* application_connector,
       application_url, GetProxy(&service_provider), nullptr);
   ConnectToService(service_provider.get(), request.Pass());
 }
+
+// Helper for getting an |InterfaceHandle<ApplicationConnector>| (which can be
+// passed to any thread) from the shell.
+InterfaceHandle<ApplicationConnector> CreateApplicationConnector(Shell* shell);
 
 }  // namespace mojo
 

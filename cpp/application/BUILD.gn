@@ -13,6 +13,7 @@ mojo_sdk_source_set("application") {
     "connection_context.h",
     "lib/application_delegate.cc",
     "lib/application_impl.cc",
+    "lib/connect.cc",
     "lib/service_provider_impl.cc",
     "service_connector.h",
     "service_provider_impl.h",

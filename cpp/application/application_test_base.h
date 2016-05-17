@@ -32,6 +32,8 @@ class ApplicationTestBase : public testing::Test {
   ~ApplicationTestBase() override;
 
  protected:
+  // TODO(vtl): Probably should get rid of this. There's really not much reason
+  // to have an |ApplicationImpl|.
   ApplicationImpl* application_impl() { return application_impl_; }
 
   // Get the ApplicationDelegate for the application to be tested.
