@@ -25,18 +25,6 @@ bool ApplicationImpl::HasArg(const std::string& arg) const {
   return std::find(args_.begin(), args_.end(), arg) != args_.end();
 }
 
-void ApplicationImpl::WaitForInitialize() {
-  if (!shell_)
-    application_binding_.WaitForIncomingMethodCall();
-}
-
-void ApplicationImpl::UnbindConnections(
-    InterfaceRequest<Application>* application_request,
-    ShellPtr* shell) {
-  *application_request = application_binding_.Unbind();
-  shell->Bind(shell_.PassInterfaceHandle());
-}
-
 void ApplicationImpl::Initialize(InterfaceHandle<Shell> shell,
                                  Array<String> args,
                                  const mojo::String& url) {

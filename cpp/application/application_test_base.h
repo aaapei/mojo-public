@@ -5,21 +5,18 @@
 #ifndef MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_TEST_BASE_H_
 #define MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_TEST_BASE_H_
 
-#include "mojo/public/cpp/application/application_delegate.h"
+#include <string>
+#include <vector>
+
 #include "mojo/public/cpp/bindings/array.h"
 #include "mojo/public/cpp/bindings/string.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/application/application.mojom.h"
+#include "mojo/public/interfaces/application/shell.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {
-
-class ApplicationImpl;
-
 namespace test {
-
-// Access the command line arguments passed to the application test.
-const Array<String>& Args();
 
 // Run all application tests. This must be called after the environment is
 // initialized, to support construction of a default run loop.
@@ -32,12 +29,8 @@ class ApplicationTestBase : public testing::Test {
   ~ApplicationTestBase() override;
 
  protected:
-  // TODO(vtl): Probably should get rid of this. There's really not much reason
-  // to have an |ApplicationImpl|.
-  ApplicationImpl* application_impl() { return application_impl_; }
-
-  // Get the ApplicationDelegate for the application to be tested.
-  virtual ApplicationDelegate* GetApplicationDelegate();
+  Shell* shell() const { return shell_.get(); }
+  const std::vector<std::string>& args() const { return args_; }
 
   // testing::Test:
   void SetUp() override;
@@ -49,16 +42,13 @@ class ApplicationTestBase : public testing::Test {
   virtual bool ShouldCreateDefaultRunLoop();
 
  private:
-  // The application implementation instance, reconstructed for each test.
-  ApplicationImpl* application_impl_;
-  // The application delegate used if GetApplicationDelegate is not overridden.
-  ApplicationDelegate default_application_delegate_;
+  ShellPtr shell_;
+  std::vector<std::string> args_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(ApplicationTestBase);
 };
 
 }  // namespace test
-
 }  // namespace mojo
 
 #endif  // MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_TEST_BASE_H_

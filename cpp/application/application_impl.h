@@ -44,8 +44,7 @@ class ApplicationImpl : public Application {
   static void Terminate();
 
   // The Mojo shell. This will return a valid pointer after Initialize() has
-  // been invoked. It will remain valid until UnbindConnections() is invoked or
-  // the ApplicationImpl is destroyed.
+  // been invoked. It will remain valid until this object is destroyed.
   Shell* shell() const { return shell_.get(); }
 
   const std::string& url() const { return url_; }
@@ -54,16 +53,7 @@ class ApplicationImpl : public Application {
   const std::vector<std::string>& args() const { return args_; }
   bool HasArg(const std::string& arg) const;
 
-  // Blocks until the |Application| is initialized (i.e., |Initialize()| is
-  // received), if it is not already.
-  void WaitForInitialize();
-
-  // Unbinds the Shell and Application connections. Can be used to re-bind the
-  // handles to another implementation of ApplicationImpl, for instance when
-  // running apptests.
-  void UnbindConnections(InterfaceRequest<Application>* application_request,
-                         ShellPtr* shell);
-
+ private:
   // |Application| implementation.
   void Initialize(InterfaceHandle<Shell> shell,
                   Array<String> args,
@@ -74,7 +64,6 @@ class ApplicationImpl : public Application {
                         const String& url) override;
   void RequestQuit() override;
 
- private:
   std::vector<std::unique_ptr<ServiceProviderImpl>> service_provider_impls_;
   ApplicationDelegate* delegate_;
   Binding<Application> application_binding_;

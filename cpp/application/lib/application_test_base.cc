@@ -6,7 +6,6 @@
 
 #include <utility>
 
-#include "mojo/public/cpp/application/application_impl.h"
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/message_pipe.h"
@@ -77,10 +76,6 @@ class ShellAndArgumentGrabber : public Application {
 
 }  // namespace
 
-const Array<String>& Args() {
-  return g_args;
-}
-
 MojoResult RunAllTests(MojoHandle application_request_handle) {
   {
     // This loop is used for init, and then destroyed before running tests.
@@ -124,15 +119,9 @@ MojoResult RunAllTests(MojoHandle application_request_handle) {
   return (result == 0) ? MOJO_RESULT_OK : MOJO_RESULT_UNKNOWN;
 }
 
-ApplicationTestBase::ApplicationTestBase() : application_impl_(nullptr) {
-}
+ApplicationTestBase::ApplicationTestBase() {}
 
-ApplicationTestBase::~ApplicationTestBase() {
-}
-
-ApplicationDelegate* ApplicationTestBase::GetApplicationDelegate() {
-  return &default_application_delegate_;
-}
+ApplicationTestBase::~ApplicationTestBase() {}
 
 void ApplicationTestBase::SetUp() {
   // A run loop is recommended for ApplicationImpl initialization and
@@ -142,21 +131,22 @@ void ApplicationTestBase::SetUp() {
 
   MOJO_CHECK(g_application_request.is_pending());
   MOJO_CHECK(g_shell);
+  MOJO_CHECK(args_.empty());
 
-  // New applications are constructed for each test to avoid persisting state.
-  application_impl_ = new ApplicationImpl(GetApplicationDelegate(),
-                                          g_application_request.Pass());
-
-  // Fake application initialization with the given command line arguments.
-  application_impl_->Initialize(g_shell.Pass(), g_args.Clone(), g_url);
+  shell_ = g_shell.Pass();
+  for (size_t i = 0; i < g_args.size(); i++)
+    args_.push_back(g_args[i]);
 }
 
 void ApplicationTestBase::TearDown() {
-  MOJO_CHECK(!g_application_request.is_pending());
   MOJO_CHECK(!g_shell);
 
-  application_impl_->UnbindConnections(&g_application_request, &g_shell);
-  delete application_impl_;
+  // TODO(vtl): The straightforward |g_shell = shell_.Pass();| causes tests to
+  // hang. Presumably, it's because there are still requests to the shell
+  // pending. :-(
+  g_shell.Bind(shell_.PassInterfaceHandle());
+  args_.clear();
+
   if (ShouldCreateDefaultRunLoop())
     Environment::DestroyDefaultRunLoop();
 }

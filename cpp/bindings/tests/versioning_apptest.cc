@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/cpp/application/application_impl.h"
 #include "mojo/public/cpp/application/application_test_base.h"
 #include "mojo/public/cpp/application/connect.h"
 #include "mojo/public/cpp/system/macros.h"
@@ -22,8 +21,8 @@ class VersioningApplicationTest : public ApplicationTestBase {
   void SetUp() override {
     ApplicationTestBase::SetUp();
 
-    ConnectToService(application_impl()->shell(),
-                     "mojo:versioning_test_service", GetProxy(&database_));
+    ConnectToService(shell(), "mojo:versioning_test_service",
+                     GetProxy(&database_));
   }
 
   HumanResourceDatabasePtr database_;
