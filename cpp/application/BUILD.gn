@@ -9,10 +9,12 @@ mojo_sdk_source_set("application") {
   sources = [
     "application_delegate.h",
     "application_impl.h",
+    "application_impl_base.h",
     "connect.h",
     "connection_context.h",
     "lib/application_delegate.cc",
     "lib/application_impl.cc",
+    "lib/application_impl_base.cc",
     "lib/connect.cc",
     "lib/service_provider_impl.cc",
     "service_connector.h",

@@ -5,17 +5,12 @@
 #ifndef MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_IMPL_H_
 #define MOJO_PUBLIC_CPP_APPLICATION_APPLICATION_IMPL_H_
 
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "mojo/public/cpp/application/application_delegate.h"
+#include "mojo/public/cpp/application/application_impl_base.h"
 #include "mojo/public/cpp/system/macros.h"
-#include "mojo/public/interfaces/application/application.mojom.h"
-#include "mojo/public/interfaces/application/shell.mojom.h"
 
 namespace mojo {
 
+class ApplicationDelegate;
 class ServiceProviderImpl;
 
 // Implements the Application interface, which the shell uses for basic
@@ -30,7 +25,7 @@ class ServiceProviderImpl;
 // ConfigureIncomingConnection() adds services to each connection. Finally, you
 // instantiate your delegate and pass it to an ApplicationRunner, which will
 // create the ApplicationImpl and then run a message (or run) loop.
-class ApplicationImpl : public Application {
+class ApplicationImpl : public ApplicationImplBase {
  public:
   // Does not take ownership of |delegate|, which must remain valid for the
   // lifetime of ApplicationImpl.
@@ -38,38 +33,13 @@ class ApplicationImpl : public Application {
                   InterfaceRequest<Application> request);
   ~ApplicationImpl() override;
 
-  // Quits the main run loop for this application.
-  // TODO(vtl): This is implemented in application_runner.cc (for example). Its
-  // presence here is pretty dubious.
-  static void Terminate();
-
-  // The Mojo shell. This will return a valid pointer after Initialize() has
-  // been invoked. It will remain valid until this object is destroyed.
-  Shell* shell() const { return shell_.get(); }
-
-  const std::string& url() const { return url_; }
-
-  // Returns any initial configuration arguments, passed by the Shell.
-  const std::vector<std::string>& args() const { return args_; }
-  bool HasArg(const std::string& arg) const;
-
  private:
-  // |Application| implementation.
-  void Initialize(InterfaceHandle<Shell> shell,
-                  Array<String> args,
-                  const mojo::String& url) override;
-  void AcceptConnection(const String& requestor_url,
-                        InterfaceRequest<ServiceProvider> services,
-                        InterfaceHandle<ServiceProvider> exposed_services,
-                        const String& url) override;
-  void RequestQuit() override;
+  // |ApplicationImplBase| implementation/overrides:
+  void OnInitialize() final;
+  bool OnAcceptConnection(ServiceProviderImpl* service_provider_impl) final;
+  void OnQuit() final;
 
-  std::vector<std::unique_ptr<ServiceProviderImpl>> service_provider_impls_;
-  ApplicationDelegate* delegate_;
-  Binding<Application> application_binding_;
-  ShellPtr shell_;
-  std::string url_;
-  std::vector<std::string> args_;
+  ApplicationDelegate* const delegate_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(ApplicationImpl);
 };

@@ -6,6 +6,7 @@
 
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/application/application_impl.h"
+#include "mojo/public/cpp/application/application_impl_base.h"
 #include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/utility/run_loop.h"
@@ -16,7 +17,7 @@ bool g_running = false;
 }  // namespace
 
 // static
-void ApplicationImpl::Terminate() {
+void ApplicationImplBase::Terminate() {
   RunLoop::current()->Quit();
 }
 
