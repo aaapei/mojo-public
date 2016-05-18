@@ -14,4 +14,11 @@ InterfaceHandle<ApplicationConnector> CreateApplicationConnector(Shell* shell) {
   return application_connector;
 }
 
+InterfaceHandle<ApplicationConnector> DuplicateApplicationConnector(
+    ApplicationConnector* application_connector) {
+  InterfaceHandle<ApplicationConnector> new_application_connector;
+  application_connector->Duplicate(GetProxy(&new_application_connector));
+  return new_application_connector;
+}
+
 }  // namespace mojo

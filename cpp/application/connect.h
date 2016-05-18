@@ -63,6 +63,12 @@ inline void ConnectToService(ApplicationConnector* application_connector,
 // passed to any thread) from the shell.
 InterfaceHandle<ApplicationConnector> CreateApplicationConnector(Shell* shell);
 
+// Helper for "duplicating" a |ApplicationConnector| (typically, from an
+// |ApplicationConnectorPtr|, getting another independent
+// |InterfaceHandle<ApplicationConnector>|).
+InterfaceHandle<ApplicationConnector> DuplicateApplicationConnector(
+    ApplicationConnector* application_connector);
+
 }  // namespace mojo
 
 #endif  // MOJO_PUBLIC_CPP_APPLICATION_CONNECT_H_
