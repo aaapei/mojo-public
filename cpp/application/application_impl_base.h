@@ -31,9 +31,13 @@ class ServiceProviderImpl;
 // use this class in the current setup).
 class ApplicationImplBase : public Application {
  public:
-  explicit ApplicationImplBase(
-      InterfaceRequest<Application> application_request);
+  ApplicationImplBase();
   ~ApplicationImplBase() override;
+
+  // Binds the given |Application| request to this object. This must be done
+  // with the message (run) loop available/running, and this will cause this
+  // object to start serving requests (via that message loop).
+  void Bind(InterfaceRequest<Application> application_request);
 
   // Quits the main run loop for this application.
   // TODO(vtl): This is implemented in application_runner.cc (for example). Its

@@ -10,7 +10,9 @@ namespace mojo {
 
 ApplicationImpl::ApplicationImpl(ApplicationDelegate* delegate,
                                  InterfaceRequest<Application> request)
-    : ApplicationImplBase(request.Pass()), delegate_(delegate) {}
+    : delegate_(delegate) {
+  Bind(request.Pass());
+}
 
 ApplicationImpl::~ApplicationImpl() {}
 

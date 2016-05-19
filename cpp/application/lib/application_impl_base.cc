@@ -13,11 +13,14 @@
 
 namespace mojo {
 
-ApplicationImplBase::ApplicationImplBase(
-    InterfaceRequest<Application> application_request)
-    : application_binding_(this, application_request.Pass()) {}
+ApplicationImplBase::ApplicationImplBase() : application_binding_(this) {}
 
 ApplicationImplBase::~ApplicationImplBase() {}
+
+void ApplicationImplBase::Bind(
+    InterfaceRequest<Application> application_request) {
+  application_binding_.Bind(application_request.Pass());
+}
 
 bool ApplicationImplBase::HasArg(const std::string& arg) const {
   return std::find(args_.begin(), args_.end(), arg) != args_.end();
