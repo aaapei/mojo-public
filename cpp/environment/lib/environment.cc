@@ -25,8 +25,6 @@ void Init(const MojoAsyncWaiter* default_async_waiter,
                                : &internal::kDefaultAsyncWaiter;
   g_default_logger =
       default_logger ? default_logger : &internal::kDefaultLogger;
-
-  RunLoop::SetUp();
 }
 
 }  // namespace
@@ -41,8 +39,6 @@ Environment::Environment(const MojoAsyncWaiter* default_async_waiter,
 }
 
 Environment::~Environment() {
-  RunLoop::TearDown();
-
   // TODO(vtl): Maybe we should allow nesting, and restore previous default
   // async waiters and loggers?
   g_default_async_waiter = nullptr;

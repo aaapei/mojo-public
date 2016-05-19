@@ -47,25 +47,8 @@ class TestRunLoopHandler : public RunLoopHandler {
   MOJO_DISALLOW_COPY_AND_ASSIGN(TestRunLoopHandler);
 };
 
-class RunLoopTest : public testing::Test {
- public:
-  RunLoopTest() {}
-
-  void SetUp() override {
-    Test::SetUp();
-    RunLoop::SetUp();
-  }
-  void TearDown() override {
-    RunLoop::TearDown();
-    Test::TearDown();
-  }
-
- private:
-  MOJO_DISALLOW_COPY_AND_ASSIGN(RunLoopTest);
-};
-
 // Trivial test to verify Run() with no added handles returns.
-TEST_F(RunLoopTest, ExitsWithNoHandles) {
+TEST(RunLoopTest, ExitsWithNoHandles) {
   RunLoop run_loop;
   run_loop.Run();
 }
@@ -90,7 +73,7 @@ class RemoveOnReadyRunLoopHandler : public TestRunLoopHandler {
 };
 
 // Verifies RunLoop quits when no more handles (handle is removed when ready).
-TEST_F(RunLoopTest, HandleReady) {
+TEST(RunLoopTest, HandleReady) {
   RemoveOnReadyRunLoopHandler handler;
   MessagePipe test_pipe;
   EXPECT_TRUE(test::WriteTextMessage(test_pipe.handle1.get(), std::string()));
@@ -125,7 +108,7 @@ class QuitOnReadyRunLoopHandler : public TestRunLoopHandler {
 };
 
 // Verifies Quit() from OnHandleReady() quits the loop.
-TEST_F(RunLoopTest, QuitFromReady) {
+TEST(RunLoopTest, QuitFromReady) {
   QuitOnReadyRunLoopHandler handler;
   MessagePipe test_pipe;
   EXPECT_TRUE(test::WriteTextMessage(test_pipe.handle1.get(), std::string()));
@@ -160,7 +143,7 @@ class QuitOnErrorRunLoopHandler : public TestRunLoopHandler {
 };
 
 // Verifies Quit() when the deadline is reached works.
-TEST_F(RunLoopTest, QuitWhenDeadlineExpired) {
+TEST(RunLoopTest, QuitWhenDeadlineExpired) {
   QuitOnErrorRunLoopHandler handler;
   MessagePipe test_pipe;
   RunLoop run_loop;
@@ -176,7 +159,7 @@ TEST_F(RunLoopTest, QuitWhenDeadlineExpired) {
 }
 
 // Test that handlers are notified of loop destruction.
-TEST_F(RunLoopTest, Destruction) {
+TEST(RunLoopTest, Destruction) {
   TestRunLoopHandler handler;
   MessagePipe test_pipe;
   {
@@ -213,7 +196,7 @@ class RemoveManyRunLoopHandler : public TestRunLoopHandler {
 };
 
 // Test that handlers are notified of loop destruction.
-TEST_F(RunLoopTest, MultipleHandleDestruction) {
+TEST(RunLoopTest, MultipleHandleDestruction) {
   RemoveManyRunLoopHandler odd_handler;
   TestRunLoopHandler even_handler;
   MessagePipe test_pipe1, test_pipe2, test_pipe3;
@@ -262,7 +245,7 @@ class AddHandlerOnErrorHandler : public TestRunLoopHandler {
   MOJO_DISALLOW_COPY_AND_ASSIGN(AddHandlerOnErrorHandler);
 };
 
-TEST_F(RunLoopTest, AddHandlerOnError) {
+TEST(RunLoopTest, AddHandlerOnError) {
   AddHandlerOnErrorHandler handler;
   MessagePipe test_pipe;
   {
@@ -277,7 +260,7 @@ TEST_F(RunLoopTest, AddHandlerOnError) {
   EXPECT_EQ(MOJO_RESULT_ABORTED, handler.last_error_result());
 }
 
-TEST_F(RunLoopTest, Current) {
+TEST(RunLoopTest, Current) {
   EXPECT_TRUE(RunLoop::current() == nullptr);
   {
     RunLoop run_loop;
@@ -360,7 +343,7 @@ class NestingRunLoopHandler : public TestRunLoopHandler {
 const size_t NestingRunLoopHandler::kDepthLimit = 10;
 const char NestingRunLoopHandler::kSignalMagic = 'X';
 
-TEST_F(RunLoopTest, NestedRun) {
+TEST(RunLoopTest, NestedRun) {
   NestingRunLoopHandler handler;
   MessagePipe test_pipe;
   RunLoop run_loop;
@@ -388,7 +371,7 @@ struct Task {
   std::vector<int>* sequence;
 };
 
-TEST_F(RunLoopTest, DelayedTaskOrder) {
+TEST(RunLoopTest, DelayedTaskOrder) {
   std::vector<int> sequence;
   RunLoop run_loop;
   run_loop.PostDelayedTask(Closure(Task(1, &sequence)), 0);
@@ -410,7 +393,7 @@ struct QuittingTask {
   RunLoop* run_loop;
 };
 
-TEST_F(RunLoopTest, QuitFromDelayedTask) {
+TEST(RunLoopTest, QuitFromDelayedTask) {
   TestRunLoopHandler handler;
   MessagePipe test_pipe;
   RunLoop run_loop;

@@ -25,13 +25,6 @@ class RunLoop {
   RunLoop();
   ~RunLoop();
 
-  // Sets up state needed for RunLoop. This must be invoked before creating a
-  // RunLoop.
-  static void SetUp();
-
-  // Cleans state created by Setup().
-  static void TearDown();
-
   // Returns the RunLoop for the current thread. Returns null if not yet
   // created.
   static RunLoop* current();

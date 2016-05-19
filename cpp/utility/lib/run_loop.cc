@@ -5,21 +5,43 @@
 #include "mojo/public/cpp/utility/run_loop.h"
 
 #include <assert.h>
+#include <pthread.h>
 
 #include <algorithm>
 #include <vector>
 
+#include "mojo/public/c/system/macros.h"
 #include "mojo/public/cpp/system/time.h"
 #include "mojo/public/cpp/system/wait.h"
-#include "mojo/public/cpp/utility/lib/thread_local.h"
 #include "mojo/public/cpp/utility/run_loop_handler.h"
 
 namespace mojo {
 namespace {
 
-internal::ThreadLocalPointer<RunLoop> current_run_loop;
-
 const MojoTimeTicks kInvalidTimeTicks = static_cast<MojoTimeTicks>(0);
+
+pthread_key_t g_current_run_loop_key;
+
+// Ensures that the "current run loop" functionality is available (i.e., that we
+// have a TLS slot).
+void EnsureCurrentRunLoopInitialized() {
+  static pthread_once_t current_run_loop_key_once = PTHREAD_ONCE_INIT;
+  int error = pthread_once(&current_run_loop_key_once, []() {
+    int error = pthread_key_create(&g_current_run_loop_key, nullptr);
+    MOJO_ALLOW_UNUSED_LOCAL(error);
+    assert(!error);
+  });
+  MOJO_ALLOW_UNUSED_LOCAL(error);
+  assert(!error);
+}
+
+void SetCurrentRunLoop(RunLoop* run_loop) {
+  EnsureCurrentRunLoopInitialized();
+
+  int error = pthread_setspecific(g_current_run_loop_key, run_loop);
+  MOJO_ALLOW_UNUSED_LOCAL(error);
+  assert(!error);
+}
 
 // State needed for one iteration of WaitMany().
 struct WaitState {
@@ -38,29 +60,19 @@ struct RunLoop::RunState {
 RunLoop::RunLoop()
     : run_state_(nullptr), next_handler_id_(0), next_sequence_number_(0) {
   assert(!current());
-  current_run_loop.Set(this);
+  SetCurrentRunLoop(this);
 }
 
 RunLoop::~RunLoop() {
   assert(current() == this);
   NotifyHandlers(MOJO_RESULT_ABORTED, IGNORE_DEADLINE);
-  current_run_loop.Set(nullptr);
-}
-
-// static
-void RunLoop::SetUp() {
-  current_run_loop.Allocate();
-}
-
-// static
-void RunLoop::TearDown() {
-  assert(!current());
-  current_run_loop.Free();
+  SetCurrentRunLoop(nullptr);
 }
 
 // static
 RunLoop* RunLoop::current() {
-  return current_run_loop.Get();
+  EnsureCurrentRunLoopInitialized();
+  return static_cast<RunLoop*>(pthread_getspecific(g_current_run_loop_key));
 }
 
 void RunLoop::AddHandler(RunLoopHandler* handler,

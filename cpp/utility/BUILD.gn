@@ -7,9 +7,6 @@ import("../../mojo_sdk.gni")
 mojo_sdk_source_set("utility") {
   sources = [
     "lib/run_loop.cc",
-    "lib/thread_local.h",
-    "lib/thread_local_posix.cc",
-    "lib/thread_local_win.cc",
     "run_loop.h",
     "run_loop_handler.h",
   ]
