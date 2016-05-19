@@ -34,6 +34,9 @@ struct MojoSystemImplThunksPrivate {
   size_t size;  // Should be set to sizeof(MojoExplicitThunksPrivate).
   MojoTimeTicks (*GetTimeTicksNow)(MojoSystemImpl system);
   MojoResult (*Close)(MojoSystemImpl system, MojoHandle handle);
+  MojoResult (*GetRights)(MojoSystemImpl system,
+                          MojoHandle handle,
+                          MojoHandleRights* rights);
   MojoResult (*Wait)(MojoSystemImpl system,
                      MojoHandle handle,
                      MojoHandleSignals signals,
@@ -153,6 +156,7 @@ inline MojoSystemImplThunksPrivate MojoMakeSystemImplThunksPrivate() {
       sizeof(MojoSystemImplThunksPrivate),
       MojoSystemImplGetTimeTicksNow,
       MojoSystemImplClose,
+      MojoSystemImplGetRights,
       MojoSystemImplWait,
       MojoSystemImplWaitMany,
       MojoSystemImplCreateMessagePipe,

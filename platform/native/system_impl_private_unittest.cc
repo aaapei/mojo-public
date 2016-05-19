@@ -12,6 +12,22 @@
 namespace mojo {
 namespace {
 
+const MojoHandleRights kDefaultMessagePipeHandleRights =
+    MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_READ |
+    MOJO_HANDLE_RIGHT_WRITE | MOJO_HANDLE_RIGHT_GET_OPTIONS |
+    MOJO_HANDLE_RIGHT_SET_OPTIONS;
+const MojoHandleRights kDefaultDataPipeProducerHandleRights =
+    MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_WRITE |
+    MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS;
+const MojoHandleRights kDefaultDataPipeConsumerHandleRights =
+    MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_READ |
+    MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS;
+const MojoHandleRights kDefaultSharedBufferHandleRights =
+    MOJO_HANDLE_RIGHT_DUPLICATE | MOJO_HANDLE_RIGHT_TRANSFER |
+    MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS |
+    MOJO_HANDLE_RIGHT_MAP_READABLE | MOJO_HANDLE_RIGHT_MAP_WRITABLE |
+    MOJO_HANDLE_RIGHT_MAP_EXECUTABLE;
+
 TEST(SystemImplTest, GetTimeTicksNow) {
   MojoSystemImpl system = MojoSystemImplCreateImpl();
   const MojoTimeTicks start = MojoSystemImplGetTimeTicksNow(system);
@@ -37,6 +53,15 @@ TEST(SystemImplTest, BasicMessagePipe) {
             MojoSystemImplCreateMessagePipe(sys0, nullptr, &h0, &h1));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
+  EXPECT_NE(h0, h1);
+
+  // Both handles should have the correct rights.
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, h0, &rights));
+  EXPECT_EQ(kDefaultMessagePipeHandleRights, rights);
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, h1, &rights));
+  EXPECT_EQ(kDefaultMessagePipeHandleRights, rights);
 
   // Move the other end of the pipe to a different SystemImpl.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplTransferHandle(sys0, h1, sys1, &h1));
@@ -147,6 +172,15 @@ TEST(SystemImplTest, BasicDataPipe) {
             MojoSystemImplCreateDataPipe(sys0, nullptr, &hp, &hc));
   EXPECT_NE(hp, MOJO_HANDLE_INVALID);
   EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+  EXPECT_NE(hp, hc);
+
+  // Both handles should have the correct rights.
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, hp, &rights));
+  EXPECT_EQ(kDefaultDataPipeProducerHandleRights, rights);
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, hc, &rights));
+  EXPECT_EQ(kDefaultDataPipeConsumerHandleRights, rights);
 
   // Move the other end of the pipe to a different SystemImpl.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplTransferHandle(sys0, hc, sys1, &hc));
@@ -574,6 +608,11 @@ TEST(SystemImplTest, BasicSharedBuffer) {
             MojoSystemImplCreateSharedBuffer(sys0, nullptr, kSize, &h0));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
 
+  // The handle should have the correct rights.
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, h0, &rights));
+  EXPECT_EQ(kDefaultSharedBufferHandleRights, rights);
+
   // Check the buffer information.
   {
     MojoBufferInformation info = {};
@@ -597,6 +636,11 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoSystemImplDuplicateBufferHandle(sys0, h0, nullptr, &h1));
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
+
+  // The new handle should have the correct rights.
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, h1, &rights));
+  EXPECT_EQ(kDefaultSharedBufferHandleRights, rights);
 
   // Move the other end of the pipe to a different SystemImpl.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplTransferHandle(sys0, h1, sys1, &h1));

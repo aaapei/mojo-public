@@ -41,6 +41,13 @@ MojoResult MojoSystemImplClose(MojoSystemImpl system, MojoHandle handle) {
   return g_system_impl_thunks.Close(system, handle);
 }
 
+MojoResult MojoSystemImplGetRights(MojoSystemImpl system,
+                                   MojoHandle handle,
+                                   MojoHandleRights* rights) {
+  assert(g_system_impl_thunks.GetRights);
+  return g_system_impl_thunks.GetRights(system, handle, rights);
+}
+
 MojoResult MojoSystemImplWait(MojoSystemImpl system,
                               MojoHandle handle,
                               MojoHandleSignals signals,

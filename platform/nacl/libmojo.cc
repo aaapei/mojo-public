@@ -53,6 +53,13 @@ MojoResult MojoClose(MojoHandle handle) {
   return irt_mojo->MojoClose(handle);
 }
 
+MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoGetRights(handle, rights);
+}
+
 MojoResult MojoWait(MojoHandle handle,
                     MojoHandleSignals signals,
                     MojoDeadline deadline,

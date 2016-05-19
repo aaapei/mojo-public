@@ -21,6 +21,7 @@ struct nacl_irt_mojo {
   MojoResult (*_MojoGetInitialHandle)(MojoHandle* handle);
   MojoTimeTicks (*MojoGetTimeTicksNow)();
   MojoResult (*MojoClose)(MojoHandle handle);
+  MojoResult (*MojoGetRights)(MojoHandle handle, MojoHandleRights* rights);
   MojoResult (*MojoWait)(MojoHandle handle,
                          MojoHandleSignals signals,
                          MojoDeadline deadline,

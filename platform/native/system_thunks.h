@@ -126,6 +126,7 @@ struct MojoSystemThunks {
       MojoHandle data_pipe_producer_handle,
       struct MojoDataPipeProducerOptions* options,
       uint32_t options_num_bytes);
+  MojoResult (*GetRights)(MojoHandle handle, MojoHandleRights* rights);
 };
 #pragma pack(pop)
 
@@ -159,6 +160,7 @@ inline MojoSystemThunks MojoMakeSystemThunks() {
       MojoGetDataPipeConsumerOptions,
       MojoSetDataPipeProducerOptions,
       MojoGetDataPipeProducerOptions,
+      MojoGetRights,
   };
   return system_thunks;
 }

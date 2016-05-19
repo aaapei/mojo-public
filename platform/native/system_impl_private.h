@@ -51,6 +51,9 @@ MojoResult MojoSystemImplTransferHandle(MojoSystemImpl from_system,
 // APIs mirroring the Mojo system APIs, but also taking a MojoSystemImpl param.
 MojoTimeTicks MojoSystemImplGetTimeTicksNow(MojoSystemImpl system);
 MojoResult MojoSystemImplClose(MojoSystemImpl system, MojoHandle handle);
+MojoResult MojoSystemImplGetRights(MojoSystemImpl system,
+                                   MojoHandle handle,
+                                   MojoHandleRights* rights);
 MojoResult MojoSystemImplWait(MojoSystemImpl system,
                               MojoHandle handle,
                               MojoHandleSignals signals,

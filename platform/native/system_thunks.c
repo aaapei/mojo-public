@@ -20,6 +20,11 @@ MojoResult MojoClose(MojoHandle handle) {
   return g_thunks.Close(handle);
 }
 
+MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights) {
+  assert(g_thunks.GetRights);
+  return g_thunks.GetRights(handle, rights);
+}
+
 MojoResult MojoWait(MojoHandle handle,
                     MojoHandleSignals signals,
                     MojoDeadline deadline,

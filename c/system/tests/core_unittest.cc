@@ -24,6 +24,22 @@ const char* MinimalCppTest();
 namespace mojo {
 namespace {
 
+const MojoHandleRights kDefaultMessagePipeHandleRights =
+    MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_READ |
+    MOJO_HANDLE_RIGHT_WRITE | MOJO_HANDLE_RIGHT_GET_OPTIONS |
+    MOJO_HANDLE_RIGHT_SET_OPTIONS;
+const MojoHandleRights kDefaultDataPipeProducerHandleRights =
+    MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_WRITE |
+    MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS;
+const MojoHandleRights kDefaultDataPipeConsumerHandleRights =
+    MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_READ |
+    MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS;
+const MojoHandleRights kDefaultSharedBufferHandleRights =
+    MOJO_HANDLE_RIGHT_DUPLICATE | MOJO_HANDLE_RIGHT_TRANSFER |
+    MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS |
+    MOJO_HANDLE_RIGHT_MAP_READABLE | MOJO_HANDLE_RIGHT_MAP_WRITABLE |
+    MOJO_HANDLE_RIGHT_MAP_EXECUTABLE;
+
 TEST(CoreTest, GetTimeTicksNow) {
   const MojoTimeTicks start = MojoGetTimeTicksNow();
   EXPECT_NE(static_cast<MojoTimeTicks>(0), start)
@@ -41,6 +57,11 @@ TEST(CoreTest, InvalidHandle) {
 
   // Close:
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(MOJO_HANDLE_INVALID));
+
+  // GetRights:
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoGetRights(MOJO_HANDLE_INVALID, &rights));
 
   // Wait:
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
@@ -129,6 +150,15 @@ TEST(CoreTest, BasicMessagePipe) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateMessagePipe(nullptr, &h0, &h1));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
+  EXPECT_NE(h0, h1);
+
+  // Both handles should have the correct rights.
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(h0, &rights));
+  EXPECT_EQ(kDefaultMessagePipeHandleRights, rights);
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(h1, &rights));
+  EXPECT_EQ(kDefaultMessagePipeHandleRights, rights);
 
   // Shouldn't be readable, we haven't written anything.
   MojoHandleSignalsState state;
@@ -225,6 +255,15 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateDataPipe(nullptr, &hp, &hc));
   EXPECT_NE(hp, MOJO_HANDLE_INVALID);
   EXPECT_NE(hc, MOJO_HANDLE_INVALID);
+  EXPECT_NE(hp, hc);
+
+  // Both handles should have the correct rights.
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(hp, &rights));
+  EXPECT_EQ(kDefaultDataPipeProducerHandleRights, rights);
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(hc, &rights));
+  EXPECT_EQ(kDefaultDataPipeConsumerHandleRights, rights);
 
   // The consumer |hc| shouldn't be readable.
   MojoHandleSignalsState state;
@@ -583,6 +622,11 @@ TEST(CoreTest, MAYBE_BasicSharedBuffer) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateSharedBuffer(nullptr, 100, &h0));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
 
+  // The handle should have the correct rights.
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(h0, &rights));
+  EXPECT_EQ(kDefaultSharedBufferHandleRights, rights);
+
   // Check information about the buffer from |h0|.
   MojoBufferInformation info = {};
   static const uint32_t kInfoSize = static_cast<uint32_t>(sizeof(info));
@@ -602,6 +646,11 @@ TEST(CoreTest, MAYBE_BasicSharedBuffer) {
   h1 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoDuplicateBufferHandle(h0, nullptr, &h1));
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
+
+  // The new handle should have the correct rights.
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(h1, &rights));
+  EXPECT_EQ(kDefaultSharedBufferHandleRights, rights);
 
   // Check information about the buffer from |h1|.
   info = MojoBufferInformation();
