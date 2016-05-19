@@ -7,7 +7,6 @@
 
 #include <memory>
 
-#include "mojo/public/c/environment/logger.h"
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/cpp/system/macros.h"
@@ -31,14 +30,6 @@ class ApplicationRunner {
  public:
   explicit ApplicationRunner(std::unique_ptr<ApplicationDelegate> delegate);
   ~ApplicationRunner();
-
-  // This replaces the underlying logger implementation with the one provided.
-  // This static method may only be called while |Run()| is running. |logger|
-  // must outlive the duration of this |Run()|, or until the subsequent
-  // |ApplicationRunner::SetDefaultLogger()|, which ever comes first.
-  static void SetDefaultLogger(const MojoLogger* logger);
-  // This static method may only be called while |Run()| is running.
-  static const MojoLogger* GetDefaultLogger();
 
   // Once the various parameters have been set above, use Run to initialize an
   // ApplicationImpl wired to the provided delegate, and run a RunLoop until
