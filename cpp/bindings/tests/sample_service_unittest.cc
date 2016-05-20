@@ -7,7 +7,6 @@
 #include <string>
 #include <utility>
 
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/bindings/tests/sample_service.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -315,18 +314,7 @@ class SimpleMessageReceiver : public mojo::MessageReceiverWithResponder {
   }
 };
 
-class BindingsSampleTest : public testing::Test {
- public:
-  BindingsSampleTest() {}
-  ~BindingsSampleTest() override {}
-
- private:
-  mojo::Environment env_;
-
-  MOJO_DISALLOW_COPY_AND_ASSIGN(BindingsSampleTest);
-};
-
-TEST_F(BindingsSampleTest, Basic) {
+TEST(BindingsSampleTest, Basic) {
   SimpleMessageReceiver receiver;
 
   // User has a proxy to a Service somehow.
@@ -348,7 +336,7 @@ TEST_F(BindingsSampleTest, Basic) {
   delete service;
 }
 
-TEST_F(BindingsSampleTest, DefaultValues) {
+TEST(BindingsSampleTest, DefaultValues) {
   DefaultsTestPtr defaults(DefaultsTest::New());
   EXPECT_EQ(-12, defaults->a0);
   EXPECT_EQ(kTwelve, defaults->a1);

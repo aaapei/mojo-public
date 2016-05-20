@@ -57,16 +57,13 @@ cdef class RunLoop(object):
 # We use a wrapping class to be able to call the C++ class PythonAsyncWaiter
 # across module boundaries.
 cdef class AsyncWaiter(object):
-  cdef c_environment.CEnvironment* _cenvironment
   cdef c_async_waiter.PythonAsyncWaiter* _c_async_waiter
 
   def __init__(self):
-    self._cenvironment = new c_environment.CEnvironment()
     self._c_async_waiter = c_environment.NewAsyncWaiter()
 
   def __dealloc__(self):
     del self._c_async_waiter
-    del self._cenvironment
 
   def AsyncWait(self, handle, signals, deadline, callback):
     return self._c_async_waiter.AsyncWait(handle, signals, deadline, callback)

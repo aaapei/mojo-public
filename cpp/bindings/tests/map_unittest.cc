@@ -11,7 +11,6 @@
 #include "mojo/public/cpp/bindings/map.h"
 #include "mojo/public/cpp/bindings/string.h"
 #include "mojo/public/cpp/bindings/tests/container_test_util.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/interfaces/bindings/tests/rect.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -39,15 +38,7 @@ struct StringIntData {
 
 const size_t kStringIntDataSize = 4;
 
-class MapTest : public testing::Test {
- public:
-  ~MapTest() override {}
-
- private:
-  Environment env_;
-};
-
-TEST_F(MapTest, Testability) {
+TEST(MapTest, Testability) {
   Map<int32_t, int32_t> map;
   EXPECT_FALSE(map);
   EXPECT_TRUE(map.is_null());
@@ -58,7 +49,7 @@ TEST_F(MapTest, Testability) {
 }
 
 // Tests that basic Map operations work.
-TEST_F(MapTest, InsertWorks) {
+TEST(MapTest, InsertWorks) {
   Map<String, int> map;
   for (size_t i = 0; i < kStringIntDataSize; ++i)
     map.insert(kStringIntData[i].string_data, kStringIntData[i].int_data);
@@ -69,7 +60,7 @@ TEST_F(MapTest, InsertWorks) {
   }
 }
 
-TEST_F(MapTest, TestIndexOperator) {
+TEST(MapTest, TestIndexOperator) {
   Map<String, int> map;
   for (size_t i = 0; i < kStringIntDataSize; ++i)
     map[kStringIntData[i].string_data] = kStringIntData[i].int_data;
@@ -80,7 +71,7 @@ TEST_F(MapTest, TestIndexOperator) {
   }
 }
 
-TEST_F(MapTest, TestIndexOperatorAsRValue) {
+TEST(MapTest, TestIndexOperatorAsRValue) {
   Map<String, int> map;
   for (size_t i = 0; i < kStringIntDataSize; ++i)
     map.insert(kStringIntData[i].string_data, kStringIntData[i].int_data);
@@ -90,7 +81,7 @@ TEST_F(MapTest, TestIndexOperatorAsRValue) {
   }
 }
 
-TEST_F(MapTest, TestIndexOperatorMoveOnly) {
+TEST(MapTest, TestIndexOperatorMoveOnly) {
   ASSERT_EQ(0u, MoveOnlyType::num_instances());
   mojo::Map<mojo::String, mojo::Array<int32_t>> map;
   std::vector<MoveOnlyType*> value_ptrs;
@@ -112,7 +103,7 @@ TEST_F(MapTest, TestIndexOperatorMoveOnly) {
   }
 }
 
-TEST_F(MapTest, ConstructedFromArray) {
+TEST(MapTest, ConstructedFromArray) {
   auto keys = Array<String>::New(kStringIntDataSize);
   auto values = Array<int>::New(kStringIntDataSize);
   for (size_t i = 0; i < kStringIntDataSize; ++i) {
@@ -128,7 +119,7 @@ TEST_F(MapTest, ConstructedFromArray) {
   }
 }
 
-TEST_F(MapTest, Insert_Copyable) {
+TEST(MapTest, Insert_Copyable) {
   ASSERT_EQ(0u, CopyableType::num_instances());
   mojo::Map<mojo::String, CopyableType> map;
   std::vector<CopyableType*> value_ptrs;
@@ -154,7 +145,7 @@ TEST_F(MapTest, Insert_Copyable) {
   EXPECT_EQ(0u, CopyableType::num_instances());
 }
 
-TEST_F(MapTest, Insert_MoveOnly) {
+TEST(MapTest, Insert_MoveOnly) {
   ASSERT_EQ(0u, MoveOnlyType::num_instances());
   mojo::Map<mojo::String, MoveOnlyType> map;
   std::vector<MoveOnlyType*> value_ptrs;
@@ -180,7 +171,7 @@ TEST_F(MapTest, Insert_MoveOnly) {
   EXPECT_EQ(0u, MoveOnlyType::num_instances());
 }
 
-TEST_F(MapTest, IndexOperator_MoveOnly) {
+TEST(MapTest, IndexOperator_MoveOnly) {
   ASSERT_EQ(0u, MoveOnlyType::num_instances());
   mojo::Map<mojo::String, MoveOnlyType> map;
   std::vector<MoveOnlyType*> value_ptrs;
@@ -206,7 +197,7 @@ TEST_F(MapTest, IndexOperator_MoveOnly) {
   EXPECT_EQ(0u, MoveOnlyType::num_instances());
 }
 
-TEST_F(MapTest, STLToMojo) {
+TEST(MapTest, STLToMojo) {
   std::map<std::string, int> stl_data;
   for (size_t i = 0; i < kStringIntDataSize; ++i)
     stl_data[kStringIntData[i].string_data] = kStringIntData[i].int_data;
@@ -218,7 +209,7 @@ TEST_F(MapTest, STLToMojo) {
   }
 }
 
-TEST_F(MapTest, MojoToSTL) {
+TEST(MapTest, MojoToSTL) {
   Map<String, int32_t> mojo_map;
   for (size_t i = 0; i < kStringIntDataSize; ++i)
     mojo_map.insert(kStringIntData[i].string_data, kStringIntData[i].int_data);
@@ -232,7 +223,7 @@ TEST_F(MapTest, MojoToSTL) {
   }
 }
 
-TEST_F(MapTest, MapArrayClone) {
+TEST(MapTest, MapArrayClone) {
   Map<String, Array<String>> m;
   for (size_t i = 0; i < kStringIntDataSize; ++i) {
     Array<String> s;
@@ -248,7 +239,7 @@ TEST_F(MapTest, MapArrayClone) {
   }
 }
 
-TEST_F(MapTest, ArrayOfMap) {
+TEST(MapTest, ArrayOfMap) {
   {
     auto array = Array<Map<int32_t, int8_t>>::New(1);
     array[0].insert(1, 42);
@@ -295,7 +286,7 @@ TEST_F(MapTest, ArrayOfMap) {
   }
 }
 
-TEST_F(MapTest, Serialization_MapWithScopedEnumKeys) {
+TEST(MapTest, Serialization_MapWithScopedEnumKeys) {
   enum class TestEnum : int32_t {
     E0,
     E1,
@@ -337,7 +328,7 @@ TEST_F(MapTest, Serialization_MapWithScopedEnumKeys) {
   }
 }
 
-TEST_F(MapTest, Serialization_MapWithScopedEnumVals) {
+TEST(MapTest, Serialization_MapWithScopedEnumVals) {
   enum class TestEnum : int32_t {
     E0,
     E1,
@@ -380,7 +371,7 @@ TEST_F(MapTest, Serialization_MapWithScopedEnumVals) {
 }
 
 // Test serialization/deserialization of a map with null elements.
-TEST_F(MapTest, Serialization_MapOfNullableStructs) {
+TEST(MapTest, Serialization_MapOfNullableStructs) {
   ArrayValidateParams validate_nullable(2, true, nullptr);
   ArrayValidateParams validate_non_nullable(2, false, nullptr);
 

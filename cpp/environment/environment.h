@@ -12,27 +12,19 @@ struct MojoLogger;
 
 namespace mojo {
 
-// Other parts of the Mojo C++ APIs use the *static* methods of this class.
-//
-// The "standalone" implementation of this class requires that this class (in
-// the lib/ subdirectory) be instantiated (and remain so) while using the Mojo
-// C++ APIs. I.e., the static methods depend on things set up by the constructor
-// and torn down by the destructor.
-//
-// Other implementations may not have this requirement.
+// This class just acts as a "namespace": it only has static methods (whose
+// implementation may be varied). Note that some implementations may require
+// their own explicit initialization/shut down functions to be called.
 class Environment {
  public:
-  Environment();
-  // This constructor allows the standard implementations to be overridden (set
-  // a parameter to null to get the standard implementation).
-  Environment(const MojoAsyncWaiter* default_async_waiter,
-              const MojoLogger* default_logger);
-  ~Environment();
-
   static const MojoAsyncWaiter* GetDefaultAsyncWaiter();
+  // Setting the default async waiter to null will use the original default
+  // implementation.
+  static void SetDefaultAsyncWaiter(const MojoAsyncWaiter* async_waiter);
 
   static const MojoLogger* GetDefaultLogger();
-  // Setting the logger to null will use the standard implementation.
+  // Setting the logger to null will use the will use the original default
+  // implementation.
   static void SetDefaultLogger(const MojoLogger* logger);
 
   // These instantiate and destroy an environment-specific run loop for the
@@ -44,7 +36,8 @@ class Environment {
   static void DestroyDefaultRunLoop();
 
  private:
-  MOJO_DISALLOW_COPY_AND_ASSIGN(Environment);
+  Environment() = delete;
+  ~Environment() = delete;
 };
 
 }  // namespace mojo

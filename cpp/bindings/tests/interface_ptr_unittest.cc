@@ -6,7 +6,6 @@
 
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "mojo/public/interfaces/bindings/tests/math_calculator.mojom.h"
 #include "mojo/public/interfaces/bindings/tests/sample_interfaces.mojom.h"
@@ -195,7 +194,6 @@ class InterfacePtrTest : public testing::Test {
   void PumpMessages() { loop_.RunUntilIdle(); }
 
  private:
-  Environment env_;
   RunLoop loop_;
 };
 
@@ -486,7 +484,6 @@ class StrongMathCalculatorImpl : public math::Calculator {
 };
 
 TEST(StrongConnectorTest, Math) {
-  Environment env;
   RunLoop loop;
 
   bool error_received = false;
@@ -555,7 +552,6 @@ class WeakMathCalculatorImpl : public math::Calculator {
 };
 
 TEST(WeakConnectorTest, Math) {
-  Environment env;
   RunLoop loop;
 
   bool error_received = false;

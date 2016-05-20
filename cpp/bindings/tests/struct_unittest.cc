@@ -7,7 +7,6 @@
 
 #include "mojo/public/cpp/bindings/lib/fixed_buffer.h"
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/message_pipe.h"
 #include "mojo/public/interfaces/bindings/tests/test_structs.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -80,17 +79,9 @@ U SerializeAndDeserialize(T input) {
   return output;
 }
 
-class StructTest : public testing::Test {
- public:
-  ~StructTest() override {}
-
- private:
-  Environment env_;
-};
-
 }  // namespace
 
-TEST_F(StructTest, Rect) {
+TEST(StructTest, Rect) {
   RectPtr rect;
   EXPECT_FALSE(rect);
   EXPECT_TRUE(rect.is_null());
@@ -118,7 +109,7 @@ TEST_F(StructTest, Rect) {
   CheckRect(*rect);
 }
 
-TEST_F(StructTest, Clone) {
+TEST(StructTest, Clone) {
   NamedRegionPtr region;
 
   NamedRegionPtr clone_region = region.Clone();
@@ -147,7 +138,7 @@ TEST_F(StructTest, Clone) {
 }
 
 // Serialization test of a struct with no pointer or handle members.
-TEST_F(StructTest, Serialization_Basic) {
+TEST(StructTest, Serialization_Basic) {
   RectPtr rect(MakeRect());
 
   size_t size = GetSerializedSize_(*rect);
@@ -165,7 +156,7 @@ TEST_F(StructTest, Serialization_Basic) {
 }
 
 // Construction of a struct with struct pointers from null.
-TEST_F(StructTest, Construction_StructPointers) {
+TEST(StructTest, Construction_StructPointers) {
   RectPairPtr pair;
   EXPECT_TRUE(pair.is_null());
 
@@ -179,7 +170,7 @@ TEST_F(StructTest, Construction_StructPointers) {
 }
 
 // Serialization test of a struct with struct pointers.
-TEST_F(StructTest, Serialization_StructPointers) {
+TEST(StructTest, Serialization_StructPointers) {
   RectPairPtr pair(RectPair::New());
   pair->first = MakeRect();
   pair->second = MakeRect();
@@ -200,7 +191,7 @@ TEST_F(StructTest, Serialization_StructPointers) {
 }
 
 // Serialization test of a struct with an array member.
-TEST_F(StructTest, Serialization_ArrayPointers) {
+TEST(StructTest, Serialization_ArrayPointers) {
   NamedRegionPtr region(NamedRegion::New());
   region->name = "region";
   region->rects = Array<RectPtr>::New(4);
@@ -235,7 +226,7 @@ TEST_F(StructTest, Serialization_ArrayPointers) {
 }
 
 // Serialization test of a struct with null array pointers.
-TEST_F(StructTest, Serialization_NullArrayPointers) {
+TEST(StructTest, Serialization_NullArrayPointers) {
   NamedRegionPtr region(NamedRegion::New());
   EXPECT_TRUE(region->name.is_null());
   EXPECT_TRUE(region->rects.is_null());
@@ -258,7 +249,7 @@ TEST_F(StructTest, Serialization_NullArrayPointers) {
   EXPECT_TRUE(region2->rects.is_null());
 }
 
-TEST_F(StructTest, Serialization_InterfaceRequest) {
+TEST(StructTest, Serialization_InterfaceRequest) {
   ContainsInterfaceRequest iface_req_struct;
 
   auto size = GetSerializedSize_(iface_req_struct);
@@ -287,7 +278,7 @@ TEST_F(StructTest, Serialization_InterfaceRequest) {
 }
 
 // Tests deserializing structs as a newer version.
-TEST_F(StructTest, Versioning_OldToNew) {
+TEST(StructTest, Versioning_OldToNew) {
   {
     MultiVersionStructV0Ptr input(MultiVersionStructV0::New());
     input->f_int32 = 123;
@@ -387,7 +378,7 @@ TEST_F(StructTest, Versioning_OldToNew) {
 }
 
 // Tests deserializing structs as an older version.
-TEST_F(StructTest, Versioning_NewToOld) {
+TEST(StructTest, Versioning_NewToOld) {
   {
     MultiVersionStructPtr input = MakeMultiVersionStruct();
     MultiVersionStructV7Ptr expected_output(MultiVersionStructV7::New());

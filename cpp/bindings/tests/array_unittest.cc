@@ -8,7 +8,6 @@
 #include "mojo/public/cpp/bindings/lib/fixed_buffer.h"
 #include "mojo/public/cpp/bindings/tests/container_test_util.h"
 #include "mojo/public/cpp/bindings/tests/iterator_test_util.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/interfaces/bindings/tests/test_arrays.mojom.h"
 #include "mojo/public/interfaces/bindings/tests/test_structs.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -22,16 +21,8 @@ using mojo::internal::ArrayValidateParams;
 using mojo::internal::FixedBufferForTesting;
 using mojo::internal::String_Data;
 
-class ArrayTest : public testing::Test {
- public:
-  ~ArrayTest() override {}
-
- private:
-  Environment env_;
-};
-
 // Tests that basic Array operations work.
-TEST_F(ArrayTest, Basic) {
+TEST(ArrayTest, Basic) {
   auto array = Array<uint8_t>::New(8);
   for (size_t i = 0u; i < array.size(); ++i) {
     uint8_t val = static_cast<uint8_t>(i * 2);
@@ -44,7 +35,7 @@ TEST_F(ArrayTest, Basic) {
   EXPECT_EQ(4u, *(array.data() + 2));
 }
 
-TEST_F(ArrayTest, Testability) {
+TEST(ArrayTest, Testability) {
   Array<int32_t> array;
   EXPECT_FALSE(array);
   EXPECT_TRUE(array.is_null());
@@ -60,7 +51,7 @@ void NullptrConstructorTestHelper(Array<int32_t> array) {
   EXPECT_EQ(0u, array.size());
 }
 
-TEST_F(ArrayTest, NullptrConstructor) {
+TEST(ArrayTest, NullptrConstructor) {
   Array<int32_t> array(nullptr);
   EXPECT_FALSE(array);
   EXPECT_TRUE(array.is_null());
@@ -77,7 +68,7 @@ TEST_F(ArrayTest, NullptrConstructor) {
 }
 
 // Tests that basic Array<bool> operations work.
-TEST_F(ArrayTest, Bool) {
+TEST(ArrayTest, Bool) {
   auto array = Array<bool>::New(64);
   for (size_t i = 0; i < array.size(); ++i) {
     bool val = i % 3 == 0;
@@ -87,7 +78,7 @@ TEST_F(ArrayTest, Bool) {
 }
 
 // Tests that Array<ScopedMessagePipeHandle> supports transferring handles.
-TEST_F(ArrayTest, Handle) {
+TEST(ArrayTest, Handle) {
   MessagePipe pipe;
   auto handles = Array<ScopedMessagePipeHandle>::New(2);
   handles[0] = pipe.handle0.Pass();
@@ -106,7 +97,7 @@ TEST_F(ArrayTest, Handle) {
 }
 
 // Tests that Array<ScopedMessagePipeHandle> supports closing handles.
-TEST_F(ArrayTest, HandlesAreClosed) {
+TEST(ArrayTest, HandlesAreClosed) {
   MessagePipe pipe;
   MojoHandle pipe0_value = pipe.handle0.get().value();
   MojoHandle pipe1_value = pipe.handle0.get().value();
@@ -122,7 +113,7 @@ TEST_F(ArrayTest, HandlesAreClosed) {
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(pipe1_value));
 }
 
-TEST_F(ArrayTest, Clone) {
+TEST(ArrayTest, Clone) {
   {
     // Test POD.
     auto array = Array<int32_t>::New(3);
@@ -187,7 +178,7 @@ TEST_F(ArrayTest, Clone) {
   }
 }
 
-TEST_F(ArrayTest, Serialization_ArrayOfPOD) {
+TEST(ArrayTest, Serialization_ArrayOfPOD) {
   auto array = Array<int32_t>::New(4);
   for (size_t i = 0; i < array.size(); ++i)
     array[i] = static_cast<int32_t>(i);
@@ -209,7 +200,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfPOD) {
     EXPECT_EQ(static_cast<int32_t>(i), array2[i]);
 }
 
-TEST_F(ArrayTest, Serialization_EmptyArrayOfPOD) {
+TEST(ArrayTest, Serialization_EmptyArrayOfPOD) {
   auto array = Array<int32_t>::New(0);
   size_t size = GetSerializedSize_(array);
   EXPECT_EQ(8U, size);
@@ -225,7 +216,7 @@ TEST_F(ArrayTest, Serialization_EmptyArrayOfPOD) {
   EXPECT_EQ(0U, array2.size());
 }
 
-TEST_F(ArrayTest, Serialization_ArrayOfArrayOfPOD) {
+TEST(ArrayTest, Serialization_ArrayOfArrayOfPOD) {
   auto array = Array<Array<int32_t>>::New(2);
   for (size_t j = 0; j < array.size(); ++j) {
     auto inner = Array<int32_t>::New(4);
@@ -256,7 +247,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfArrayOfPOD) {
   }
 }
 
-TEST_F(ArrayTest, Serialization_ArrayOfScopedEnum) {
+TEST(ArrayTest, Serialization_ArrayOfScopedEnum) {
   enum class TestEnum : int32_t {
     E0,
     E1,
@@ -288,7 +279,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfScopedEnum) {
     EXPECT_EQ(TEST_VALS[i], array2[i]);
 }
 
-TEST_F(ArrayTest, Serialization_ArrayOfBool) {
+TEST(ArrayTest, Serialization_ArrayOfBool) {
   auto array = Array<bool>::New(10);
   for (size_t i = 0; i < array.size(); ++i)
     array[i] = i % 2 ? true : false;
@@ -310,7 +301,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfBool) {
     EXPECT_EQ(i % 2 ? true : false, array2[i]);
 }
 
-TEST_F(ArrayTest, Serialization_ArrayOfString) {
+TEST(ArrayTest, Serialization_ArrayOfString) {
   auto array = Array<String>::New(10);
   for (size_t i = 0; i < array.size(); ++i) {
     char c = 'A' + static_cast<char>(i);
@@ -342,7 +333,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfString) {
 }
 
 // Tests serializing and deserializing an Array<Handle>.
-TEST_F(ArrayTest, Serialization_ArrayOfHandle) {
+TEST(ArrayTest, Serialization_ArrayOfHandle) {
   auto array = Array<ScopedHandleBase<MessagePipeHandle>>::New(4);
   MessagePipe p0;
   MessagePipe p1;
@@ -388,13 +379,13 @@ TEST_F(ArrayTest, Serialization_ArrayOfHandle) {
   EXPECT_TRUE(array[3].is_valid());
 }
 
-TEST_F(ArrayTest, Serialization_StructWithArraysOfHandles) {
+TEST(ArrayTest, Serialization_StructWithArraysOfHandles) {
   StructWithHandles handles_struct;
   MessagePipe handle_pair_0;
 }
 
 // Test serializing and deserializing an Array<InterfacePtr>.
-TEST_F(ArrayTest, Serialization_ArrayOfInterfacePtr) {
+TEST(ArrayTest, Serialization_ArrayOfInterfacePtr) {
   auto iface_array = Array<mojo::InterfaceHandle<TestInterface>>::New(1);
   size_t size = GetSerializedSize_(iface_array);
   EXPECT_EQ(8U               // array header
@@ -435,7 +426,7 @@ TEST_F(ArrayTest, Serialization_ArrayOfInterfacePtr) {
 
 // Test serializing and deserializing a struct with an Array<> of another struct
 // which has an InterfacePtr.
-TEST_F(ArrayTest, Serialization_StructWithArrayOfInterfacePtr) {
+TEST(ArrayTest, Serialization_StructWithArrayOfInterfacePtr) {
   StructWithInterfaceArray struct_arr_iface;
   struct_arr_iface.structs_array = Array<StructWithInterfacePtr>::New(1);
   struct_arr_iface.nullable_structs_array =
@@ -480,7 +471,7 @@ TEST_F(ArrayTest, Serialization_StructWithArrayOfInterfacePtr) {
 
 // Test serializing and deserializing a struct with an Array<> of interface
 // requests.
-TEST_F(ArrayTest, Serialization_StructWithArrayOfIntefaceRequest) {
+TEST(ArrayTest, Serialization_StructWithArrayOfIntefaceRequest) {
   StructWithInterfaceRequests struct_arr_iface_req;
   struct_arr_iface_req.req_array =
       Array<InterfaceRequest<TestInterface>>::New(1);
@@ -524,7 +515,7 @@ TEST_F(ArrayTest, Serialization_StructWithArrayOfIntefaceRequest) {
   EXPECT_TRUE(struct_arr_iface_req.req_array[0].is_pending());
 }
 
-TEST_F(ArrayTest, Resize_Copyable) {
+TEST(ArrayTest, Resize_Copyable) {
   ASSERT_EQ(0u, CopyableType::num_instances());
   auto array = mojo::Array<CopyableType>::New(3);
   std::vector<CopyableType*> value_ptrs;
@@ -576,7 +567,7 @@ TEST_F(ArrayTest, Resize_Copyable) {
   EXPECT_TRUE(array);
 }
 
-TEST_F(ArrayTest, Resize_MoveOnly) {
+TEST(ArrayTest, Resize_MoveOnly) {
   ASSERT_EQ(0u, MoveOnlyType::num_instances());
   auto array = mojo::Array<MoveOnlyType>::New(3);
   std::vector<MoveOnlyType*> value_ptrs;
@@ -628,7 +619,7 @@ TEST_F(ArrayTest, Resize_MoveOnly) {
   EXPECT_TRUE(array);
 }
 
-TEST_F(ArrayTest, PushBack_Copyable) {
+TEST(ArrayTest, PushBack_Copyable) {
   ASSERT_EQ(0u, CopyableType::num_instances());
   auto array = mojo::Array<CopyableType>::New(2);
   array.reset();
@@ -663,7 +654,7 @@ TEST_F(ArrayTest, PushBack_Copyable) {
   EXPECT_EQ(0u, CopyableType::num_instances());
 }
 
-TEST_F(ArrayTest, PushBack_MoveOnly) {
+TEST(ArrayTest, PushBack_MoveOnly) {
   ASSERT_EQ(0u, MoveOnlyType::num_instances());
   auto array = mojo::Array<MoveOnlyType>::New(2);
   array.reset();
@@ -698,7 +689,7 @@ TEST_F(ArrayTest, PushBack_MoveOnly) {
   EXPECT_EQ(0u, MoveOnlyType::num_instances());
 }
 
-TEST_F(ArrayTest, Iterator) {
+TEST(ArrayTest, Iterator) {
   std::vector<int> values;
   values.push_back(0);
   values.push_back(1);
@@ -748,7 +739,7 @@ TEST_F(ArrayTest, Iterator) {
 }
 
 // Test serializing and deserializing of an array with null elements.
-TEST_F(ArrayTest, Serialization_ArrayOfStructPtr) {
+TEST(ArrayTest, Serialization_ArrayOfStructPtr) {
   ArrayValidateParams validate_nullable(2, true, nullptr);
   ArrayValidateParams validate_non_nullable(2, false, nullptr);
 

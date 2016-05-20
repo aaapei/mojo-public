@@ -8,7 +8,6 @@
 #include "mojo/public/cpp/bindings/lib/message_builder.h"
 #include "mojo/public/cpp/bindings/lib/router.h"
 #include "mojo/public/cpp/bindings/tests/message_queue.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -140,7 +139,6 @@ class RouterTest : public testing::Test {
   ScopedMessagePipeHandle handle1_;
 
  private:
-  Environment env_;
   RunLoop loop_;
 };
 

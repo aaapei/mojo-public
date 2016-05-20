@@ -17,7 +17,6 @@
 #include "mojo/public/cpp/bindings/lib/validation_errors.h"
 #include "mojo/public/cpp/bindings/message.h"
 #include "mojo/public/cpp/bindings/tests/validation_test_input_parser.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/system/message_pipe.h"
 #include "mojo/public/cpp/test_support/test_support.h"
@@ -193,15 +192,7 @@ class DummyMessageReceiver : public MessageReceiver {
   }
 };
 
-class ValidationTest : public testing::Test {
- public:
-  ~ValidationTest() override {}
-
- private:
-  Environment env_;
-};
-
-class ValidationIntegrationTest : public ValidationTest {
+class ValidationIntegrationTest : public testing::Test {
  public:
   ValidationIntegrationTest() : test_message_receiver_(nullptr) {}
 
@@ -277,7 +268,7 @@ class FailingValidator : public mojo::internal::MessageValidator {
   ValidationError err_;
 };
 
-TEST_F(ValidationTest, InputParser) {
+TEST(ValidationTest, InputParser) {
   {
     // The parser, as well as Append() defined above, assumes that this code is
     // running on a little-endian platform. Test whether that is true.
@@ -381,7 +372,7 @@ TEST_F(ValidationTest, InputParser) {
   }
 }
 
-TEST_F(ValidationTest, Conformance) {
+TEST(ValidationTest, Conformance) {
   DummyMessageReceiver dummy_receiver;
   MessageValidatorList validators;
   validators.push_back(std::unique_ptr<MessageValidator>(
@@ -395,7 +386,7 @@ TEST_F(ValidationTest, Conformance) {
 // This test is similar to Conformance test but its goal is specifically
 // do bounds-check testing of message validation. For example we test the
 // detection of off-by-one errors in method ordinals.
-TEST_F(ValidationTest, BoundsCheck) {
+TEST(ValidationTest, BoundsCheck) {
   DummyMessageReceiver dummy_receiver;
   MessageValidatorList validators;
   validators.push_back(std::unique_ptr<MessageValidator>(
@@ -407,7 +398,7 @@ TEST_F(ValidationTest, BoundsCheck) {
 }
 
 // This test is similar to the Conformance test but for responses.
-TEST_F(ValidationTest, ResponseConformance) {
+TEST(ValidationTest, ResponseConformance) {
   DummyMessageReceiver dummy_receiver;
   MessageValidatorList validators;
   validators.push_back(std::unique_ptr<MessageValidator>(
@@ -419,7 +410,7 @@ TEST_F(ValidationTest, ResponseConformance) {
 }
 
 // This test is similar to the BoundsCheck test but for responses.
-TEST_F(ValidationTest, ResponseBoundsCheck) {
+TEST(ValidationTest, ResponseBoundsCheck) {
   DummyMessageReceiver dummy_receiver;
   MessageValidatorList validators;
   validators.push_back(std::unique_ptr<MessageValidator>(
@@ -474,7 +465,7 @@ TEST_F(ValidationIntegrationTest, Binding) {
 }
 
 // Test pointer validation (specifically, that the encoded offset is 32-bit)
-TEST_F(ValidationTest, ValidateEncodedPointer) {
+TEST(ValidationTest, ValidateEncodedPointer) {
   uint64_t offset;
 
   offset = 0ULL;
@@ -488,7 +479,7 @@ TEST_F(ValidationTest, ValidateEncodedPointer) {
   EXPECT_FALSE(mojo::internal::ValidateEncodedPointer(&offset));
 }
 
-TEST_F(ValidationTest, RunValidatorsOnMessageTest) {
+TEST(ValidationTest, RunValidatorsOnMessageTest) {
   Message msg;
   mojo::internal::MessageValidatorList validators;
 

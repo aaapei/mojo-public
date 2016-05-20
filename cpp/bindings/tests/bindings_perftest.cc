@@ -83,7 +83,6 @@ struct BoundPingService {
 
 class MojoBindingsPerftest : public testing::Test {
  protected:
-  Environment env_;
   RunLoop run_loop_;
 };
 

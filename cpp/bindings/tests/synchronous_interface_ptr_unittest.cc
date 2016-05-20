@@ -11,7 +11,6 @@
 #include "mojo/public/cpp/bindings/interface_request.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
 #include "mojo/public/cpp/bindings/synchronous_interface_ptr.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "mojo/public/interfaces/bindings/tests/math_calculator.mojom-sync.h"
 #include "mojo/public/interfaces/bindings/tests/math_calculator.mojom.h"
@@ -69,7 +68,6 @@ class SynchronousInterfacePtrTest : public testing::Test {
   }
 
  private:
-  Environment env_;
   RunLoop loop_;
 };
 

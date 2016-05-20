@@ -28,8 +28,3 @@ cdef extern from "mojo/public/cpp/utility/run_loop.h" nogil:
     void Quit()
     void PostDelayedTask(CClosure&, int64_t)
   cdef CRunLoop CRunLoopCurrent "mojo::RunLoop::current"()
-
-
-cdef extern from "mojo/public/cpp/environment/environment.h" nogil:
-  cdef cppclass CEnvironment "mojo::Environment":
-    CEnvironment()

@@ -20,7 +20,6 @@ const MojoLogger kTestLogger = {
 TEST(LoggerTest, Basic) {
   const char kPath[] = "/fake/path/to/file.cc";
 
-  Environment environment;
   const MojoLogger* const logger = Environment::GetDefaultLogger();
 
   logger->LogMessage(MOJO_LOG_LEVEL_VERBOSE - 1, kPath, 123,
@@ -42,7 +41,6 @@ TEST(LoggerTest, Basic) {
 TEST(LoggerTest, LogLevels) {
   const char kPath[] = "/fake/path/to/file.cc";
 
-  Environment environment;
   const MojoLogger* const logger = Environment::GetDefaultLogger();
 
   for (MojoLogLevel log_level = MOJO_LOG_LEVEL_VERBOSE - 1;
@@ -74,7 +72,6 @@ TEST(LoggerTest, LogLevels) {
 }
 
 TEST(LoggerTest, NoFile) {
-  Environment environment;
   const MojoLogger* const logger = Environment::GetDefaultLogger();
 
   logger->LogMessage(MOJO_LOG_LEVEL_VERBOSE - 1, nullptr, 0,
@@ -94,7 +91,6 @@ TEST(LoggerTest, NoFile) {
 }
 
 TEST(LoggerTest, SetDefaultLogger) {
-  Environment environment;
   Environment::SetDefaultLogger(&kTestLogger);
 
   std::vector<std::string> expected_msgs;

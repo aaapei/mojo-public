@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include "mojo/public/cpp/bindings/binding.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/test_support/test_utils.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "mojo/public/interfaces/bindings/tests/sample_import.mojom.h"
@@ -90,7 +89,6 @@ class RequestResponseTest : public testing::Test {
   void PumpMessages() { loop_.RunUntilIdle(); }
 
  private:
-  Environment env_;
   RunLoop loop_;
 };
 

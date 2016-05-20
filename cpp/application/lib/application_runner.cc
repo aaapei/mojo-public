@@ -7,7 +7,6 @@
 #include "mojo/public/cpp/application/application_delegate.h"
 #include "mojo/public/cpp/application/application_impl.h"
 #include "mojo/public/cpp/application/application_impl_base.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 
 namespace mojo {
@@ -33,7 +32,6 @@ MojoResult ApplicationRunner::Run(MojoHandle app_request_handle) {
       << "Another ApplicationRunner::Run() is already running!";
 
   g_running = true;
-  Environment env;
   {
     RunLoop loop;
     ApplicationImpl app(delegate_.get(),

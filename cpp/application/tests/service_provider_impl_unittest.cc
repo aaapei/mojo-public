@@ -8,7 +8,6 @@
 
 #include "mojo/public/cpp/application/connect.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "mojo/public/interfaces/application/service_provider.mojom.h"
@@ -32,7 +31,6 @@ class ServiceProviderImplTest : public testing::Test {
   }
 
  private:
-  Environment env_;
   RunLoop loop_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(ServiceProviderImplTest);

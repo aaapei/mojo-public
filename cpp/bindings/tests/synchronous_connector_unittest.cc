@@ -46,7 +46,6 @@ TEST(SynchronousConnectorTest, Basic) {
 
 // Writing to a closed pipe should fail.
 TEST(SynchronousConnectorTest, WriteToClosedPipe) {
-  Environment env;
   MessagePipe pipe;
   internal::SynchronousConnector connector0(std::move(pipe.handle0));
 
@@ -59,7 +58,6 @@ TEST(SynchronousConnectorTest, WriteToClosedPipe) {
 
 // Reading from a closed pipe should fail (while waiting on it).
 TEST(SynchronousConnectorTest, ReadFromClosedPipe) {
-  Environment env;
   MessagePipe pipe;
   internal::SynchronousConnector connector0(std::move(pipe.handle0));
 

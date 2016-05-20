@@ -47,9 +47,6 @@ class StructSerializationAPITest : public testing::Test {
     EXPECT_EQ(actual_validation_error == mojo::internal::ValidationError::NONE,
               deserialize_ret);
   }
-
- private:
-  Environment env_;
 };
 
 TEST_F(StructSerializationAPITest, GetSerializedSize) {

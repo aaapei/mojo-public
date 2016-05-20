@@ -61,7 +61,6 @@ class AsyncWaitTest : public testing::Test {
   AsyncWaitTest() {}
 
  private:
-  Environment environment_;
   RunLoop run_loop_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(AsyncWaitTest);

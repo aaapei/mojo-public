@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/interfaces/bindings/tests/test_structs.mojom.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -20,16 +19,9 @@ RectPtr CreateRect() {
   return r;
 }
 
-class EqualsTest : public testing::Test {
- public:
-  ~EqualsTest() override {}
+}  // namespace
 
- private:
-  Environment env_;
-};
-}
-
-TEST_F(EqualsTest, Null) {
+TEST(EqualsTest, Null) {
   RectPtr r1;
   RectPtr r2;
   EXPECT_TRUE(r1.Equals(r2));
@@ -40,7 +32,7 @@ TEST_F(EqualsTest, Null) {
   EXPECT_FALSE(r2.Equals(r1));
 }
 
-TEST_F(EqualsTest, EqualsStruct) {
+TEST(EqualsTest, EqualsStruct) {
   RectPtr r1(CreateRect());
   RectPtr r2(r1.Clone());
   EXPECT_TRUE(r1.Equals(r2));
@@ -50,7 +42,7 @@ TEST_F(EqualsTest, EqualsStruct) {
   EXPECT_FALSE(r1.Equals(r2));
 }
 
-TEST_F(EqualsTest, EqualsStructNested) {
+TEST(EqualsTest, EqualsStructNested) {
   RectPairPtr p1(RectPair::New());
   p1->first = CreateRect();
   p1->second = CreateRect();
@@ -62,7 +54,7 @@ TEST_F(EqualsTest, EqualsStructNested) {
   EXPECT_FALSE(p1.Equals(p2));
 }
 
-TEST_F(EqualsTest, EqualsArray) {
+TEST(EqualsTest, EqualsArray) {
   NamedRegionPtr n1(NamedRegion::New());
   n1->name = "n1";
   n1->rects.push_back(CreateRect());
@@ -86,7 +78,7 @@ TEST_F(EqualsTest, EqualsArray) {
   EXPECT_TRUE(n1.Equals(n2));
 }
 
-TEST_F(EqualsTest, EqualsMap) {
+TEST(EqualsTest, EqualsMap) {
   auto n1(NamedRegion::New());
   n1->name = "foo";
   n1->rects.push_back(CreateRect());

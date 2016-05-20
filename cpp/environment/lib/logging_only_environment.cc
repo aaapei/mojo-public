@@ -12,13 +12,6 @@
 
 namespace mojo {
 
-Environment::Environment() {}
-
-Environment::Environment(const MojoAsyncWaiter* default_async_waiter,
-                         const MojoLogger* default_logger) {}
-
-Environment::~Environment() {}
-
 // static
 const MojoLogger* Environment::GetDefaultLogger() {
   return &internal::kDefaultLogger;

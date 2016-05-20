@@ -7,7 +7,6 @@
 
 #include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
-#include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "mojo/public/interfaces/bindings/tests/sample_interfaces.mojom.h"
@@ -25,7 +24,6 @@ class BindingTestBase : public testing::Test {
   RunLoop& loop() { return loop_; }
 
  private:
-  Environment env_;
   RunLoop loop_;
 
   MOJO_DISALLOW_COPY_AND_ASSIGN(BindingTestBase);
