@@ -243,9 +243,10 @@ def DartDeclType(kind):
     key_type = DartDeclType(kind.key_kind)
     value_type = DartDeclType(kind.value_kind)
     return "Map<"+ key_type + ", " + value_type + ">"
-  if mojom.IsInterfaceKind(kind) or \
-     mojom.IsInterfaceRequestKind(kind):
-    return "Object"
+  if mojom.IsInterfaceKind(kind):
+    return ("%sInterface" % GetDartType(kind))
+  if mojom.IsInterfaceRequestKind(kind):
+    return ("%sInterfaceRequest" % GetDartType(kind.kind))
   if mojom.IsEnumKind(kind):
     return GetDartType(kind)
 
