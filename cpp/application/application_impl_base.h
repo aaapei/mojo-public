@@ -26,12 +26,16 @@ class ServiceProviderImpl;
 // To use this class, subclass it and implement/override the required methods
 // (see below).
 //
+// Note that by default |ApplicationImplBase|s are not "strongly bound" to their
+// |Application| requests (so, e.g., they can thus be constructed on the stack).
+// A subclass may make itself strongly bound by setting a suitable connection
+// error handler on the binding (available via |application_binding()|).
+//
 // TODO(vtl): ApplicationRunners should take this instead of an
 // ApplicationDelegate. Write more here when that's true (it's pretty hard to
 // use this class in the current setup).
 class ApplicationImplBase : public Application {
  public:
-  ApplicationImplBase();
   ~ApplicationImplBase() override;
 
   // Binds the given |Application| request to this object. This must be done
@@ -48,30 +52,41 @@ class ApplicationImplBase : public Application {
   // until this object is destroyed.
   Shell* shell() const { return shell_.get(); }
 
+  // Returns this object's |Application| binding (set up by |Bind()|; of course,
+  // you can always manipulate it directly).
+  const Binding<Application>& application_binding() const {
+    return application_binding_;
+  }
+  Binding<Application>& application_binding() { return application_binding_; }
+
   // Returns any initial configuration arguments, passed by the shell.
   const std::vector<std::string>& args() const { return args_; }
   bool HasArg(const std::string& arg) const;
 
   const std::string& url() const { return url_; }
 
-  // Methods to be implemented/overridden by subclasses:
+  // Methods to be overridden (if desired) by subclasses:
 
   // Called after |Initialize()| has been received (|shell()|, |args()|, and
   // |url()| will be valid when this is called. The default implementation does
   // nothing.
-  virtual void OnInitialize() {}
+  virtual void OnInitialize();
 
   // Called when another application connects to this application (i.e., we
   // receive |AcceptConnection()|). This should either configure what services
   // are "provided" (made available via a |ServiceProvider|) to that application
   // and return true, or this may return false to reject the connection
-  // entirely.
-  virtual bool OnAcceptConnection(
-      ServiceProviderImpl* service_provider_impl) = 0;
+  // entirely. The default implementation rejects all connections (by just
+  // returning false).
+  virtual bool OnAcceptConnection(ServiceProviderImpl* service_provider_impl);
 
   // Called before quitting the main message (run) loop, i.e., before
   // |Terminate()|. The default implementation does nothing.
-  virtual void OnQuit() {}
+  virtual void OnQuit();
+
+ protected:
+  // This class is meant to be subclassed.
+  ApplicationImplBase();
 
  private:
   // |Application| implementation. In general, you probably shouldn't call these

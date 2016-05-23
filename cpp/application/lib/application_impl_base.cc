@@ -13,8 +13,6 @@
 
 namespace mojo {
 
-ApplicationImplBase::ApplicationImplBase() : application_binding_(this) {}
-
 ApplicationImplBase::~ApplicationImplBase() {}
 
 void ApplicationImplBase::Bind(
@@ -25,6 +23,17 @@ void ApplicationImplBase::Bind(
 bool ApplicationImplBase::HasArg(const std::string& arg) const {
   return std::find(args_.begin(), args_.end(), arg) != args_.end();
 }
+
+void ApplicationImplBase::OnInitialize() {}
+
+bool ApplicationImplBase::OnAcceptConnection(
+    ServiceProviderImpl* service_provider_impl) {
+  return false;
+}
+
+void ApplicationImplBase::OnQuit() {}
+
+ApplicationImplBase::ApplicationImplBase() : application_binding_(this) {}
 
 void ApplicationImplBase::Initialize(InterfaceHandle<Shell> shell,
                                      Array<String> args,

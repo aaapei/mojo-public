@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "mojo/public/c/system/main.h"
-#include "mojo/public/cpp/application/application_delegate.h"
-#include "mojo/public/cpp/application/application_runner.h"
+#include "mojo/public/cpp/application/application_impl_base.h"
+#include "mojo/public/cpp/application/run_application.h"
 #include "mojo/public/cpp/application/service_provider_impl.h"
 #include "mojo/public/cpp/bindings/strong_binding.h"
 #include "mojo/public/cpp/system/macros.h"
@@ -90,15 +90,17 @@ class HumanResourceDatabaseImpl : public HumanResourceDatabase {
   std::map<uint64_t, EmployeeInfo*> employees_;
 
   StrongBinding<HumanResourceDatabase> strong_binding_;
+
+  MOJO_DISALLOW_COPY_AND_ASSIGN(HumanResourceDatabaseImpl);
 };
 
-class HumanResourceSystemServer : public ApplicationDelegate {
+class HumanResourceSystemServer : public ApplicationImplBase {
  public:
   HumanResourceSystemServer() {}
+  ~HumanResourceSystemServer() override {}
 
-  // ApplicationDelegate implementation.
-  bool ConfigureIncomingConnection(
-      ServiceProviderImpl* service_provider_impl) override {
+  // |ApplicationImplBase| overrides:
+  bool OnAcceptConnection(ServiceProviderImpl* service_provider_impl) override {
     service_provider_impl->AddService<HumanResourceDatabase>(
         [](const ConnectionContext& connection_context,
            InterfaceRequest<HumanResourceDatabase> hr_db_request) {
@@ -108,6 +110,9 @@ class HumanResourceSystemServer : public ApplicationDelegate {
         });
     return true;
   }
+
+ private:
+  MOJO_DISALLOW_COPY_AND_ASSIGN(HumanResourceSystemServer);
 };
 
 }  // namespace versioning
@@ -115,9 +120,7 @@ class HumanResourceSystemServer : public ApplicationDelegate {
 }  // namespace mojo
 
 MojoResult MojoMain(MojoHandle application_request) {
-  mojo::ApplicationRunner runner(
-      std::unique_ptr<mojo::test::versioning::HumanResourceSystemServer>(
-          new mojo::test::versioning::HumanResourceSystemServer()));
-
-  return runner.Run(application_request);
+  mojo::test::versioning::HumanResourceSystemServer hr_system_server;
+  mojo::RunApplication(application_request, &hr_system_server);
+  return MOJO_RESULT_OK;
 }

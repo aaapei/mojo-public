@@ -32,7 +32,10 @@ mojo_sdk_source_set("application") {
 # GYP version: mojo/public/mojo_public.gyp:mojo_application_standalone
 mojo_sdk_source_set("standalone") {
   sources = [
+    "application_runner.h",
     "lib/application_runner.cc",
+    "lib/run_application.cc",
+    "run_application.h",
   ]
 
   public_deps = [
@@ -41,7 +44,9 @@ mojo_sdk_source_set("standalone") {
 
   mojo_sdk_deps = [
     "mojo/public/cpp/environment:standalone",
+    "mojo/public/cpp/system",
     "mojo/public/cpp/utility",
+    "mojo/public/interfaces/application",
   ]
 }
 
