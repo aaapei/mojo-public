@@ -63,6 +63,18 @@ TEST(SystemImplTest, BasicMessagePipe) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, h1, &rights));
   EXPECT_EQ(kDefaultMessagePipeHandleRights, rights);
 
+  // Shouldn't be able to duplicate either handle (just test "with reduced
+  // rights" on one, and without on the other).
+  MojoHandle handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoSystemImplDuplicateHandleWithReducedRights(
+                sys0, h0, MOJO_HANDLE_RIGHT_DUPLICATE, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
+  handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoSystemImplDuplicateHandle(sys0, h1, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
+
   // Move the other end of the pipe to a different SystemImpl.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplTransferHandle(sys0, h1, sys1, &h1));
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
@@ -181,6 +193,18 @@ TEST(SystemImplTest, BasicDataPipe) {
   rights = MOJO_HANDLE_RIGHT_NONE;
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys0, hc, &rights));
   EXPECT_EQ(kDefaultDataPipeConsumerHandleRights, rights);
+
+  // Shouldn't be able to duplicate either handle (just test "with reduced
+  // rights" on one, and without on the other).
+  MojoHandle handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoSystemImplDuplicateHandleWithReducedRights(
+                sys0, hp, MOJO_HANDLE_RIGHT_DUPLICATE, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
+  handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoSystemImplDuplicateHandle(sys0, hc, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
 
   // Move the other end of the pipe to a different SystemImpl.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplTransferHandle(sys0, hc, sys1, &hc));
@@ -599,11 +623,8 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   MojoSystemImpl sys1 = MojoSystemImplCreateImpl();
   EXPECT_NE(sys0, sys1);
 
-  MojoHandle h0, h1;
-  void* pointer;
-
   // Create a shared buffer (|h0|).
-  h0 = MOJO_HANDLE_INVALID;
+  MojoHandle h0 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoSystemImplCreateSharedBuffer(sys0, nullptr, kSize, &h0));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
@@ -624,7 +645,7 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   }
 
   // Map everything.
-  pointer = nullptr;
+  void* pointer = nullptr;
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoSystemImplMapBuffer(sys0, h0, 0u, kSize, &pointer,
                                     MOJO_MAP_BUFFER_FLAG_NONE));
@@ -632,10 +653,10 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   static_cast<char*>(pointer)[kSize / 2] = 'x';
 
   // Duplicate |h0| to |h1|.
-  h1 = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_OK,
-            MojoSystemImplDuplicateBufferHandle(sys0, h0, nullptr, &h1));
+  MojoHandle h1 = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplDuplicateHandle(sys0, h0, &h1));
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
+  EXPECT_NE(h1, h0);
 
   // The new handle should have the correct rights.
   rights = MOJO_HANDLE_RIGHT_NONE;
@@ -679,7 +700,25 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   // Unmap it.
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplUnmapBuffer(sys1, pointer));
 
+  // Test duplication with reduced rights.
+  MojoHandle h2 = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplDuplicateHandleWithReducedRights(
+                                sys1, h1, MOJO_HANDLE_RIGHT_DUPLICATE, &h2));
+  EXPECT_NE(h2, MOJO_HANDLE_INVALID);
+  EXPECT_NE(h2, h1);
+  // |h2| should have the correct rights.
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplGetRights(sys1, h2, &rights));
+  EXPECT_EQ(kDefaultSharedBufferHandleRights & ~MOJO_HANDLE_RIGHT_DUPLICATE,
+            rights);
+  // Trying to duplicate |h2| should fail.
+  MojoHandle h3 = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoSystemImplDuplicateHandle(sys1, h2, &h3));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, h3);
+
   EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys1, h1));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys1, h2));
 
   // 2 SystemImpls are leaked...
 }

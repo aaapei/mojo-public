@@ -48,6 +48,23 @@ MojoResult MojoSystemImplGetRights(MojoSystemImpl system,
   return g_system_impl_thunks.GetRights(system, handle, rights);
 }
 
+MojoResult MojoSystemImplDuplicateHandleWithReducedRights(
+    MojoSystemImpl system,
+    MojoHandle handle,
+    MojoHandleRights rights_to_remove,
+    MojoHandle* new_handle) {
+  assert(g_system_impl_thunks.DuplicateHandleWithReducedRights);
+  return g_system_impl_thunks.DuplicateHandleWithReducedRights(
+      system, handle, rights_to_remove, new_handle);
+}
+
+MojoResult MojoSystemImplDuplicateHandle(MojoSystemImpl system,
+                                         MojoHandle handle,
+                                         MojoHandle* new_handle) {
+  assert(g_system_impl_thunks.DuplicateHandle);
+  return g_system_impl_thunks.DuplicateHandle(system, handle, new_handle);
+}
+
 MojoResult MojoSystemImplWait(MojoSystemImpl system,
                               MojoHandle handle,
                               MojoHandleSignals signals,

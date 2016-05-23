@@ -54,6 +54,14 @@ MojoResult MojoSystemImplClose(MojoSystemImpl system, MojoHandle handle);
 MojoResult MojoSystemImplGetRights(MojoSystemImpl system,
                                    MojoHandle handle,
                                    MojoHandleRights* rights);
+MojoResult MojoSystemImplDuplicateHandleWithReducedRights(
+    MojoSystemImpl system,
+    MojoHandle handle,
+    MojoHandleRights rights_to_remove,
+    MojoHandle* new_handle);
+MojoResult MojoSystemImplDuplicateHandle(MojoSystemImpl system,
+                                         MojoHandle handle,
+                                         MojoHandle* new_handle);
 MojoResult MojoSystemImplWait(MojoSystemImpl system,
                               MojoHandle handle,
                               MojoHandleSignals signals,

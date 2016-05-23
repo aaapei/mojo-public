@@ -25,6 +25,20 @@ MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights) {
   return g_thunks.GetRights(handle, rights);
 }
 
+MojoResult MojoDuplicateHandleWithReducedRights(
+    MojoHandle handle,
+    MojoHandleRights rights_to_remove,
+    MojoHandle* new_handle) {
+  assert(g_thunks.DuplicateHandleWithReducedRights);
+  return g_thunks.DuplicateHandleWithReducedRights(handle, rights_to_remove,
+                                                   new_handle);
+}
+
+MojoResult MojoDuplicateHandle(MojoHandle handle, MojoHandle* new_handle) {
+  assert(g_thunks.DuplicateHandle);
+  return g_thunks.DuplicateHandle(handle, new_handle);
+}
+
 MojoResult MojoWait(MojoHandle handle,
                     MojoHandleSignals signals,
                     MojoDeadline deadline,

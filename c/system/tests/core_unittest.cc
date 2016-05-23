@@ -63,6 +63,19 @@ TEST(CoreTest, InvalidHandle) {
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoGetRights(MOJO_HANDLE_INVALID, &rights));
 
+  // DuplicateHandleWithReducedRights:
+  MojoHandle new_handle = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoDuplicateHandleWithReducedRights(
+                MOJO_HANDLE_INVALID, MOJO_HANDLE_RIGHT_DUPLICATE, &new_handle));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, new_handle);
+
+  // DuplicateHandle:
+  new_handle = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+            MojoDuplicateHandle(MOJO_HANDLE_INVALID, &new_handle));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, new_handle);
+
   // Wait:
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoWait(MOJO_HANDLE_INVALID, ~MOJO_HANDLE_SIGNAL_NONE, 1000000u,
@@ -159,6 +172,18 @@ TEST(CoreTest, BasicMessagePipe) {
   rights = MOJO_HANDLE_RIGHT_NONE;
   EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(h1, &rights));
   EXPECT_EQ(kDefaultMessagePipeHandleRights, rights);
+
+  // Shouldn't be able to duplicate either handle (just test "with reduced
+  // rights" on one, and without on the other).
+  MojoHandle handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoDuplicateHandleWithReducedRights(
+                h0, MOJO_HANDLE_RIGHT_DUPLICATE, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
+  handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoDuplicateHandle(h1, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
 
   // Shouldn't be readable, we haven't written anything.
   MojoHandleSignalsState state;
@@ -264,6 +289,18 @@ TEST(CoreTest, MAYBE_BasicDataPipe) {
   rights = MOJO_HANDLE_RIGHT_NONE;
   EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(hc, &rights));
   EXPECT_EQ(kDefaultDataPipeConsumerHandleRights, rights);
+
+  // Shouldn't be able to duplicate either handle (just test "with reduced
+  // rights" on one, and without on the other).
+  MojoHandle handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoDuplicateHandleWithReducedRights(
+                hp, MOJO_HANDLE_RIGHT_DUPLICATE, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
+  handle_denied = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+            MojoDuplicateHandle(hc, &handle_denied));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
 
   // The consumer |hc| shouldn't be readable.
   MojoHandleSignalsState state;
@@ -614,11 +651,9 @@ TEST(CoreTest, DataPipeReadThreshold) {
 #define MAYBE_BasicSharedBuffer BasicSharedBuffer
 #endif
 TEST(CoreTest, MAYBE_BasicSharedBuffer) {
-  MojoHandle h0, h1;
-  void* pointer;
 
   // Create a shared buffer (|h0|).
-  h0 = MOJO_HANDLE_INVALID;
+  MojoHandle h0 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateSharedBuffer(nullptr, 100, &h0));
   EXPECT_NE(h0, MOJO_HANDLE_INVALID);
 
@@ -636,16 +671,17 @@ TEST(CoreTest, MAYBE_BasicSharedBuffer) {
   EXPECT_EQ(100u, info.num_bytes);
 
   // Map everything.
-  pointer = nullptr;
+  void* pointer = nullptr;
   EXPECT_EQ(MOJO_RESULT_OK,
             MojoMapBuffer(h0, 0, 100, &pointer, MOJO_MAP_BUFFER_FLAG_NONE));
   ASSERT_TRUE(pointer);
   static_cast<char*>(pointer)[50] = 'x';
 
   // Duplicate |h0| to |h1|.
-  h1 = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoDuplicateBufferHandle(h0, nullptr, &h1));
+  MojoHandle h1 = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoDuplicateHandle(h0, &h1));
   EXPECT_NE(h1, MOJO_HANDLE_INVALID);
+  EXPECT_NE(h1, h0);
 
   // The new handle should have the correct rights.
   rights = MOJO_HANDLE_RIGHT_NONE;
@@ -681,7 +717,24 @@ TEST(CoreTest, MAYBE_BasicSharedBuffer) {
   // Unmap it.
   EXPECT_EQ(MOJO_RESULT_OK, MojoUnmapBuffer(pointer));
 
+  // Test duplication with reduced rights.
+  MojoHandle h2 = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoDuplicateHandleWithReducedRights(
+                                h1, MOJO_HANDLE_RIGHT_DUPLICATE, &h2));
+  EXPECT_NE(h2, MOJO_HANDLE_INVALID);
+  EXPECT_NE(h2, h1);
+  // |h2| should have the correct rights.
+  rights = MOJO_HANDLE_RIGHT_NONE;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoGetRights(h2, &rights));
+  EXPECT_EQ(kDefaultSharedBufferHandleRights & ~MOJO_HANDLE_RIGHT_DUPLICATE,
+            rights);
+  // Trying to duplicate |h2| should fail.
+  MojoHandle h3 = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED, MojoDuplicateHandle(h2, &h3));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, h3);
+
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h1));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h2));
 }
 
 // This checks that things actually work in C (not C++).

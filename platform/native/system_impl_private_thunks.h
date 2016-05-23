@@ -37,6 +37,14 @@ struct MojoSystemImplThunksPrivate {
   MojoResult (*GetRights)(MojoSystemImpl system,
                           MojoHandle handle,
                           MojoHandleRights* rights);
+  MojoResult (*DuplicateHandleWithReducedRights)(
+      MojoSystemImpl system,
+      MojoHandle handle,
+      MojoHandleRights rights_to_remove,
+      MojoHandle* new_handle);
+  MojoResult (*DuplicateHandle)(MojoSystemImpl system,
+                                MojoHandle handle,
+                                MojoHandle* new_handle);
   MojoResult (*Wait)(MojoSystemImpl system,
                      MojoHandle handle,
                      MojoHandleSignals signals,
@@ -157,6 +165,8 @@ inline MojoSystemImplThunksPrivate MojoMakeSystemImplThunksPrivate() {
       MojoSystemImplGetTimeTicksNow,
       MojoSystemImplClose,
       MojoSystemImplGetRights,
+      MojoSystemImplDuplicateHandleWithReducedRights,
+      MojoSystemImplDuplicateHandle,
       MojoSystemImplWait,
       MojoSystemImplWaitMany,
       MojoSystemImplCreateMessagePipe,
