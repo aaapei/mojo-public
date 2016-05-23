@@ -142,6 +142,9 @@ MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights);  // Out.
 //   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
 //       (that, e.g., may result in it being invalidated, such as being sent in
 //       a message).
+//
+// TODO(vtl): Discuss this API some more. It may be more desirable to replace
+// the handle with a new one (with reduced rights).
 MojoResult MojoReduceRights(MojoHandle handle,
                             MojoHandleRights rights_to_remove);
 
