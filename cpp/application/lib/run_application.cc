@@ -4,17 +4,66 @@
 
 #include "mojo/public/cpp/application/run_application.h"
 
+#include <assert.h>
+#include <pthread.h>
+
 #include "mojo/public/cpp/application/application_impl_base.h"
+#include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/system/message_pipe.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 #include "mojo/public/interfaces/application/application.mojom.h"
 
 namespace mojo {
 
-void RunApplication(MojoHandle application_request_handle,
-                    ApplicationImplBase* application_impl) {
-  // TODO(vtl): Possibly we should have an assertion that we're not running, but
-  // that requires TLS.
+namespace {
+
+// We store a pointer to a |ResultHolder|, which just stores a |MojoResult|, in
+// TLS so that |TerminateApplication()| can provide the result that
+// |RunApplication()| will return. (The |ResultHolder| is just on
+// |RunApplication()|'s stack.)
+struct ResultHolder {
+#ifndef NDEBUG
+  bool is_set = false;
+#endif
+  MojoResult result = MOJO_RESULT_UNKNOWN;
+};
+
+pthread_key_t g_current_result_holder_key;
+
+// Ensures that we have a TLS slot to store the current result in.
+void InitializeCurrentResultHolderIfNecessary() {
+  static pthread_once_t current_result_holder_key_once = PTHREAD_ONCE_INIT;
+  int error = pthread_once(&current_result_holder_key_once, []() {
+    int error = pthread_key_create(&g_current_result_holder_key, nullptr);
+    MOJO_ALLOW_UNUSED_LOCAL(error);
+    assert(!error);
+  });
+  MOJO_ALLOW_UNUSED_LOCAL(error);
+  assert(!error);
+}
+
+ResultHolder* GetCurrentResultHolder() {
+  InitializeCurrentResultHolderIfNecessary();
+  return static_cast<ResultHolder*>(
+      pthread_getspecific(g_current_result_holder_key));
+}
+
+void SetCurrentResultHolder(ResultHolder* result_holder) {
+  InitializeCurrentResultHolderIfNecessary();
+
+  int error = pthread_setspecific(g_current_result_holder_key, result_holder);
+  MOJO_ALLOW_UNUSED_LOCAL(error);
+  assert(!error);
+}
+
+}  // namespace
+
+MojoResult RunApplication(MojoHandle application_request_handle,
+                          ApplicationImplBase* application_impl) {
+  assert(!GetCurrentResultHolder());
+
+  ResultHolder result_holder;
+  SetCurrentResultHolder(&result_holder);
 
   RunLoop loop;
   application_impl->Bind(InterfaceRequest<Application>(
@@ -23,10 +72,26 @@ void RunApplication(MojoHandle application_request_handle,
 
   // TODO(vtl): Should we unbind stuff here? (Should there be "will start"/"did
   // stop" notifications to the |ApplicationImplBase|?)
+
+  SetCurrentResultHolder(nullptr);
+
+  // TODO(vtl): We'd like to enable the following assertion, but we do things
+  // like |RunLoop::current()->Quit()| in various places.
+  // assert(result_holder.is_set);
+
+  return result_holder.result;
 }
 
-void TerminateApplication() {
+void TerminateApplication(MojoResult result) {
   RunLoop::current()->Quit();
+
+  ResultHolder* result_holder = GetCurrentResultHolder();
+  assert(result_holder);
+  assert(!result_holder->is_set);
+  result_holder->result = result;
+#ifndef NDEBUG
+  result_holder->is_set = true;
+#endif
 }
 
 }  // namespace mojo
