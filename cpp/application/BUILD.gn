@@ -17,6 +17,7 @@ mojo_sdk_source_set("application") {
     "lib/application_impl_base.cc",
     "lib/connect.cc",
     "lib/service_provider_impl.cc",
+    "run_application.h",
     "service_connector.h",
     "service_provider_impl.h",
   ]
@@ -35,7 +36,6 @@ mojo_sdk_source_set("standalone") {
     "application_runner.h",
     "lib/application_runner.cc",
     "lib/run_application.cc",
-    "run_application.h",
   ]
 
   public_deps = [
