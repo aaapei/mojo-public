@@ -723,5 +723,43 @@ TEST(SystemImplTest, BasicSharedBuffer) {
   // 2 SystemImpls are leaked...
 }
 
+TEST(CoreTest, MessagePipeChecksTransferRight) {
+  MojoSystemImpl sys = MojoSystemImplCreateImpl();
+
+  MojoHandle h0 = MOJO_HANDLE_INVALID;
+  MojoHandle h1 = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplCreateMessagePipe(sys, nullptr, &h0, &h1));
+
+  // Create a shared buffer (which is transferrable and duplicatable).
+  MojoHandle h_transferrable = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplCreateSharedBuffer(sys, nullptr, 100,
+                                                             &h_transferrable));
+
+  // Make a non-transferrable duplicate handle.
+  MojoHandle h_not_transferrable = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplDuplicateHandleWithReducedRights(
+                sys, h_transferrable, MOJO_HANDLE_RIGHT_TRANSFER,
+                &h_not_transferrable));
+
+  // |h_transferrable| can be transferred.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoSystemImplWriteMessage(sys, h0, nullptr, 0u, &h_transferrable,
+                                       1u, MOJO_WRITE_MESSAGE_FLAG_NONE));
+
+  // |h_not_transferrable| can be transferred.
+  EXPECT_EQ(
+      MOJO_RESULT_PERMISSION_DENIED,
+      MojoSystemImplWriteMessage(sys, h0, nullptr, 0u, &h_not_transferrable, 1u,
+                                 MOJO_WRITE_MESSAGE_FLAG_NONE));
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys, h0));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys, h1));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSystemImplClose(sys, h_not_transferrable));
+
+  // 1 SystemImpl is leaked...
+}
+
 }  // namespace
 }  // namespace mojo

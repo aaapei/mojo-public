@@ -99,7 +99,8 @@ MojoResult MojoCreateMessagePipe(
 //       |message_pipe_handle| is not a valid handle, or some of the
 //       requirements above are not satisfied).
 //   |MOJO_RESULT_PERMISSION_DENIED| if |message_pipe_handle| does not have the
-//       |MOJO_HANDLE_RIGHT_WRITE| right.
+//       |MOJO_HANDLE_RIGHT_WRITE| right or if one of the handles to be sent
+//       does not have the |MOJO_HANDLE_RIGHT_TRANSFER| right.
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if some system limit has been reached, or
 //       the number of handles to send is too large (TODO(vtl): reconsider the
 //       latter case).
@@ -112,6 +113,15 @@ MojoResult MojoCreateMessagePipe(
 //       transaction (that, e.g., may result in it being invalidated, such as
 //       being sent in a message), or if some handle to be sent is currently in
 //       use.
+//
+// Note: |MOJO_RESULT_BUSY| is generally "preferred" over
+// |MOJO_RESULT_PERMISSION_DENIED|. E.g., if a handle to be sent both is busy
+// and does not have the transfer right, then the result will be "busy".
+//
+// TODO(vtl): We'll also report |MOJO_RESULT_BUSY| if a (data pipe
+// producer/consumer) handle to be sent is in a two-phase write/read). But
+// should we? (For comparison, there's no such provision in |MojoClose()|.)
+// https://github.com/domokit/mojo/issues/782
 //
 // TODO(vtl): Add a notion of capacity for message pipes, and return
 // |MOJO_RESULT_SHOULD_WAIT| if the message pipe is full.
