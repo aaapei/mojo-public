@@ -12,6 +12,17 @@ namespace mojo {
 
 class ApplicationImplBase;
 
+// Base class for options to |RunMainApplication()| and |RunApplication()|. An
+// implementation of these functions may (but need not, in which case no options
+// are available) separately provide an implementation subclass, which would be
+// specific to that implementation. (The "standalone" implementation has no
+// options.)
+class RunApplicationOptions {
+ protected:
+  RunApplicationOptions() {}
+  ~RunApplicationOptions() {}
+};
+
 // |RunMainApplication()| and |RunApplication()| set up a message (run) loop and
 // run the provided application implementation. |RunMainApplication()| should be
 // used on the application's main thread (e.g., from |MojoMain()|) and may do
@@ -31,11 +42,15 @@ class ApplicationImplBase;
 // running a message loop of some sort).
 //
 // |*application_impl| must remain alive until the message loop starts running
-// (thus it may own itself).
+// (thus it may own itself). If |options| is non-null, then it must point to an
+// instance of an implementation-specific subclass of |RunApplicationOptions|;
+// |*options| must remain alive for the duration of the call.
 MojoResult RunMainApplication(MojoHandle application_request_handle,
-                              ApplicationImplBase* application_impl);
+                              ApplicationImplBase* application_impl,
+                              const RunApplicationOptions* options = nullptr);
 MojoResult RunApplication(MojoHandle application_request_handle,
-                          ApplicationImplBase* application_impl);
+                          ApplicationImplBase* application_impl,
+                          const RunApplicationOptions* options = nullptr);
 
 // |TerminateMainApplication()| and |TerminateApplication()| terminate the
 // application that is running on the current thread. They may only be called
