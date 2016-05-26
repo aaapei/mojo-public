@@ -127,11 +127,19 @@ MojoResult MojoClose(MojoHandle handle);  // In.
 //       a message).
 MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights);  // Out.
 
-// |MojoReduceRights()|: Reduces rights that the given |handle| may have.
+// |MojoReplaceHandleWithReducedRights()|: Replaces |handle| with an equivalent
+// one with reduced rights.
 //
-// That is, on success:
+// On success, |*replacement_handle| will be a handle that is equivalent to
+// |handle| (before the call), but with:
 //
-//   new rights = current rights & ~rights_to_remove.
+//   replacement handle rights = current rights & ~rights_to_remove.
+//
+// |handle| will be invalidated, and any ongoing two-phase operations (e.g., for
+// data pipes) on |handle| will be aborted.
+//
+// On failure, |handle| will remain valid and unchanged (with any ongoing
+// two-phase operations undisturbed) and |*replacement_handle| will not be set.
 //
 // Note that it is not an error to "remove" rights that the handle does not
 // (currently) possess.
@@ -139,22 +147,23 @@ MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights);  // Out.
 // Returns:
 //   |MOJO_RESULT_OK| on success.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
+//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
+//       been reached.
 //   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
 //       (that, e.g., may result in it being invalidated, such as being sent in
 //       a message).
-//
-// TODO(vtl): Discuss this API some more. It may be more desirable to replace
-// the handle with a new one (with reduced rights).
-MojoResult MojoReduceRights(MojoHandle handle,
-                            MojoHandleRights rights_to_remove);
+MojoResult MojoReplaceHandleWithReducedRights(
+    MojoHandle handle,
+    MojoHandleRights rights_to_remove,
+    MojoHandle* replacement_handle);  // Out.
 
 // |MojoDuplicateHandleWithReducedRights()|: Duplicates |handle| to a new handle
 // with reduced rights. This requires |handle| to have the
 // |MOJO_HANDLE_RIGHT_DUPLICATE| (note that some handle types may never have
 // this right).
 //
-// The rights for the new handle are determined as in |MojoReduceRights()|. That
-// is, on success:
+// The rights for the new handle are determined as in
+// |MojoReplaceHandleWithReducedRights()|. That is, on success:
 //
 //   new handle rights = original handle rights & ~rights_to_remove.
 //
