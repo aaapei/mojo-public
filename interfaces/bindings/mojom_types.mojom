@@ -38,11 +38,11 @@ module mojo.bindings.types;
  * We refer to this higher-layer context as the *owning context.*
  *
  * In addition to types, Mojom values are also representd by structures in this
- * file. A |Value| may be a LiteralValue, a ConstantReference, 
- * an EnumValueReference or a BuiltinConstantValue. Similarly to the situation 
- * with TypeReferences, ConstantReferences and EnumValueReferences contain a 
+ * file. A |Value| may be a LiteralValue, a ConstantReference,
+ * an EnumValueReference or a BuiltinConstantValue. Similarly to the situation
+ * with TypeReferences, ConstantReferences and EnumValueReferences contain a
  * key which may be used to lookup user-defined value (an EnumValue or a
- * DeclaredConstant) in the owning context. 
+ * DeclaredConstant) in the owning context.
  */
 
 // The different kinds of types. We divide the types into five categories:
@@ -166,8 +166,7 @@ struct StructField {
   // the eight-byte header, of the first byte of this field. In the case of
   // boolean fields, this refers to the byte in which the field's bit is
   // located but not which bit corresponds to the field.
-  // A negative value means unset.
-  int32 offset;
+  uint32 offset;
 
   // In the case of a boolean field, this value gives the zero-based
   // index of the bit within the field's byte within the serialized struct.
@@ -351,7 +350,7 @@ struct ConstantReference {
   // The identifier, as it appears at the reference site.
   string identifier;
 
-  // The DeclaredConstant to which this reference has resolved can be looked up 
+  // The DeclaredConstant to which this reference has resolved can be looked up
   // using this key in the appropriate map in the owning context.
   string constant_key;
 };
@@ -363,10 +362,10 @@ struct EnumValueReference {
 
   // The type key of the MojomEnum containing the EnumValue to which this
   // reference has resolved. The MojomEnum can be looked up using this key in
-  // the appropriate map in the owning context. 
+  // the appropriate map in the owning context.
   string enum_type_key;
 
-  // The 0-based index into the |values| array within the MojomEnum specified 
+  // The 0-based index into the |values| array within the MojomEnum specified
   // by |enum_type_key| of the EnumValue to which this reference has resolved.
   uint32 enum_value_index;
 };
@@ -390,7 +389,7 @@ struct DeclaredConstant {
 
 
   // The resolved concrete value. This must be a LiteralValue, a
-  // BuiltinConstantValue, or an EnumValueReference. It may not be a 
+  // BuiltinConstantValue, or an EnumValueReference. It may not be a
   // ConstantReference.
   //
   // The resolved concrete value is defined as follows:
@@ -407,7 +406,7 @@ struct DeclaredConstant {
   // must terminate in well-formed Mojom.
   //
   // In the case that |resolved_concrete_value| is set to an EnumValueReference
-  // only the |enum_type_key| and |enum_value_index| fields of the 
+  // only the |enum_type_key| and |enum_value_index| fields of the
   // EnumValueReference are meaningful. The other fields should be ignored.
   Value? resolved_concrete_value;
 };
