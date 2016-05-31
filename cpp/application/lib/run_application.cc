@@ -60,12 +60,6 @@ void SetCurrentResultHolder(ResultHolder* result_holder) {
 
 }  // namespace
 
-MojoResult RunMainApplication(MojoHandle application_request_handle,
-                              ApplicationImplBase* application_impl,
-                              const RunApplicationOptions* options) {
-  return RunApplication(application_request_handle, application_impl, options);
-}
-
 MojoResult RunApplication(MojoHandle application_request_handle,
                           ApplicationImplBase* application_impl,
                           const RunApplicationOptions* options) {
@@ -90,10 +84,6 @@ MojoResult RunApplication(MojoHandle application_request_handle,
   // assert(result_holder.is_set);
 
   return result_holder.result;
-}
-
-void TerminateMainApplication(MojoResult result) {
-  TerminateApplication(result);
 }
 
 void TerminateApplication(MojoResult result) {

@@ -121,5 +121,5 @@ class HumanResourceSystemServer : public ApplicationImplBase {
 
 MojoResult MojoMain(MojoHandle application_request) {
   mojo::test::versioning::HumanResourceSystemServer hr_system_server;
-  return mojo::RunMainApplication(application_request, &hr_system_server);
+  return mojo::RunApplication(application_request, &hr_system_server);
 }
