@@ -90,7 +90,12 @@ void TerminateApplication(MojoResult result) {
   RunLoop::current()->Quit();
 
   ResultHolder* result_holder = GetCurrentResultHolder();
-  assert(result_holder);
+  // TODO(vtl): We may execute code during |RunLoop|'s destruction (in
+  // particular, "handlers" are notified of destruction, and those handlers may
+  // call this). There's no |is_running()| method (unlike |base::MessageLoop|),
+  // so we detect this case by checking if there's a current result holder. Ugh.
+  if (!result_holder)
+    return;
   assert(!result_holder->is_set);
   result_holder->result = result;
 #ifndef NDEBUG

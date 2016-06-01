@@ -14,11 +14,6 @@ namespace {
 bool g_running = false;
 }  // namespace
 
-// static
-void ApplicationImplBase::Terminate() {
-  RunLoop::current()->Quit();
-}
-
 ApplicationRunner::ApplicationRunner(
     std::unique_ptr<ApplicationDelegate> delegate)
     : delegate_(std::move(delegate)) {}

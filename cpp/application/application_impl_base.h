@@ -43,11 +43,6 @@ class ApplicationImplBase : public Application {
   // object to start serving requests (via that message loop).
   void Bind(InterfaceRequest<Application> application_request);
 
-  // Quits the main run loop for this application.
-  // TODO(vtl): This is implemented in application_runner.cc (for example). Its
-  // presence here is pretty dubious.
-  static void Terminate();
-
   // This will be valid after |Initialize()| has been received and remain valid
   // until this object is destroyed.
   Shell* shell() const { return shell_.get(); }
@@ -83,6 +78,12 @@ class ApplicationImplBase : public Application {
   // Called before quitting the main message (run) loop, i.e., before
   // |Terminate()|. The default implementation does nothing.
   virtual void OnQuit();
+
+  // Terminates this application with result |result|. The default
+  // implementation quits the main run loop for this application by calling
+  // |mojo::TerminateApplication()| (and assumes that the application was run
+  // using |mojo::RunApplication()|).
+  virtual void Terminate(MojoResult result);
 
  protected:
   // This class is meant to be subclassed.

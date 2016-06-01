@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "mojo/public/cpp/application/connection_context.h"
+#include "mojo/public/cpp/application/run_application.h"
 #include "mojo/public/cpp/application/service_provider_impl.h"
 #include "mojo/public/cpp/environment/logging.h"
 
@@ -33,6 +34,10 @@ bool ApplicationImplBase::OnAcceptConnection(
 
 void ApplicationImplBase::OnQuit() {}
 
+void ApplicationImplBase::Terminate(MojoResult result) {
+  TerminateApplication(result);
+}
+
 ApplicationImplBase::ApplicationImplBase() : application_binding_(this) {}
 
 void ApplicationImplBase::Initialize(InterfaceHandle<Shell> shell,
@@ -42,7 +47,9 @@ void ApplicationImplBase::Initialize(InterfaceHandle<Shell> shell,
   shell_.set_connection_error_handler([this]() {
     OnQuit();
     service_provider_impls_.clear();
-    Terminate();
+    // TODO(vtl): Maybe this should be |MOJO_RESULT_UNKNOWN| or something else,
+    // but currently tests fail if we don't just report "OK".
+    Terminate(MOJO_RESULT_OK);
   });
   url_ = url;
   args_ = args.To<std::vector<std::string>>();
@@ -71,7 +78,7 @@ void ApplicationImplBase::AcceptConnection(
 
 void ApplicationImplBase::RequestQuit() {
   OnQuit();
-  Terminate();
+  Terminate(MOJO_RESULT_OK);
 }
 
 }  // namespace mojo
