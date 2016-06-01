@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// This file tests the C time API.
+// This file tests the C time API (the functions declared in
+// mojo/public/c/system/time.h).
 
 #include "mojo/public/c/system/time.h"
 #include "testing/gtest/include/gtest/gtest.h"

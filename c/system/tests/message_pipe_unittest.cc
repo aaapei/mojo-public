@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// This file tests the C message pipe API.
+// This file tests the C message pipe API (the functions declared in
+// mojo/public/c/system/message_pipe.h).
 
 #include "mojo/public/c/system/buffer.h"
 #include "mojo/public/c/system/handle.h"
