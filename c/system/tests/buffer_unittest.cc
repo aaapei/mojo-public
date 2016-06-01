@@ -1,24 +1,14 @@
-// Copyright 2013 The Chromium Authors. All rights reserved.
+// Copyright 2016 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// This file tests the C API.
-
-#include <string.h>
+// This file tests the C buffer API (the functions declared in
+// mojo/public/c/system/buffer.h).
 
 #include "mojo/public/c/system/buffer.h"
 #include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/time.h"
-#include "mojo/public/c/system/wait.h"
 #include "testing/gtest/include/gtest/gtest.h"
-
-// Defined in core_unittest_pure_c.c.
-extern "C" const char* MinimalCTest(void);
-
-// Defined in core_unittest_pure_cpp.cc.
-const char* MinimalCppTest();
 
 namespace {
 
@@ -30,18 +20,7 @@ const MojoHandleRights kDefaultSharedBufferHandleRights =
 
 // The only handle that's guaranteed to be invalid is |MOJO_HANDLE_INVALID|.
 // Tests that everything that takes a handle properly recognizes it.
-TEST(CoreTest, InvalidHandle) {
-  // Wait:
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
-            MojoWait(MOJO_HANDLE_INVALID, ~MOJO_HANDLE_SIGNAL_NONE, 1000000u,
-                     nullptr));
-
-  const MojoHandle h = MOJO_HANDLE_INVALID;
-  MojoHandleSignals sig = ~MOJO_HANDLE_SIGNAL_NONE;
-  EXPECT_EQ(
-      MOJO_RESULT_INVALID_ARGUMENT,
-      MojoWaitMany(&h, &sig, 1u, MOJO_DEADLINE_INDEFINITE, nullptr, nullptr));
-
+TEST(BufferTest, InvalidHandle) {
   // Shared buffer:
   MojoHandle out_handle = MOJO_HANDLE_INVALID;
   EXPECT_EQ(
@@ -63,12 +42,11 @@ TEST(CoreTest, InvalidHandle) {
 
 // TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
 #ifdef __native_client__
-#define MAYBE_BasicSharedBuffer DISABLED_BasicSharedBuffer
+#define MAYBE_Basic DISABLED_Basic
 #else
-#define MAYBE_BasicSharedBuffer BasicSharedBuffer
+#define MAYBE_Basic Basic
 #endif
-TEST(CoreTest, MAYBE_BasicSharedBuffer) {
-
+TEST(BufferTest, MAYBE_Basic) {
   // Create a shared buffer (|h0|).
   MojoHandle h0 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateSharedBuffer(nullptr, 100, &h0));
@@ -152,17 +130,6 @@ TEST(CoreTest, MAYBE_BasicSharedBuffer) {
 
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h1));
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h2));
-}
-
-// This checks that things actually work in C (not C++).
-TEST(CoreTest, MinimalCTest) {
-  const char* failure = MinimalCTest();
-  EXPECT_FALSE(failure) << failure;
-}
-
-TEST(CoreTest, MinimalCppTest) {
-  const char* failure = MinimalCppTest();
-  EXPECT_FALSE(failure) << failure;
 }
 
 // TODO(vtl): Add multi-threaded tests.

@@ -13,12 +13,14 @@ mojo_sdk_source_set("tests") {
   cflags_c = [ "-Wundef" ]
 
   sources = [
-    "core_unittest.cc",
+    "buffer_unittest.cc",
+    "compile_unittest.cc",
     "data_pipe_unittest.cc",
     "handle_unittest.cc",
     "macros_unittest.cc",
     "message_pipe_unittest.cc",
     "time_unittest.cc",
+    "wait_unittest.cc",
   ]
 
   deps = [
@@ -43,8 +45,8 @@ mojo_sdk_source_set("pure_tests") {
   cflags = [ "-Wundef" ]
 
   sources = [
-    "core_unittest_pure_c.c",
-    "core_unittest_pure_cpp.cc",
+    "compile_unittest_pure_c.c",
+    "compile_unittest_pure_cpp.cc",
   ]
 
   mojo_sdk_deps = [
