@@ -7,13 +7,9 @@ import("../../mojo_sdk.gni")
 # GYP version: mojo/public/mojo_public.gyp:mojo_application_base
 mojo_sdk_source_set("application") {
   sources = [
-    "application_delegate.h",
-    "application_impl.h",
     "application_impl_base.h",
     "connect.h",
     "connection_context.h",
-    "lib/application_delegate.cc",
-    "lib/application_impl.cc",
     "lib/application_impl_base.cc",
     "lib/connect.cc",
     "lib/service_provider_impl.cc",
@@ -33,8 +29,6 @@ mojo_sdk_source_set("application") {
 # GYP version: mojo/public/mojo_public.gyp:mojo_application_standalone
 mojo_sdk_source_set("standalone") {
   sources = [
-    "application_runner.h",
-    "lib/application_runner.cc",
     "lib/run_application.cc",
   ]
 
