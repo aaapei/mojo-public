@@ -87,10 +87,15 @@ abstract class {{interface|name}}Interface
                {{interface|name}} {
   factory {{interface|name}}Interface([{{interface|name}} impl]) =>
       new {{interface|name}}Stub.unbound(impl);
+
   factory {{interface|name}}Interface.fromEndpoint(
       core.MojoMessagePipeEndpoint endpoint,
       [{{interface|name}} impl]) =>
       new {{interface|name}}Stub.fromEndpoint(endpoint, impl);
+
+  factory {{interface|name}}Interface.fromMock(
+      {{interface|name}} mock) =>
+      new {{interface|name}}Proxy.fromMock(mock);
 }
 
 abstract class {{interface|name}}InterfaceRequest
@@ -103,6 +108,8 @@ abstract class {{interface|name}}InterfaceRequest
 class _{{interface|name}}ProxyControl
     extends bindings.ProxyMessageHandler
     implements bindings.ProxyControl<{{interface|name}}> {
+  {{interface|name}} impl;
+
   _{{interface|name}}ProxyControl.fromEndpoint(
       core.MojoMessagePipeEndpoint endpoint) : super.fromEndpoint(endpoint);
 
@@ -147,11 +154,6 @@ class _{{interface|name}}ProxyControl
     }
   }
 
-  {{interface|name}} get impl => null;
-  set impl({{interface|name}} _) {
-    throw new core.MojoApiError("The impl of a Proxy cannot be set.");
-  }
-
   @override
   String toString() {
     var superString = super.toString();
@@ -174,6 +176,13 @@ class {{interface|name}}Proxy
   {{interface|name}}Proxy.unbound()
       : super(new _{{interface|name}}ProxyControl.unbound());
 
+  factory {{interface|name}}Proxy.fromMock({{interface|name}} mock) {
+    {{interface|name}}Proxy newMockedProxy =
+        new {{interface|name}}Proxy.unbound();
+    newMockedProxy.impl = mock;
+    return newMockedProxy;
+  }
+
   static {{interface|name}}Proxy newFromEndpoint(
       core.MojoMessagePipeEndpoint endpoint) {
     assert(endpoint.setDescription("For {{interface|name}}Proxy"));
@@ -188,6 +197,14 @@ class {{interface|name}}Proxy
 {%- endfor -%}
 {%- set request_struct = method.param_struct -%}
   ) {
+    if (impl != null) {
+      impl.{{method|name}}(
+{%- for parameter in method.parameters -%}
+        {{parameter|name}}{% if not loop.last %}, {% endif %}
+{%- endfor -%}
+      );
+      return;
+    }
     if (!ctrl.isBound) {
       ctrl.proxyError("The Proxy is closed.");
       return;
@@ -201,11 +218,19 @@ class {{interface|name}}Proxy
   }
 {%- else %}
 {%- set request_struct = method.param_struct %}
+{%- set response_struct = method.response_param_struct %}
   dynamic {{method|name}}(
 {%- for parameter in method.parameters -%}
     {{parameter.kind|dart_type}} {{parameter|name}},
 {%- endfor -%}
     [Function responseFactory = null]) {
+    if (impl != null) {
+      return new Future(() => impl.{{method|name}}(
+{%- for parameter in method.parameters -%}
+        {{parameter|name}},
+{%- endfor -%}
+        _{{interface|name}}StubControl._{{response_struct|name|lower_camel}}Factory));
+    }
     var params = new {{request_struct|name}}();
 {%- for parameter in method.parameters %}
     params.{{parameter|name}} = {{parameter|name}};
@@ -244,7 +269,7 @@ class _{{interface|name}}StubControl
 {% for method in interface.methods %}
 {%- if method.response_parameters != None %}
 {%- set response_struct = method.response_param_struct %}
-  {{response_struct|name}} _{{response_struct|name|lower_camel}}Factory(
+  static {{response_struct|name}} _{{response_struct|name|lower_camel}}Factory(
     {%- for param in method.response_parameters -%}
       {{param.kind|dart_type}} {{param|name}}{% if not loop.last %}, {% endif %}
     {%- endfor -%}
