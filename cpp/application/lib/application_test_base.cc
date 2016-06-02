@@ -97,10 +97,13 @@ MojoResult RunAllTests(MojoHandle application_request_handle) {
     // It also removes GTEST arguments from |argv| and updates the |argc| count.
     MOJO_CHECK(args.size() <
                static_cast<size_t>(std::numeric_limits<int>::max()));
-    int argc = static_cast<int>(args.size());
+    // We'll put our URL in at |argv[0]| (|args| doesn't include a "command
+    // name").
+    int argc = static_cast<int>(args.size()) + 1;
     std::vector<const char*> argv(argc + 1);
-    for (int i = 0; i < argc; ++i)
-      argv[i] = args[i].get().c_str();
+    argv[0] = g_url.get().c_str();
+    for (size_t i = 0; i < args.size(); ++i)
+      argv[i + 1] = args[i].get().c_str();
     argv[argc] = nullptr;
 
     // Note: |InitGoogleTest()| will modify |argc| and |argv[...]|.
