@@ -24,7 +24,6 @@ public class ApplicationConnection implements Closeable {
 
     /**
      * @param requestorUrl URL of the application requesting this connection.
-     * @param exposedServices ServiceProvider for services exposed by the remote application.
      */
     public ApplicationConnection(String requestorUrl, String connectionUrl) {
         mRequestorUrl = requestorUrl;
