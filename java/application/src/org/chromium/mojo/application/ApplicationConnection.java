@@ -19,7 +19,6 @@ import java.util.Map;
  */
 public class ApplicationConnection implements Closeable {
     private final String mConnectionUrl;
-    private final ServiceProvider mExposedServices;
     private final String mRequestorUrl;
     private final ServiceProviderImpl mServiceProviderImpl;
 
@@ -27,10 +26,8 @@ public class ApplicationConnection implements Closeable {
      * @param requestorUrl URL of the application requesting this connection.
      * @param exposedServices ServiceProvider for services exposed by the remote application.
      */
-    public ApplicationConnection(
-            String requestorUrl, ServiceProvider exposedServices, String connectionUrl) {
+    public ApplicationConnection(String requestorUrl, String connectionUrl) {
         mRequestorUrl = requestorUrl;
-        mExposedServices = exposedServices;
         mConnectionUrl = connectionUrl;
         mServiceProviderImpl = new ServiceProviderImpl();
     }
@@ -47,13 +44,6 @@ public class ApplicationConnection implements Closeable {
      */
     public String connectionUrl() {
         return mConnectionUrl;
-    }
-
-    /**
-     * @return ServiceProvider for services exposed by the remote application.
-     */
-    public ServiceProvider getRemoteServiceProvider() {
-        return mExposedServices;
     }
 
     /**
@@ -75,9 +65,6 @@ public class ApplicationConnection implements Closeable {
     @Override
     public void close() {
         mServiceProviderImpl.close();
-        if (mExposedServices != null) {
-            mExposedServices.close();
-        }
     }
 }
 
