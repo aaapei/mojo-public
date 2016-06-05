@@ -43,10 +43,8 @@ type Context interface {
 	// Shell.
 	Args() []string
 
-	// ConnectToApplication requests a new connection to an application. You
-	// should pass a list of services you want to provide to the requested
-	// application.
-	ConnectToApplication(remoteURL string, providedServices ...ServiceFactory) *OutgoingConnection
+	// ConnectToApplication requests a new connection to an application.
+	ConnectToApplication(remoteURL string) *OutgoingConnection
 
 	// Close closes the main run loop for this application.
 	Close()
@@ -104,7 +102,7 @@ func (impl *ApplicationImpl) Initialize(shellPointer shell.Shell_Pointer, args *
 
 // Mojo application implementation.
 func (impl *ApplicationImpl) AcceptConnection(requestorURL string, services *sp.ServiceProvider_Request, exposedServices *sp.ServiceProvider_Pointer, resolvedURL string) error {
-	connection := newConnection(requestorURL, services, exposedServices, resolvedURL)
+	connection := newConnection(requestorURL, services, resolvedURL)
 	impl.delegate.AcceptConnection(connection)
 	impl.addConnection(connection)
 	return nil
@@ -136,18 +134,21 @@ func (impl *ApplicationImpl) Args() []string {
 }
 
 // Context implementaion.
-func (impl *ApplicationImpl) ConnectToApplication(remoteURL string, providedServices ...ServiceFactory) *OutgoingConnection {
+func (impl *ApplicationImpl) ConnectToApplication(remoteURL string) *OutgoingConnection {
 	servicesRequest, servicesPointer := sp.CreateMessagePipeForServiceProvider()
-	exposedServicesRequest, exposedServicesPointer := sp.CreateMessagePipeForServiceProvider()
-	if err := impl.shell.ConnectToApplication(remoteURL, &servicesRequest, &exposedServicesPointer); err != nil {
+	if err := impl.shell.ConnectToApplication(remoteURL, &servicesRequest, nil); err != nil {
 		log.Printf("can't connect to %v: %v", remoteURL, err)
 		// In case of error message pipes sent through Shell are closed and
 		// the connection will work as if the remote application closed
 		// both ServiceProvider's pipes.
 	}
-	connection := newConnection(impl.url, &exposedServicesRequest, &servicesPointer, remoteURL)
-	impl.addConnection(connection)
-	return connection.ProvideServices(providedServices...)
+	return &OutgoingConnection{
+		connectionInfo{
+			impl.url,
+			remoteURL,
+		},
+		sp.NewServiceProviderProxy(servicesPointer, bindings.GetAsyncWaiter()),
+	}
 }
 
 func (impl *ApplicationImpl) Close() {

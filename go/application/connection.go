@@ -68,6 +68,9 @@ type ServiceFactory interface {
 // Connection represents a connection to another application. An instance of
 // this struct is passed to Delegate's AcceptConnection() function each time a
 // connection is made to this application.
+// TODO(vtl): This is largely overkill now that we no longer have "wrong way"
+// service providers (a.k.a. "exposed services"). Things should be simplified.
+// https://github.com/domokit/mojo/issues/762
 type Connection struct {
 	connectionInfo
 	// Request for local services. Is valid until ProvideServices is called.
@@ -84,21 +87,17 @@ type Connection struct {
 	describer *ServiceDescriberFactory
 }
 
-func newConnection(requestorURL string, services *sp.ServiceProvider_Request, exposedServices *sp.ServiceProvider_Pointer, resolvedURL string) *Connection {
+func newConnection(requestorURL string, services *sp.ServiceProvider_Request, resolvedURL string) *Connection {
 	info := connectionInfo{
 		requestorURL,
 		resolvedURL,
-	}
-	var remoteServices *sp.ServiceProvider_Proxy
-	if exposedServices != nil {
-		remoteServices = sp.NewServiceProviderProxy(*exposedServices, bindings.GetAsyncWaiter())
 	}
 	return &Connection{
 		connectionInfo:  info,
 		servicesRequest: services,
 		outgoingConnection: &OutgoingConnection{
 			info,
-			remoteServices,
+			nil,
 		},
 	}
 }
