@@ -21,8 +21,7 @@ class ApplicationDelegate:
   def OnAcceptConnection(self,
                          requestor_url,
                          resolved_url,
-                         service_provider,
-                         exposed_services):
+                         service_provider):
     """
     Called from ApplicationImpl's OnAcceptConnection() method. Returns a bool
     indicating whether this connection should be accepted.

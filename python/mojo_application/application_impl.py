@@ -32,7 +32,7 @@ class ApplicationImpl(application_mojom.Application):
                        resolved_url):
     service_provider = ServiceProviderImpl(services)
     if self._delegate.OnAcceptConnection(requestor_url, resolved_url,
-                                         service_provider, exposed_services):
+                                         service_provider):
       # We keep a reference to ServiceProviderImpl to ensure neither it nor
       # |services| gets garbage collected.
       services.Bind(service_provider)
