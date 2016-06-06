@@ -38,8 +38,8 @@ class ApplicationImpl implements Application {
     }
 
     @Override
-    public void acceptConnection(String requestorUrl, InterfaceRequest<ServiceProvider> services,
-            ServiceProvider exposedServices, String connectionUrl) {
+    public void acceptConnection(String requestorUrl, String connectionUrl,
+            InterfaceRequest<ServiceProvider> services) {
         ApplicationConnection connection = new ApplicationConnection(requestorUrl, connectionUrl);
         if (services != null && mApplicationDelegate.configureIncomingConnection(connection)) {
             ServiceProvider.MANAGER.bind(connection.getLocalServiceProvider(), services);

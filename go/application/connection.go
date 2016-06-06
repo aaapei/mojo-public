@@ -87,14 +87,14 @@ type Connection struct {
 	describer *ServiceDescriberFactory
 }
 
-func newConnection(requestorURL string, services *sp.ServiceProvider_Request, resolvedURL string) *Connection {
+func newConnection(requestorURL string, services sp.ServiceProvider_Request, resolvedURL string) *Connection {
 	info := connectionInfo{
 		requestorURL,
 		resolvedURL,
 	}
 	return &Connection{
 		connectionInfo:  info,
-		servicesRequest: services,
+		servicesRequest: &services,
 		outgoingConnection: &OutgoingConnection{
 			info,
 			nil,

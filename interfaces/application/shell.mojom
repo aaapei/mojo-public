@@ -13,15 +13,9 @@ import "mojo/public/interfaces/application/service_provider.mojom";
 interface Shell {
   // See |ApplicationConnector.ConnectToApplication()|.
   //
-  // WARNING: |exposed_services| is deprecated and non-functional, and will be
-  // removed. Note that this also means that |services| will become required.
-  // https://github.com/domokit/mojo/issues/762
-  //
   // TODO(vtl): Maybe this should be deprecated/removed (in favor of just using
   // |ApplicationConnector|).
-  ConnectToApplication(string application_url,
-                       ServiceProvider&? services,
-                       ServiceProvider? exposed_services);
+  ConnectToApplication(string application_url, ServiceProvider& services);
 
   CreateApplicationConnector(
       ApplicationConnector& application_connector_request);

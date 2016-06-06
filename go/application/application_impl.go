@@ -101,7 +101,7 @@ func (impl *ApplicationImpl) Initialize(shellPointer shell.Shell_Pointer, args *
 }
 
 // Mojo application implementation.
-func (impl *ApplicationImpl) AcceptConnection(requestorURL string, services *sp.ServiceProvider_Request, exposedServices *sp.ServiceProvider_Pointer, resolvedURL string) error {
+func (impl *ApplicationImpl) AcceptConnection(requestorURL string, resolvedURL string, services sp.ServiceProvider_Request) error {
 	connection := newConnection(requestorURL, services, resolvedURL)
 	impl.delegate.AcceptConnection(connection)
 	impl.addConnection(connection)
@@ -136,7 +136,7 @@ func (impl *ApplicationImpl) Args() []string {
 // Context implementaion.
 func (impl *ApplicationImpl) ConnectToApplication(remoteURL string) *OutgoingConnection {
 	servicesRequest, servicesPointer := sp.CreateMessagePipeForServiceProvider()
-	if err := impl.shell.ConnectToApplication(remoteURL, &servicesRequest, nil); err != nil {
+	if err := impl.shell.ConnectToApplication(remoteURL, servicesRequest); err != nil {
 		log.Printf("can't connect to %v: %v", remoteURL, err)
 		// In case of error message pipes sent through Shell are closed and
 		// the connection will work as if the remote application closed

@@ -40,8 +40,7 @@ inline void ConnectToService(
     InterfaceRequest<Interface> interface_request,
     const std::string& interface_name = Interface::Name_) {
   ServiceProviderPtr service_provider;
-  shell->ConnectToApplication(application_url, GetProxy(&service_provider),
-                              nullptr);
+  shell->ConnectToApplication(application_url, GetProxy(&service_provider));
   ConnectToService(service_provider.get(), interface_request.Pass(),
                    interface_name);
 }
@@ -54,8 +53,8 @@ inline void ConnectToService(ApplicationConnector* application_connector,
                              const std::string& application_url,
                              InterfaceRequest<Interface> request) {
   ServiceProviderPtr service_provider;
-  application_connector->ConnectToApplication(
-      application_url, GetProxy(&service_provider), nullptr);
+  application_connector->ConnectToApplication(application_url,
+                                              GetProxy(&service_provider));
   ConnectToService(service_provider.get(), request.Pass());
 }
 

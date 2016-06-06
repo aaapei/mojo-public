@@ -19,9 +19,6 @@ namespace mojo {
 //                    string resolved_url,
 //                    ServiceProvider& services);
 //
-// (TODO(vtl): I've jumped the gun: I've pre-removed |exposed_services|, made
-// |services| non-nullable, and reordered the parameters.)
-//
 // Upon handling |AcceptConnection()|, the |ServiceProvider| implementation
 // bound to |services| is given a |ConnectionContext| with |type =
 // Type::INCOMING|, |remote_url = requestor_url|, and |connection_url =

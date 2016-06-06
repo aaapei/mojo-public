@@ -31,7 +31,7 @@ public class ShellHelper {
         Pair<ServiceProvider.Proxy, InterfaceRequest<ServiceProvider>> providerRequest =
                 ServiceProvider.MANAGER.getInterfaceRequest(core);
         try (ServiceProvider.Proxy provider = providerRequest.first) {
-            shell.connectToApplication(application, providerRequest.second, null);
+            shell.connectToApplication(application, providerRequest.second);
             Pair<P, InterfaceRequest<I>> serviceRequest = manager.getInterfaceRequest(core);
             provider.connectToService(manager.getName(), serviceRequest.second.passHandle());
             return serviceRequest.first;

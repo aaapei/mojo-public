@@ -96,9 +96,8 @@ class ApplicationImplBase : public Application {
                   Array<String> args,
                   const mojo::String& url) final;
   void AcceptConnection(const String& requestor_url,
-                        InterfaceRequest<ServiceProvider> services,
-                        InterfaceHandle<ServiceProvider> exposed_services,
-                        const String& url) final;
+                        const String& url,
+                        InterfaceRequest<ServiceProvider> services) final;
   void RequestQuit() final;
 
   Binding<Application> application_binding_;

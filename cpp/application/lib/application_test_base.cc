@@ -62,9 +62,8 @@ class ShellAndArgumentGrabber : public Application {
   }
 
   void AcceptConnection(const String& requestor_url,
-                        InterfaceRequest<ServiceProvider> services,
-                        InterfaceHandle<ServiceProvider> exposed_services,
-                        const String& url) override {
+                        const String& url,
+                        InterfaceRequest<ServiceProvider> services) override {
     MOJO_CHECK(false);
   }
 

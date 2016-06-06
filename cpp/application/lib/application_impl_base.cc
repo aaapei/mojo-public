@@ -58,14 +58,8 @@ void ApplicationImplBase::Initialize(InterfaceHandle<Shell> shell,
 
 void ApplicationImplBase::AcceptConnection(
     const String& requestor_url,
-    InterfaceRequest<ServiceProvider> services,
-    InterfaceHandle<ServiceProvider> exposed_services,
-    const String& url) {
-  // Note: The shell no longer actually connects |exposed_services|, so a) we
-  // never actually get valid |exposed_services| here, b) it should be OK to
-  // drop it on the floor.
-  MOJO_LOG_IF(ERROR, exposed_services)
-      << "DEPRECATED: exposed_services is going away";
+    const String& url,
+    InterfaceRequest<ServiceProvider> services) {
   std::unique_ptr<ServiceProviderImpl> service_provider_impl(
       new ServiceProviderImpl(
           ConnectionContext(ConnectionContext::Type::INCOMING, requestor_url,
