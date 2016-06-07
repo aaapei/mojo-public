@@ -31,9 +31,9 @@ class ServiceProviderImpl;
 // A subclass may make itself strongly bound by setting a suitable connection
 // error handler on the binding (available via |application_binding()|).
 //
-// TODO(vtl): ApplicationRunners should take this instead of an
-// ApplicationDelegate. Write more here when that's true (it's pretty hard to
-// use this class in the current setup).
+// The |RunApplication()| helper function (declared in run_application.h) takes
+// a pointer to an instance of (a subclass of) |ApplicationImplBase| and runs it
+// using a suitable message loop; see run_application.h for more details.
 class ApplicationImplBase : public Application {
  public:
   ~ApplicationImplBase() override;
