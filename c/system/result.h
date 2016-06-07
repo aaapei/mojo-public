@@ -144,7 +144,7 @@ typedef uint32_t MojoResult;
 #define MOJO_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY ((MojoResult)0x001u)
 
 // Subcodes valid for MOJO_ERROR_CODE_UNAVAILABLE:
-//   |MOJO_ERROR_CODE_UNAVAILABLE_SUBCODE_SHOULD_WAIT | - The request cannot
+//   |MOJO_ERROR_CODE_UNAVAILABLE_SUBCODE_SHOULD_WAIT| - The request cannot
 //       currently be completed (e.g., if the data requested is not yet
 //       available). The caller should wait for it to be feasible using one of
 //       the wait primitives.
