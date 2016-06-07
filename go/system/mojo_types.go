@@ -27,24 +27,28 @@ type MojoBufferInformationFlags uint32
 const (
 	MOJO_DEADLINE_INDEFINITE        MojoDeadline = math.MaxUint64
 	MOJO_HANDLE_INVALID             MojoHandle   = 0
-	MOJO_RESULT_OK                  MojoResult   = 0
-	MOJO_RESULT_CANCELLED           MojoResult   = 1
-	MOJO_RESULT_UNKNOWN             MojoResult   = 2
-	MOJO_RESULT_INVALID_ARGUMENT    MojoResult   = 3
-	MOJO_RESULT_DEADLINE_EXCEEDED   MojoResult   = 4
-	MOJO_RESULT_NOT_FOUND           MojoResult   = 5
-	MOJO_RESULT_ALREADY_EXISTS      MojoResult   = 6
-	MOJO_RESULT_PERMISSION_DENIED   MojoResult   = 7
-	MOJO_RESULT_RESOURCE_EXHAUSTED  MojoResult   = 8
-	MOJO_RESULT_FAILED_PRECONDITION MojoResult   = 9
-	MOJO_RESULT_ABORTED             MojoResult   = 10
-	MOJO_RESULT_OUT_OF_RANGE        MojoResult   = 11
-	MOJO_RESULT_UNIMPLEMENTED       MojoResult   = 12
-	MOJO_RESULT_INTERNAL            MojoResult   = 13
-	MOJO_RESULT_UNAVAILABLE         MojoResult   = 14
-	MOJO_RESULT_DATA_LOSS           MojoResult   = 15
-	MOJO_RESULT_BUSY                MojoResult   = 16
-	MOJO_RESULT_SHOULD_WAIT         MojoResult   = 17
+  // TODO(vtl): Find a way of supporting the new, more flexible/extensible
+  // MojoResult (see mojo/public/c/syste/result.h).
+	MOJO_RESULT_OK                  MojoResult   = 0x0
+	MOJO_RESULT_CANCELLED           MojoResult   = 0x1
+	MOJO_RESULT_UNKNOWN             MojoResult   = 0x2
+	MOJO_RESULT_INVALID_ARGUMENT    MojoResult   = 0x3
+	MOJO_RESULT_DEADLINE_EXCEEDED   MojoResult   = 0x4
+	MOJO_RESULT_NOT_FOUND           MojoResult   = 0x5
+	MOJO_RESULT_ALREADY_EXISTS      MojoResult   = 0x6
+	MOJO_RESULT_PERMISSION_DENIED   MojoResult   = 0x7
+	MOJO_RESULT_RESOURCE_EXHAUSTED  MojoResult   = 0x8
+	MOJO_RESULT_FAILED_PRECONDITION MojoResult   = 0x9
+	MOJO_RESULT_ABORTED             MojoResult   = 0xa
+	MOJO_RESULT_OUT_OF_RANGE        MojoResult   = 0xb
+	MOJO_RESULT_UNIMPLEMENTED       MojoResult   = 0xc
+	MOJO_RESULT_INTERNAL            MojoResult   = 0xd
+	MOJO_RESULT_UNAVAILABLE         MojoResult   = 0xe
+	MOJO_RESULT_DATA_LOSS           MojoResult   = 0xf
+  // MOJO_RESULT_FAILED_PRECONDITION, subcode 0x001:
+	MOJO_RESULT_BUSY                MojoResult   = 0x0019
+  // MOJO_RESULT_UNAVAILABLE, subcode 0x001:
+	MOJO_RESULT_SHOULD_WAIT         MojoResult   = 0x001e
 
 	MOJO_HANDLE_SIGNAL_NONE        MojoHandleSignals = 0
 	MOJO_HANDLE_SIGNAL_READABLE    MojoHandleSignals = 1 << 0

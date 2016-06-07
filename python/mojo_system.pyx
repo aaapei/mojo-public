@@ -34,6 +34,8 @@ def SetSystemThunks(system_thunks_as_object):
   c_thunks.MojoSetSystemThunks(system_thunks)
 
 HANDLE_INVALID = c_core.MOJO_HANDLE_INVALID
+# TODO(vtl): Find a way of supporting the new, more flexible/extensible
+# MojoResult (see mojo/public/c/syste/result.h).
 RESULT_OK = c_core.MOJO_RESULT_OK
 RESULT_CANCELLED = c_core.MOJO_RESULT_CANCELLED
 RESULT_UNKNOWN = c_core.MOJO_RESULT_UNKNOWN

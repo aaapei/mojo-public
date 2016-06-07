@@ -19,6 +19,7 @@ mojo_sdk_source_set("tests") {
     "handle_unittest.cc",
     "macros_unittest.cc",
     "message_pipe_unittest.cc",
+    "result_unittest.cc",
     "time_unittest.cc",
     "wait_unittest.cc",
   ]
