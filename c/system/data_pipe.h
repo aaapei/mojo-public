@@ -266,6 +266,15 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
 // specify the amount written and to complete the two-phase write.
 // |MojoEndWriteData()| need not be called for other return values.
 //
+// Note: After a successful |MojoBeginWriteData()| on a given handle and before
+// a corresponding |MojoEndWriteData()|, any operation that invalidates the
+// handle (such as closing the handle, replacing the handle with one with
+// reduced rights, or transferring the handle over a message pipe) will abort
+// the two-phase write. That is, the behavior is equivalent to ending the
+// two-phase write with no data written. That operation will also invalidate the
+// buffer pointer: the behavior if data continues to be written to the buffer is
+// undefined.
+//
 // Returns:
 //   |MOJO_RESULT_OK| on success.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
@@ -439,6 +448,15 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
 // Once the caller has finished reading data from |*buffer|, it should call
 // |MojoEndReadData()| to specify the amount read and to complete the two-phase
 // read.
+//
+// Note: After a successful |MojoBeginReadData()| on a given handle and before a
+// corresponding |MojoEndReadData()|, any operation that invalidates the handle
+// (such as closing the handle, replacing the handle with one with reduced
+// rights, or transferring the handle over a message pipe) will abort the
+// two-phase read. That is, the behavior is equivalent to ending the two-phase
+// read with no data consumed. That operation will also invalidate the buffer
+// pointer: the behavior if data continues to be read from the buffer is
+// undefined.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.

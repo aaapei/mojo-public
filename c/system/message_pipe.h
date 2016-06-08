@@ -89,9 +89,11 @@ MojoResult MojoCreateMessagePipe(
 // null, in which case |num_handles| must be zero.
 //
 // If handles are attached, on success the handles will no longer be valid (the
-// receiver will receive equivalent, but logically different, handles). Handles
-// to be sent should not be in simultaneous use (e.g., on another thread). On
-// failure, any handles to be attached will remain valid.
+// receiver will receive equivalent, but logically different, handles) and any
+// ongoing two-phase operations (e.g., for data pipes) on them will be aborted.
+// Handles to be sent should not be in simultaneous use (e.g., on another
+// thread). On failure, any handles to be attached will remain valid (and
+// two-phase operations will not be aborted).
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success (i.e., the message was enqueued).

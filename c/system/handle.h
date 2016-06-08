@@ -135,7 +135,7 @@ MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights);  // Out.
 //
 //   replacement handle rights = current rights & ~rights_to_remove.
 //
-// |handle| will be invalidated, and any ongoing two-phase operations (e.g., for
+// |handle| will be invalidated and any ongoing two-phase operations (e.g., for
 // data pipes) on |handle| will be aborted.
 //
 // On failure, |handle| will remain valid and unchanged (with any ongoing
