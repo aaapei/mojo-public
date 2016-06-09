@@ -10,26 +10,31 @@ const int _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name =
 
 class _{{interface|name}}ServiceDescription implements {{descpkg}}ServiceDescription {
 {%- if should_gen_mojom_types and interface.service_name %}
-  dynamic getTopLevelInterface([Function responseFactory]){
+  void getTopLevelInterface(Function responder){
     var interfaceTypeKey = getRuntimeTypeInfo().services["{{interface.service_name}}"];
     var userDefinedType = getAllMojomTypeDefinitions()[interfaceTypeKey];
-    return responseFactory(userDefinedType.interfaceType);
+    responder(userDefinedType.interfaceType);
   }
 
-  dynamic getTypeDefinition(String typeKey, [Function responseFactory]) =>
-    responseFactory(getAllMojomTypeDefinitions()[typeKey]);
+  void getTypeDefinition(String typeKey, Function responder) {
+    responder(getAllMojomTypeDefinitions()[typeKey]);
+  }
 
-  dynamic getAllTypeDefinitions([Function responseFactory]) =>
-    responseFactory(getAllMojomTypeDefinitions());
+  void getAllTypeDefinitions(Function responder) {
+    responder(getAllMojomTypeDefinitions());
+  }
 {%- else %}
-  dynamic getTopLevelInterface([Function responseFactory]) =>
-      responseFactory(null);
+  void getTopLevelInterface(Function responder) {
+    responder(null);
+  }
 
-  dynamic getTypeDefinition(String typeKey, [Function responseFactory]) =>
-      responseFactory(null);
+  void getTypeDefinition(String typeKey, Function responder) {
+    responder(null);
+  }
 
-  dynamic getAllTypeDefinitions([Function responseFactory]) =>
-      responseFactory(null);
+  void getAllTypeDefinitions(Function responder) {
+    responder(null);
+  }
 {%- endif %}
 }
 
@@ -68,11 +73,15 @@ abstract class {{interface|name}} {
     {%- endfor -%}
     );
 {%- else %}
-  dynamic {{method|name}}(
+  void {{method|name}}(
   {%- for parameter in method.parameters -%}
     {{parameter.kind|dart_type}} {{parameter|name}},
   {%- endfor -%}
-    [Function responseFactory = null]);
+     void callback(
+      {%- for param in method.response_parameters -%}
+        {{param.kind|dart_type}} {{param|name}}{% if not loop.last %}, {% endif %}
+      {%- endfor -%}
+     ));
 {%- endif %}
 {%- endfor %}
 
@@ -132,18 +141,18 @@ class _{{interface|name}}ProxyControl
           proxyError("Expected a message with a valid request Id.");
           return;
         }
-        Completer c = completerMap[message.header.requestId];
-        if (c == null) {
+        Function callback = callbackMap[message.header.requestId];
+        if (callback == null) {
           proxyError(
               "Message had unknown request Id: ${message.header.requestId}");
           return;
         }
-        completerMap.remove(message.header.requestId);
-        if (c.isCompleted) {
-          proxyError("Response completer already completed");
-          return;
-        }
-        c.complete(r);
+        callbackMap.remove(message.header.requestId);
+        callback(
+          {%- for param in method.response_parameters -%}
+            r.{{param|name}} {% if not loop.last %}, {% endif %}
+          {%- endfor -%}
+        );
         break;
 {%- endif %}
 {%- endfor %}
@@ -219,27 +228,33 @@ class {{interface|name}}Proxy
 {%- else %}
 {%- set request_struct = method.param_struct %}
 {%- set response_struct = method.response_param_struct %}
-  dynamic {{method|name}}(
+  void {{method|name}}(
 {%- for parameter in method.parameters -%}
     {{parameter.kind|dart_type}} {{parameter|name}},
 {%- endfor -%}
-    [Function responseFactory = null]) {
+    void callback(
+      {%- for param in method.response_parameters -%}
+        {{param.kind|dart_type}} {{param|name}}{% if not loop.last %}, {% endif %}
+      {%- endfor -%}
+    )) {
     if (impl != null) {
-      return new Future(() => impl.{{method|name}}(
+      impl.{{method|name}}(
 {%- for parameter in method.parameters -%}
         {{parameter|name}},
 {%- endfor -%}
-        _{{interface|name}}StubControl._{{response_struct|name|lower_camel}}Factory));
+         callback);
+      return;
     }
     var params = new {{request_struct|name}}();
 {%- for parameter in method.parameters %}
     params.{{parameter|name}} = {{parameter|name}};
 {%- endfor %}
-    return ctrl.sendMessageWithRequestId(
+    ctrl.sendMessageWithRequestId(
         params,
         _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name,
         -1,
-        bindings.MessageHeader.kMessageExpectsResponse);
+        bindings.MessageHeader.kMessageExpectsResponse,
+        callback);
   }
 {%- endif %}
 {%- endfor %}
@@ -269,25 +284,32 @@ class _{{interface|name}}StubControl
 {% for method in interface.methods %}
 {%- if method.response_parameters != None %}
 {%- set response_struct = method.response_param_struct %}
-  static {{response_struct|name}} _{{response_struct|name|lower_camel}}Factory(
-    {%- for param in method.response_parameters -%}
-      {{param.kind|dart_type}} {{param|name}}{% if not loop.last %}, {% endif %}
-    {%- endfor -%}
-  ) {
-    var result = new {{response_struct|name}}();
-    {%- for param in method.response_parameters %}
-    result.{{param|name}} = {{param|name}};
-    {%- endfor %}
-    return result;
+  Function _{{response_struct|name|lower_camel}}Responder(
+      int requestId) {
+  return (
+      {%- for param in method.response_parameters -%}
+        {{param.kind|dart_type}} {{param|name}}{% if not loop.last %}, {% endif %}
+      {%- endfor -%}
+    ) {
+      var result = new {{response_struct|name}}();
+      {%- for param in method.response_parameters %}
+      result.{{param|name}} = {{param|name}};
+      {%- endfor %}
+      sendResponse(buildResponseWithId(
+          result,
+          _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name,
+          requestId,
+          bindings.MessageHeader.kMessageIsResponse));
+    };
   }
 {%- endif %}
 {%- endfor %}
 
-  dynamic handleMessage(bindings.ServiceMessage message) {
+  void handleMessage(bindings.ServiceMessage message) {
     if (bindings.ControlMessageHandler.isControlMessage(message)) {
-      return bindings.ControlMessageHandler.handleMessage(this,
-                                                          {{interface.version}},
-                                                          message);
+      bindings.ControlMessageHandler.handleMessage(
+          this, {{interface.version}}, message);
+      return;
     }
     if (_impl == null) {
       throw new core.MojoApiError("$this has no implementation set");
@@ -308,28 +330,10 @@ class _{{interface|name}}StubControl
         );
 {%- else %}
 {%- set response_struct = method.response_param_struct %}
-        var response = _impl.{{method|name}}(
+        _impl.{{method|name}}(
           {%- for parameter in method.parameters -%}
-              params.{{parameter|name}},
-          {%- endfor -%}
-          _{{response_struct|name|lower_camel}}Factory);
-        if (response is Future) {
-          return response.then((response) {
-            if (response != null) {
-              return buildResponseWithId(
-                  response,
-                  _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name,
-                  message.header.requestId,
-                  bindings.MessageHeader.kMessageIsResponse);
-            }
-          });
-        } else if (response != null) {
-          return buildResponseWithId(
-              response,
-              _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name,
-              message.header.requestId,
-              bindings.MessageHeader.kMessageIsResponse);
-        }
+              params.{{parameter|name}}, {% endfor -%}
+          _{{response_struct|name|lower_camel}}Responder(message.header.requestId));
 {%- endif %}
         break;
 {%- endfor %}
@@ -337,7 +341,6 @@ class _{{interface|name}}StubControl
         throw new bindings.MojoCodecError("Unexpected message name");
         break;
     }
-    return null;
   }
 
   {{interface|name}} get impl => _impl;
@@ -404,16 +407,20 @@ class {{interface|name}}Stub
     );
   }
 {%- else %}
-  dynamic {{method|name}}(
+  void {{method|name}}(
 {%- for parameter in method.parameters -%}
     {{parameter.kind|dart_type}} {{parameter|name}},
 {%- endfor -%}
-    [Function responseFactory = null]) {
+    void callback(
+      {%- for param in method.response_parameters -%}
+        {{param.kind|dart_type}} {{param|name}}{% if not loop.last %}, {% endif %}
+      {%- endfor -%}
+    )) {
     return impl.{{method|name}}(
 {%- for parameter in method.parameters -%}
     {{parameter|name}},
 {%- endfor -%}
-    responseFactory);
+    callback);
   }
 {%- endif %}
 {%- endfor %}

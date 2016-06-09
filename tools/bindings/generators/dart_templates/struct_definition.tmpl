@@ -26,6 +26,12 @@ class {{struct|name}} extends bindings.Struct {
 
   {{struct|name}}() : super(kVersions.last.size);
 
+  {{struct|name}}.init(
+{%- for packed_field in struct.packed.packed_fields %}
+    {{packed_field.field.kind|dart_type}} this.{{packed_field.field|name}}{% if not loop.last %}, {% endif %}
+{%- endfor %}
+  ) : super(kVersions.last.size);
+
   static {{struct|name}} deserialize(bindings.Message message) {
     var decoder = new bindings.Decoder(message);
     var result = decode(decoder);
