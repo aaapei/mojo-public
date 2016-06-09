@@ -60,6 +60,16 @@ MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights) {
   return irt_mojo->MojoGetRights(handle, rights);
 }
 
+MojoResult MojoReplaceHandleWithReducedRights(MojoHandle handle,
+                                              MojoHandleRights rights_to_remove,
+                                              MojoHandle* replacement_handle) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoReplaceHandleWithReducedRights(handle, rights_to_remove,
+                                                      replacement_handle);
+}
+
 MojoResult MojoDuplicateHandleWithReducedRights(
     MojoHandle handle,
     MojoHandleRights rights_to_remove,

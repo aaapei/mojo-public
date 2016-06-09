@@ -13,7 +13,6 @@
 namespace {
 
 TEST(WaitTest, InvalidHandle) {
-  // Wait:
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
             MojoWait(MOJO_HANDLE_INVALID, ~MOJO_HANDLE_SIGNAL_NONE, 1000000u,
                      nullptr));

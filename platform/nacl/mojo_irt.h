@@ -22,6 +22,10 @@ struct nacl_irt_mojo {
   MojoTimeTicks (*MojoGetTimeTicksNow)();
   MojoResult (*MojoClose)(MojoHandle handle);
   MojoResult (*MojoGetRights)(MojoHandle handle, MojoHandleRights* rights);
+  MojoResult (*MojoReplaceHandleWithReducedRights)(
+      MojoHandle handle,
+      MojoHandleRights rights_to_remove,
+      MojoHandle* replacement_handle);
   MojoResult (*MojoDuplicateHandleWithReducedRights)(
       MojoHandle handle,
       MojoHandleRights rights_to_remove,

@@ -132,6 +132,10 @@ struct MojoSystemThunks {
       MojoHandleRights rights_to_remove,
       MojoHandle* new_handle);
   MojoResult (*DuplicateHandle)(MojoHandle handle, MojoHandle* new_handle);
+  MojoResult (*ReplaceHandleWithReducedRights)(
+      MojoHandle handle,
+      MojoHandleRights rights_to_remove,
+      MojoHandle* replacement_handle);
 };
 #pragma pack(pop)
 
@@ -168,6 +172,7 @@ inline MojoSystemThunks MojoMakeSystemThunks() {
       MojoGetRights,
       MojoDuplicateHandleWithReducedRights,
       MojoDuplicateHandle,
+      MojoReplaceHandleWithReducedRights,
   };
   return system_thunks;
 }

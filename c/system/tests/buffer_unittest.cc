@@ -21,7 +21,6 @@ const MojoHandleRights kDefaultSharedBufferHandleRights =
 // The only handle that's guaranteed to be invalid is |MOJO_HANDLE_INVALID|.
 // Tests that everything that takes a handle properly recognizes it.
 TEST(BufferTest, InvalidHandle) {
-  // Shared buffer:
   MojoHandle out_handle = MOJO_HANDLE_INVALID;
   EXPECT_EQ(
       MOJO_RESULT_INVALID_ARGUMENT,

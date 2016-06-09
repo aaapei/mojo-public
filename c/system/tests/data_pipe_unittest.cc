@@ -23,7 +23,6 @@ const MojoHandleRights kDefaultDataPipeConsumerHandleRights =
     MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS;
 
 TEST(DataPipeTest, InvalidHandle) {
-  // Data pipe:
   MojoDataPipeProducerOptions dpp_options = {
       sizeof(MojoDataPipeProducerOptions), 0u};
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
