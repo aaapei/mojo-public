@@ -41,6 +41,9 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateWaitSetOptions) == 8,
 
 typedef uint32_t MojoWaitSetAddOptionsFlags;
 
+#define MOJO_CREATE_WAIT_SET_OPTIONS_FLAG_NONE \
+  ((MojoCreateWaitSetOptionsFlags)0)
+
 struct MOJO_ALIGNAS(8) MojoWaitSetAddOptions {
   uint32_t struct_size;
   MojoWaitSetAddOptionsFlags flags;
@@ -81,7 +84,8 @@ MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions*
                                  MOJO_RESTRICT options,  // Optional in.
                              MojoHandle* handle);        // Out.
 
-// |MojoWaitSetAdd()|: Adds an entry to watch for to the wait set.
+// |MojoWaitSetAdd()|: Adds an entry to watch for to the wait set specified by
+// |wait_set_handle| (which must have the |MOJO_HANDLE_RIGHT_WRITE| right).
 //
 // An entry in a wait set is composed of a handle, a signal set, and a
 // caller-specified cookie value. The cookie value must be unique across all
@@ -108,7 +112,8 @@ MojoResult MojoWaitSetAdd(const struct MojoWaitSetAddOptions* MOJO_RESTRICT
                           MojoHandleSignals signals,   // In.
                           uint64_t cookie);            // In.
 
-// |MojoWaitSetRemove()|: Removes an entry from the wait set.
+// |MojoWaitSetRemove()|: Removes an entry from the wait set specified by
+// |wait_set_handle| (which must have the |MOJO_HANDLE_RIGHT_WRITE| right).
 //
 // Returns:
 //   |MOJO_RESULT_OK| if the entry was successfully removed.
@@ -118,8 +123,9 @@ MojoResult MojoWaitSetAdd(const struct MojoWaitSetAddOptions* MOJO_RESTRICT
 MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
                              uint64_t cookie);            // In.
 
-// |MojoWaitSetWait()|: Waits on all entries in the wait set for at least one of
-// the following:
+// |MojoWaitSetWait()|: Waits on all entries in the wait set specified by
+// |wait_set_handle| (which must have the |MOJO_HANDLE_RIGHT_READ| right) for at
+// least one of the following:
 //   - At least one entry's handle satisfies a signal in that entry's signal
 //     set.
 //   - At least one entry's handle can never satisfy a signal in that entry's
