@@ -249,12 +249,31 @@ class {{interface|name}}Proxy
 {%- for parameter in method.parameters %}
     params.{{parameter|name}} = {{parameter|name}};
 {%- endfor %}
+    Function zonedCallback;
+    if (identical(Zone.current, Zone.ROOT)) {
+      zonedCallback = callback;
+    } else {
+      Zone z = Zone.current;
+      zonedCallback = ((
+      {%- for param in method.response_parameters -%}
+        {{param.kind|dart_type}} {{param|name}}{% if not loop.last %}, {% endif %}
+      {%- endfor -%}
+      ) {
+        z.bindCallback(() {
+          callback(
+      {%- for param in method.response_parameters -%}
+        {{param|name}}{% if not loop.last %}, {% endif %}
+      {%- endfor -%}
+          );
+        })();
+      });
+    }
     ctrl.sendMessageWithRequestId(
         params,
         _{{interface|name|lower_camel}}Method{{method|name|upper_camel}}Name,
         -1,
         bindings.MessageHeader.kMessageExpectsResponse,
-        callback);
+        zonedCallback);
   }
 {%- endif %}
 {%- endfor %}
