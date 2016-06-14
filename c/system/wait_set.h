@@ -25,6 +25,9 @@
 
 typedef uint32_t MojoCreateWaitSetOptionsFlags;
 
+#define MOJO_CREATE_WAIT_SET_OPTIONS_FLAG_NONE \
+  ((MojoCreateWaitSetOptionsFlags)0)
+
 struct MOJO_ALIGNAS(8) MojoCreateWaitSetOptions {
   uint32_t struct_size;
   MojoCreateWaitSetOptionsFlags flags;
@@ -41,8 +44,7 @@ MOJO_STATIC_ASSERT(sizeof(MojoCreateWaitSetOptions) == 8,
 
 typedef uint32_t MojoWaitSetAddOptionsFlags;
 
-#define MOJO_CREATE_WAIT_SET_OPTIONS_FLAG_NONE \
-  ((MojoCreateWaitSetOptionsFlags)0)
+#define MOJO_WAIT_SET_ADD_OPTIONS_FLAG_NONE ((MojoWaitSetAddOptionsFlags)0)
 
 struct MOJO_ALIGNAS(8) MojoWaitSetAddOptions {
   uint32_t struct_size;
@@ -99,8 +101,10 @@ MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions*
 //   |MOJO_RESULT_OK| if the handle was added to the wait set.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if |wait_set_handle| or |handle| do not
 //       refer to valid handles, |wait_set_handle| is not a handle to a wait
-//       set, |cookie| is not a unique value within this wait set, or |options|
-//       is not null and |*options| is not a valid options structure.
+//       set, or |options| is not null and |*options| is not a valid options
+//       structure.
+//   |MOJO_RESULT_ALREADY_EXISTS| if there is already an entry in the wait set
+//       with the same |cookie| value.
 //   |MOJO_RESULT_BUSY| if |wait_set_handle| or |handle| are currently in use in
 //       some transaction.
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the handle could not be added due to
