@@ -5,38 +5,57 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_
 #define MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
 #include "mojo/public/c/bindings/struct.h"
+#include "mojo/public/c/bindings/validation.h"
+#include "mojo/public/c/system/macros.h"
 
-// These bits may be set in the |flags| field of a Mojo message header.
-#define MOJO_MESSAGE_HEADER_FLAGS_EXPECTS_RESPONSE (1 << 0u)
-#define MOJO_MESSAGE_HEADER_FLAGS_IS_RESPONSE (1 << 1u)
+MOJO_BEGIN_EXTERN_C
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define MOJOM_MESSAGE_FLAGS_EXPECTS_RESPONSE ((uint32_t)(1 << 0u))
+#define MOJOM_MESSAGE_FLAGS_IS_RESPONSE ((uint32_t)(1 << 1u))
 
-// Validates that the buffer started at a (validated) mojo_struct_header with a
-// given size contains a valid mojo message header.
-bool mojo_validate_message_header(const mojo_struct_header_t* header,
-                                  size_t size);
-
-typedef struct mojo_message_header {
-  mojo_struct_header_t struct_header;
-  uint32_t name;
+// All mojom messages (over a message pipe) are framed with a MojomMessage as
+// its header.
+// MojomMessage is actually a mojom struct -- we define it here since it's
+// easier to read, and the validation has more to it than simple mojom struct
+// validation.
+struct MojomMessage {
+  // header.version = 0 (version 1 has a request_id)
+  struct MojomStructHeader header;
+  // The ordinal number associated with this message. This is specified
+  // (implicitly, if not explicitly) in the mojom IDL for an interface message
+  // and is used to identify it.
+  uint32_t ordinal;
+  // Described by the MOJOM_MESSAGE_* flags defined above.
   uint32_t flags;
-} mojo_message_header_t;
+};
+MOJO_STATIC_ASSERT(sizeof(struct MojomMessage) == 16,
+                   "struct MojomMessage must be 16 bytes");
 
-typedef struct mojo_message_header_with_request_id {
-  mojo_message_header_t message_header;
+// Using |MojomMessage| as a member of this struct could work, but usability
+// would suffer a little while accessing the |header|. MojomMessageWithRequestId
+// is a "newer" version than MojomMessage.
+struct MojomMessageWithRequestId {
+  // header.version = 1
+  struct MojomStructHeader header;
+  // Which message is it?
+  uint32_t ordinal;
+  // Described by the MOJOM_MESSAGE_* flags defined above.
+  uint32_t flags;
   uint64_t request_id;
-} mojo_message_header_with_request_id_t;
+};
+MOJO_STATIC_ASSERT(sizeof(struct MojomMessageWithRequestId) == 24,
+                   "MojomMessageWithRequestId must be 24 bytes");
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+// Validates that |in_buf| is a valid mojom message. This does not validate the
+// contents of the message's body, only the message header.
+// |in_buf|: can be a MojomMessage or a MojomMessageWithRequestId.
+// |in_buf_size|: number of bytes in |in_buf|.
+MojomValidationResult MojomMessage_ValidateHeader(const void* in_buf,
+                                                  uint32_t in_buf_size);
+
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_

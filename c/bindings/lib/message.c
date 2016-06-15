@@ -6,45 +6,44 @@
 
 #include <stdint.h>
 
-_Static_assert(sizeof(mojo_message_header_t) == 16u,
-               "mojo_message_header_t should be 16 bytes");
+#include "mojo/public/c/bindings/struct.h"
 
-_Static_assert(sizeof(mojo_message_header_with_request_id_t) == 24u,
-               "mojo_message_header_t should be 24 bytes");
-
-bool mojo_validate_message_header(const mojo_struct_header_t* header,
-                                  size_t size) {
-  if (header->num_bytes < sizeof(mojo_message_header_t) ||
-      size < sizeof(mojo_message_header_t) || size > UINT32_MAX) {
-    return false;
+MojomValidationResult MojomMessage_ValidateHeader(const void* in_buf,
+                                                  uint32_t in_buf_size) {
+  const struct MojomStructHeader* header =
+    (const struct MojomStructHeader*)in_buf;
+  if (in_buf_size < sizeof(struct MojomStructHeader) ||
+      in_buf_size < header->num_bytes) {
+    return MOJOM_VALIDATION_UNEXPECTED_STRUCT_HEADER;
   }
 
-  const mojo_message_header_t* message_header =
-      (const mojo_message_header_t*)header;
-
-  // Message expects response and message is response flags are mutually
-  // exclusive.
-  if ((message_header->flags & MOJO_MESSAGE_HEADER_FLAGS_EXPECTS_RESPONSE) &&
-      (message_header->flags & MOJO_MESSAGE_HEADER_FLAGS_IS_RESPONSE)) {
-    return false;
-  }
-
+  const struct MojomMessage* msg = (const struct MojomMessage*)in_buf;
   if (header->version == 0u) {
-    if (header->num_bytes != sizeof(mojo_message_header_t)) {
-      return false;
+    if (header->num_bytes != sizeof(struct MojomMessage)) {
+      return MOJOM_VALIDATION_UNEXPECTED_STRUCT_HEADER;
     }
 
     // Version 0 has no request id and should not have either of these flags.
-    if ((message_header->flags & MOJO_MESSAGE_HEADER_FLAGS_EXPECTS_RESPONSE) ||
-        (message_header->flags & MOJO_MESSAGE_HEADER_FLAGS_IS_RESPONSE)) {
-      return false;
+    if ((msg->flags & MOJOM_MESSAGE_FLAGS_EXPECTS_RESPONSE) ||
+        (msg->flags & MOJOM_MESSAGE_FLAGS_IS_RESPONSE)) {
+      return MOJOM_VALIDATION_MESSAGE_HEADER_MISSING_REQUEST_ID;
     }
   } else if (header->version == 1u) {
-    if (header->num_bytes != sizeof(mojo_message_header_with_request_id_t)) {
-      return false;
+    if (header->num_bytes != sizeof(struct MojomMessageWithRequestId)) {
+      return MOJOM_VALIDATION_UNEXPECTED_STRUCT_HEADER;
+    }
+  } else if (header->version > 1u) {
+    if (header->num_bytes < sizeof(struct MojomMessageWithRequestId)) {
+      return MOJOM_VALIDATION_UNEXPECTED_STRUCT_HEADER;
     }
   }
-  // Accept unknown versions of the message header to be future-proof.
 
-  return true;
+  // Mutually exclusive flags.
+  if ((msg->flags & MOJOM_MESSAGE_FLAGS_EXPECTS_RESPONSE) &&
+      (msg->flags & MOJOM_MESSAGE_FLAGS_IS_RESPONSE)) {
+    return MOJOM_VALIDATION_MESSAGE_HEADER_INVALID_FLAGS;
+  }
+
+  // Accept unknown versions of the message header to be future-proof.
+  return MOJOM_VALIDATION_ERROR_NONE;
 }

@@ -9,11 +9,11 @@ mojo_sdk_source_set("bindings") {
     "buffer.h",
     "message.h",
     "struct.h",
+    "validation.h",
 
     # Implementation details.
     "lib/buffer.c",
     "lib/message.c",
-    "lib/struct.c",
   ]
 
   mojo_sdk_deps = [ "mojo/public/c/system" ]

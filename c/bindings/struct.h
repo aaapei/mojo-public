@@ -5,25 +5,21 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_STRUCT_H_
 #define MOJO_PUBLIC_C_BINDINGS_STRUCT_H_
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "mojo/public/c/system/macros.h"
 
-// Validates that a given buffer has a mojo struct header and that the size of
-// the struct in the header matches the size of the buffer.
-bool mojo_validate_struct_header(const void* data, size_t size);
+MOJO_BEGIN_EXTERN_C
 
-typedef struct struct_header {
+struct MojomStructHeader {
+  // num_bytes includes the size of this struct header along with the
+  // accompanying struct data.
   uint32_t num_bytes;
   uint32_t version;
-} mojo_struct_header_t;
+};
+MOJO_STATIC_ASSERT(sizeof(struct MojomStructHeader) == 8,
+                   "struct MojomStructHeader must be 8 bytes.");
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_STRUCT_H_

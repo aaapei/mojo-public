@@ -8,8 +8,8 @@ mojo_sdk_source_set("tests") {
   testonly = true
 
   sources = [
-    "bindings_unittest.cc",
     "buffer_unittest.cc",
+    "message_unittest.cc",
   ]
 
   deps = [
