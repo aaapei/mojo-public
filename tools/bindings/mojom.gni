@@ -147,6 +147,10 @@ template("mojom") {
       "{{source_gen_dir}}/{{source_name_part}}.mojom.h",
       "{{source_gen_dir}}/{{source_name_part}}.mojom.cc",
     ]
+    generator_c_outputs = [
+      "{{source_gen_dir}}/{{source_name_part}}.mojom-c.c",
+      "{{source_gen_dir}}/{{source_name_part}}.mojom-c.h",
+    ]
     generator_js_outputs =
         [ "{{source_gen_dir}}/{{source_name_part}}.mojom.js" ]
     generator_dart_outputs =
@@ -188,9 +192,10 @@ template("mojom") {
         ]
       }
       sources = invoker.sources
-      outputs = generator_cpp_outputs + generator_dart_outputs +
-                generator_go_outputs + generator_java_outputs +
-                generator_js_outputs + generator_python_outputs
+      outputs =
+          generator_cpp_outputs + generator_dart_outputs +
+          generator_go_outputs + generator_java_outputs + generator_js_outputs +
+          generator_python_outputs + generator_c_outputs
       args = [
         "gen",
         "--src-root-path",
@@ -203,18 +208,13 @@ template("mojom") {
         rebase_path(root_gen_dir),
         "--no-gen-imports",
         "--generators",
-        "legacy",
+        "legacy,c",
       ]
 
       if (defined(invoker.generate_type_info) && invoker.generate_type_info) {
         args += [
           "--gen-arg",
           "generate-type-info",
-        ]
-      } else {
-        args += [
-          "--gen-arg",
-          "no-generate-type-info",
         ]
       }
 
@@ -270,6 +270,44 @@ template("mojom") {
     }
 
     deps = cpp_deps
+  }
+
+  # This target is used to generate and build the C mojom bindings.
+  source_set("${target_name}_c") {
+    if (defined(invoker.visibility)) {
+      visibility = invoker.visibility
+    }
+    if (defined(invoker.testonly)) {
+      testonly = invoker.testonly
+    }
+
+    public_configs =
+        rebase_path([ "mojo/public/build/config:mojo_sdk" ], ".", mojo_root)
+
+    public_deps = rebase_path([ "mojo/public/c/bindings" ], ".", mojo_root)
+    foreach(d, rebased_mojo_sdk_public_deps) {
+      full_name = get_label_info(d, "label_no_toolchain")
+      public_deps += [ "${full_name}_c" ]
+    }
+
+    deps = []
+    foreach(d, rebased_mojo_sdk_deps) {
+      # Resolve the name, so that a target //mojo/something becomes
+      # //mojo/something:something and we can append "_c" to get the C
+      # dependency name.
+      full_name = get_label_info(d, "label_no_toolchain")
+      deps += [ "${full_name}_c" ]
+    }
+
+    if (defined(invoker.sources)) {
+      deps += [ ":$generator_target_name" ]
+      sources = process_file_template(
+              invoker.sources,
+              [
+                "{{source_gen_dir}}/{{source_name_part}}.mojom-c.c",
+                "{{source_gen_dir}}/{{source_name_part}}.mojom-c.h",
+              ])
+    }
   }
 
   source_set("${target_name}_sync") {
