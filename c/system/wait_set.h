@@ -122,7 +122,8 @@ MojoResult MojoWaitSetAdd(const struct MojoWaitSetAddOptions* MOJO_RESTRICT
 // Returns:
 //   |MOJO_RESULT_OK| if the entry was successfully removed.
 //   |MOJO_RESULT_INVALID_ARGUMENT| if |wait_set_handle| does not refer to a
-//       valid wait set or if |cookie| does not identify an entry within the
+//       valid wait set.
+//   |MOJO_RESULT_NOT_FOUND| if |cookie| does not identify an entry within the
 //       wait set.
 MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
                              uint64_t cookie);            // In.
