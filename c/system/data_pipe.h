@@ -41,7 +41,7 @@ struct MOJO_ALIGNAS(8) MojoCreateDataPipeOptions {
   uint32_t element_num_bytes;
   uint32_t capacity_num_bytes;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoCreateDataPipeOptions) == 16,
+MOJO_STATIC_ASSERT(sizeof(struct MojoCreateDataPipeOptions) == 16,
                    "MojoCreateDataPipeOptions has wrong size");
 
 // |MojoDataPipeProducerOptions|: Used to specify data pipe producer options (to
@@ -60,7 +60,7 @@ struct MOJO_ALIGNAS(8) MojoDataPipeProducerOptions {
   uint32_t struct_size;
   uint32_t write_threshold_num_bytes;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoDataPipeProducerOptions) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoDataPipeProducerOptions) == 8,
                    "MojoDataPipeProducerOptions has wrong size");
 
 // |MojoWriteDataFlags|: Used to specify different modes to |MojoWriteData()|
@@ -95,7 +95,7 @@ struct MOJO_ALIGNAS(8) MojoDataPipeConsumerOptions {
   uint32_t struct_size;
   uint32_t read_threshold_num_bytes;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoDataPipeConsumerOptions) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoDataPipeConsumerOptions) == 8,
                    "MojoDataPipeConsumerOptions has wrong size");
 
 // |MojoReadDataFlags|: Used to specify different modes to |MojoReadData()| and

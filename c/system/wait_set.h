@@ -32,7 +32,7 @@ struct MOJO_ALIGNAS(8) MojoCreateWaitSetOptions {
   uint32_t struct_size;
   MojoCreateWaitSetOptionsFlags flags;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoCreateWaitSetOptions) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoCreateWaitSetOptions) == 8,
                    "MojoCreateWaitSetOptions has wrong size");
 
 // |MojoWaitSetAddOptions|: Used to specify parameters in adding an entry to a
@@ -50,7 +50,7 @@ struct MOJO_ALIGNAS(8) MojoWaitSetAddOptions {
   uint32_t struct_size;
   MojoWaitSetAddOptionsFlags flags;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoWaitSetAddOptions) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoWaitSetAddOptions) == 8,
                    "MojoWaitSetAddOptions has wrong size");
 
 // |MojoWaitSetResult|: Returned by |MojoWaitSetWait()| to indicate the state of
@@ -63,7 +63,7 @@ struct MOJO_ALIGNAS(8) MojoWaitSetResult {
   MojoHandleSignals satisfied_signals;
   MojoHandleSignals satisfiable_signals;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoWaitSetResult) == 24,
+MOJO_STATIC_ASSERT(sizeof(struct MojoWaitSetResult) == 24,
                    "MojoWaitSetResult has wrong size");
 
 MOJO_BEGIN_EXTERN_C

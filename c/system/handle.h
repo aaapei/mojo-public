@@ -94,7 +94,7 @@ struct MOJO_ALIGNAS(4) MojoHandleSignalsState {
   MojoHandleSignals satisfied_signals;
   MojoHandleSignals satisfiable_signals;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoHandleSignalsState) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoHandleSignalsState) == 8,
                    "MojoHandleSignalsState has wrong size");
 
 MOJO_BEGIN_EXTERN_C

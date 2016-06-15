@@ -9,6 +9,7 @@ mojo_sdk_source_set("tests") {
 
   sources = [
     "bindings_unittest.cc",
+    "buffer_unittest.cc",
   ]
 
   deps = [

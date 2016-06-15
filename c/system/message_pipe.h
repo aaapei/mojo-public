@@ -31,7 +31,7 @@ struct MOJO_ALIGNAS(8) MojoCreateMessagePipeOptions {
   uint32_t struct_size;
   MojoCreateMessagePipeOptionsFlags flags;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoCreateMessagePipeOptions) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoCreateMessagePipeOptions) == 8,
                    "MojoCreateMessagePipeOptions has wrong size");
 
 // |MojoWriteMessageFlags|: Used to specify different modes to

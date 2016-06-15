@@ -38,7 +38,7 @@ struct MOJO_ALIGNAS(8) MojoCreateSharedBufferOptions {
   uint32_t struct_size;
   MojoCreateSharedBufferOptionsFlags flags;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoCreateSharedBufferOptions) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoCreateSharedBufferOptions) == 8,
                    "MojoCreateSharedBufferOptions has wrong size");
 
 // |MojoDuplicateBufferHandleOptions|: Used to specify parameters in duplicating
@@ -61,7 +61,7 @@ struct MOJO_ALIGNAS(8) MojoDuplicateBufferHandleOptions {
   uint32_t struct_size;
   MojoDuplicateBufferHandleOptionsFlags flags;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoDuplicateBufferHandleOptions) == 8,
+MOJO_STATIC_ASSERT(sizeof(struct MojoDuplicateBufferHandleOptions) == 8,
                    "MojoDuplicateBufferHandleOptions has wrong size");
 
 // |MojoBufferInformation|: Used to provide information about a buffer (see
@@ -82,7 +82,7 @@ struct MOJO_ALIGNAS(8) MojoBufferInformation {
   MojoBufferInformationFlags flags;
   uint64_t num_bytes;
 };
-MOJO_STATIC_ASSERT(sizeof(MojoBufferInformation) == 16,
+MOJO_STATIC_ASSERT(sizeof(struct MojoBufferInformation) == 16,
                    "MojoBufferInformation has wrong size");
 
 // |MojoMapBufferFlags|: Used to specify different modes to |MojoMapBuffer()|.
