@@ -6,14 +6,20 @@ import("../../mojo_sdk.gni")
 
 mojo_sdk_source_set("bindings") {
   sources = [
+    "array.h",
     "buffer.h",
+    "interface.h",
+    "map.h",
     "message.h",
+    "string.h",
     "struct.h",
     "validation.h",
 
     # Implementation details.
     "lib/buffer.c",
     "lib/message.c",
+    "lib/type_descriptor.c",
+    "lib/type_descriptor.h",
   ]
 
   mojo_sdk_deps = [ "mojo/public/c/system" ]

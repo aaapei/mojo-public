@@ -20,5 +20,9 @@ mojo_sdk_source_set("tests") {
     "mojo/public/cpp/bindings/tests:mojo_public_bindings_test_utils",
     "mojo/public/cpp/system",
     "mojo/public/c/bindings",
+
+    # The "_c" suffix'd target compiles the generated C bindings to this mojom
+    # target.
+    "mojo/public/interfaces/bindings/tests:test_interfaces_c",
   ]
 }
