@@ -22,7 +22,7 @@ struct MojomBuffer {
   uint32_t num_bytes_used;
 };
 
-// Allocates |num_bytes| (rounded to 8 bytes) from |buf|. Returns NULL if
+// Allocates |num_bytes| (rounded up to 8 bytes) from |buf|. Returns NULL if
 // there isn't enough space left to allocate.
 void* MojomBuffer_Allocate(struct MojomBuffer* buf, uint32_t num_bytes);
 

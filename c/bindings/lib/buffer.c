@@ -5,17 +5,15 @@
 #include "mojo/public/c/bindings/buffer.h"
 
 #include <assert.h>
-#include <stddef.h>  // for NULL
+#include <stddef.h>
+
+#include "mojo/public/c/bindings/lib/util.h"
 
 void* MojomBuffer_Allocate(struct MojomBuffer* buf, uint32_t num_bytes) {
   assert(buf);
 
-  static const size_t kAlignment = 8;
   const uint32_t bytes_used = buf->num_bytes_used;
-
-  // size = num_bytes is rounded to 8 bytes:
-  const uint64_t size = ((uint64_t)num_bytes + (kAlignment-1))
-                        & ~(kAlignment-1);
+  const uint64_t size = MOJOM_INTERNAL_ROUND_TO_8((uint64_t)num_bytes);
   if (bytes_used + size > buf->buf_size)
     return NULL;
 

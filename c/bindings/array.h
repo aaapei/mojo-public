@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include "mojo/public/c/bindings/buffer.h"
 #include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
@@ -33,6 +34,12 @@ union MojomArrayHeaderPtr {
 };
 MOJO_STATIC_ASSERT(sizeof(union MojomArrayHeaderPtr) == 8,
                    "union MojomArrayHeaderPtr must be 8 bytes.");
+
+// Allocates enough space using the given |buffer| for |num_elements|, each of
+// which is |element_byte_size| bytes in size. Returns NULL on failure.
+struct MojomArrayHeader* MojomArray_New(struct MojomBuffer* buffer,
+                                        uint32_t num_elements,
+                                        uint32_t element_byte_size);
 
 MOJO_END_EXTERN_C
 

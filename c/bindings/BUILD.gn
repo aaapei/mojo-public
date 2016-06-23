@@ -16,10 +16,12 @@ mojo_sdk_source_set("bindings") {
     "validation.h",
 
     # Implementation details.
+    "lib/array.c",
     "lib/buffer.c",
     "lib/message.c",
     "lib/type_descriptor.c",
     "lib/type_descriptor.h",
+    "lib/util.h",
   ]
 
   mojo_sdk_deps = [ "mojo/public/c/system" ]
