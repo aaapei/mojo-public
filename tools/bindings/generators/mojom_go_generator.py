@@ -331,7 +331,7 @@ class Generator(generator.Generator):
   def GenerateFiles(self, args):
     self.should_gen_mojom_types = "--generate_type_info" in args
 
-    self.Write(self.GenerateSource(), os.path.join("go", "src",
+    self.Write(self.GenerateSource(), os.path.join(
         GetPackagePath(self.module), "%s.go" % self.module.name))
 
   def GetJinjaParameters(self):

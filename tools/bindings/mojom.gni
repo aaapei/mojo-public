@@ -129,6 +129,8 @@ template("mojom") {
       "$generator_root/mojom_tool/bin/mac64/mojom.sha1",
       "$generator_root/mojom_tool/bin/linux64/generators/c.sha1",
       "$generator_root/mojom_tool/bin/mac64/generators/c.sha1",
+      "$generator_root/mojom_tool/bin/linux64/generators/go.sha1",
+      "$generator_root/mojom_tool/bin/mac64/generators/go.sha1",
       "$generator_root/pylib/mojom/__init__.py",
       "$generator_root/pylib/mojom/error.py",
       "$generator_root/pylib/mojom/generate/__init__.py",
@@ -210,7 +212,7 @@ template("mojom") {
         rebase_path(root_gen_dir),
         "--no-gen-imports",
         "--generators",
-        "legacy,c",
+        "legacy,c,go",
       ]
 
       if (defined(invoker.generate_type_info) && invoker.generate_type_info) {
