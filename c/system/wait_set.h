@@ -60,8 +60,7 @@ struct MOJO_ALIGNAS(8) MojoWaitSetResult {
   uint64_t cookie;
   MojoResult wait_result;
   uint32_t reserved;
-  MojoHandleSignals satisfied_signals;
-  MojoHandleSignals satisfiable_signals;
+  struct MojoHandleSignalsState signals_state;
 };
 MOJO_STATIC_ASSERT(sizeof(struct MojoWaitSetResult) == 24,
                    "MojoWaitSetResult has wrong size");
@@ -156,12 +155,10 @@ MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
 //         signals
 //   - |reserved| is set to 0
 //
-//   When the |wait_result| is |MOJO_RESULT_OK| or
-//   |MOJO_RESULT_FAILED_PRECONDITION| the |satisfied_signals| and
-//   |satisfiable_signals| entries are set to the signals the handle currently
-//   satisfies and could possibly satisfy. When the |wait_result| is any other
-//   value the |satisfied_signals| and |satisfiable_signals| entries are set to
-//   |MOJO_HANDLE_SIGNALS_NONE|.
+//   When |wait_result| is |MOJO_RESULT_OK| or |MOJO_RESULT_FAILED_PRECONDITION|
+//   |signals_state| is set to the handle's current signal state; otherwise, it
+//   is set to a zeroed |MojoHandleSignalsState| (in particular, both fields
+//   will then be |MOJO_HANDLE_SIGNALS_NONE|).
 //
 // On any result other than |MOJO_RESULT_OK|, |*num_results|, |*results| and
 // |*max_results| are not modified.
