@@ -61,7 +61,10 @@ mojo_sdk_source_set("perftests") {
   testonly = true
 
   sources = [
-    "core_perftest.cc",
+    "message_pipe_perftest.cc",
+    "perftest_utils.cc",
+    "perftest_utils.h",
+    "reference_perftest.cc",
   ]
 
   deps = [
