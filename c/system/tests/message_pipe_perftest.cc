@@ -4,6 +4,8 @@
 
 // This tests the performance of message pipes via the C API.
 
+#include "mojo/public/c/system/message_pipe.h"
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,7 +13,6 @@
 #include <thread>
 
 #include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/tests/perftest_utils.h"
 #include "mojo/public/c/system/time.h"

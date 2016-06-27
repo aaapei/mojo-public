@@ -65,6 +65,7 @@ mojo_sdk_source_set("perftests") {
     "perftest_utils.cc",
     "perftest_utils.h",
     "reference_perftest.cc",
+    "wait_set_perftest.cc",
   ]
 
   deps = [
