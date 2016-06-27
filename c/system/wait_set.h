@@ -108,12 +108,12 @@ MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions*
 //       some transaction.
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the handle could not be added due to
 //       hitting a system or quota limitation.
-MojoResult MojoWaitSetAdd(const struct MojoWaitSetAddOptions* MOJO_RESTRICT
-                              options,                 // Optional in.
-                          MojoHandle wait_set_handle,  // In.
+MojoResult MojoWaitSetAdd(MojoHandle wait_set_handle,  // In.
                           MojoHandle handle,           // In.
                           MojoHandleSignals signals,   // In.
-                          uint64_t cookie);            // In.
+                          uint64_t cookie,             // In.
+                          const struct MojoWaitSetAddOptions* MOJO_RESTRICT
+                              options);  // Optional in.
 
 // |MojoWaitSetRemove()|: Removes an entry from the wait set specified by
 // |wait_set_handle| (which must have the |MOJO_HANDLE_RIGHT_WRITE| right).
