@@ -5,9 +5,10 @@
 // This file tests the C message pipe API (the functions declared in
 // mojo/public/c/system/message_pipe.h).
 
+#include "mojo/public/c/system/message_pipe.h"
+
 #include "mojo/public/c/system/buffer.h"
 #include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/wait.h"
 #include "testing/gtest/include/gtest/gtest.h"

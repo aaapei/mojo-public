@@ -14,6 +14,7 @@
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
+#include "mojo/public/c/system/wait_set.h"
 #include "mojo/public/platform/nacl/mojo_irt.h"
 #include "native_client/src/untrusted/irt/irt.h"
 
@@ -312,3 +313,41 @@ MojoResult MojoUnmapBuffer(void* buffer) {
   return irt_mojo->MojoUnmapBuffer(buffer);
 }
 
+MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions* options,
+                             MojoHandle* handle) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoCreateWaitSet(options, handle);
+}
+
+MojoResult MojoWaitSetAdd(MojoHandle wait_set_handle,
+                          MojoHandle handle,
+                          MojoHandleSignals signals,
+                          uint64_t cookie,
+                          const struct MojoWaitSetAddOptions* options) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoWaitSetAdd(wait_set_handle, handle, signals, cookie,
+                                  options);
+}
+
+MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle, uint64_t cookie) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoWaitSetRemove(wait_set_handle, cookie);
+}
+
+MojoResult MojoWaitSetWait(MojoHandle wait_set_handle,
+                           MojoDeadline deadline,
+                           uint32_t* num_results,
+                           struct MojoWaitSetResult* results,
+                           uint32_t* max_results) {
+  struct nacl_irt_mojo* irt_mojo = get_irt_mojo();
+  if (!irt_mojo)
+    abort();
+  return irt_mojo->MojoWaitSetWait(wait_set_handle, deadline, num_results,
+                                   results, max_results);
+}

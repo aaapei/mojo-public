@@ -16,6 +16,7 @@
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
+#include "mojo/public/c/system/wait_set.h"
 
 // The embedder needs to bind the basic Mojo Core functions of a DSO to those of
 // the embedder when loading a DSO that is dependent on mojo_system.
@@ -136,9 +137,21 @@ struct MojoSystemThunks {
       MojoHandle handle,
       MojoHandleRights rights_to_remove,
       MojoHandle* replacement_handle);
+  MojoResult (*CreateWaitSet)(const struct MojoCreateWaitSetOptions* options,
+                              MojoHandle* handle);
+  MojoResult (*WaitSetAdd)(MojoHandle wait_set_handle,
+                           MojoHandle handle,
+                           MojoHandleSignals signals,
+                           uint64_t cookie,
+                           const struct MojoWaitSetAddOptions* options);
+  MojoResult (*WaitSetRemove)(MojoHandle wait_set_handle, uint64_t cookie);
+  MojoResult (*WaitSetWait)(MojoHandle wait_set_handle,
+                            MojoDeadline deadline,
+                            uint32_t* num_results,
+                            struct MojoWaitSetResult* results,
+                            uint32_t* max_results);
 };
 #pragma pack(pop)
-
 
 #ifdef __cplusplus
 // Intended to be called from the embedder. Returns a |MojoCore| initialized
@@ -173,6 +186,10 @@ inline MojoSystemThunks MojoMakeSystemThunks() {
       MojoDuplicateHandleWithReducedRights,
       MojoDuplicateHandle,
       MojoReplaceHandleWithReducedRights,
+      MojoCreateWaitSet,
+      MojoWaitSetAdd,
+      MojoWaitSetRemove,
+      MojoWaitSetWait,
   };
   return system_thunks;
 }

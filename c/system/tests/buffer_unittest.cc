@@ -6,6 +6,7 @@
 // mojo/public/c/system/buffer.h).
 
 #include "mojo/public/c/system/buffer.h"
+
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/result.h"
 #include "testing/gtest/include/gtest/gtest.h"

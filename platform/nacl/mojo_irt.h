@@ -11,6 +11,7 @@
 #include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
+#include "mojo/public/c/system/wait_set.h"
 
 #define NACL_IRT_MOJO_v0_1 "nacl-irt-mojo-0.1"
 
@@ -109,6 +110,20 @@ struct nacl_irt_mojo {
                               void** buffer,
                               MojoMapBufferFlags flags);
   MojoResult (*MojoUnmapBuffer)(void* buffer);
+  MojoResult (*MojoCreateWaitSet)(
+      const struct MojoCreateWaitSetOptions* options,
+      MojoHandle* handle);
+  MojoResult (*MojoWaitSetAdd)(MojoHandle wait_set_handle,
+                               MojoHandle handle,
+                               MojoHandleSignals signals,
+                               uint64_t cookie,
+                               const struct MojoWaitSetAddOptions* options);
+  MojoResult (*MojoWaitSetRemove)(MojoHandle wait_set_handle, uint64_t cookie);
+  MojoResult (*MojoWaitSetWait)(MojoHandle wait_set_handle,
+                                MojoDeadline deadline,
+                                uint32_t* num_results,
+                                struct MojoWaitSetResult* results,
+                                uint32_t* max_results);
 };
 
 #endif  // MOJO_PUBLIC_PLATFORM_NACL_MOJO_IRT_H_

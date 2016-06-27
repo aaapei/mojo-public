@@ -6,6 +6,7 @@
 // mojo/public/c/system/time.h).
 
 #include "mojo/public/c/system/time.h"
+
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {

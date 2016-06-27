@@ -226,6 +226,36 @@ MojoResult MojoUnmapBuffer(void* buffer) {
   return g_thunks.UnmapBuffer(buffer);
 }
 
+MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions* options,
+                             MojoHandle* handle) {
+  assert(g_thunks.CreateWaitSet);
+  return g_thunks.CreateWaitSet(options, handle);
+}
+
+MojoResult MojoWaitSetAdd(MojoHandle wait_set_handle,
+                          MojoHandle handle,
+                          MojoHandleSignals signals,
+                          uint64_t cookie,
+                          const struct MojoWaitSetAddOptions* options) {
+  assert(g_thunks.WaitSetAdd);
+  return g_thunks.WaitSetAdd(wait_set_handle, handle, signals, cookie, options);
+}
+
+MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle, uint64_t cookie) {
+  assert(g_thunks.WaitSetRemove);
+  return g_thunks.WaitSetRemove(wait_set_handle, cookie);
+}
+
+MojoResult MojoWaitSetWait(MojoHandle wait_set_handle,
+                           MojoDeadline deadline,
+                           uint32_t* num_results,
+                           struct MojoWaitSetResult* results,
+                           uint32_t* max_results) {
+  assert(g_thunks.WaitSetWait);
+  return g_thunks.WaitSetWait(wait_set_handle, deadline, num_results, results,
+                              max_results);
+}
+
 THUNK_EXPORT size_t
 MojoSetSystemThunks(const struct MojoSystemThunks* system_thunks) {
   if (system_thunks->size >= sizeof(g_thunks))
