@@ -40,13 +40,7 @@ TEST(BufferTest, InvalidHandle) {
   EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoUnmapBuffer(nullptr));
 }
 
-// TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
-#ifdef __native_client__
-#define MAYBE_Basic DISABLED_Basic
-#else
-#define MAYBE_Basic Basic
-#endif
-TEST(BufferTest, MAYBE_Basic) {
+TEST(BufferTest, Basic) {
   // Create a shared buffer (|h0|).
   MojoHandle h0 = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateSharedBuffer(nullptr, 100, &h0));

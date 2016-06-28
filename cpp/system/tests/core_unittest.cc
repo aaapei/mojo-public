@@ -544,13 +544,7 @@ TEST(CoreCppTest, WaitManyResult) {
   }
 }
 
-// TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
-#ifdef __native_client__
-#define MAYBE_DataPipe DISABLED_DataPipe
-#else
-#define MAYBE_DataPipe DataPipe
-#endif
-TEST(CoreCppTest, MAYBE_DataPipe) {
+TEST(CoreCppTest, DataPipe) {
   ScopedDataPipeProducerHandle ph;
   ScopedDataPipeConsumerHandle ch;
 

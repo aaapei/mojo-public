@@ -63,13 +63,7 @@ TEST(DataPipeTest, InvalidHandle) {
             MojoEndReadData(MOJO_HANDLE_INVALID, 1u));
 }
 
-// TODO(ncbray): enable this test once NaCl supports the corresponding APIs.
-#ifdef __native_client__
-#define MAYBE_Basic DISABLED_Basic
-#else
-#define MAYBE_Basic Basic
-#endif
-TEST(DataPipeTest, MAYBE_Basic) {
+TEST(DataPipeTest, Basic) {
   MojoHandle hp = MOJO_HANDLE_INVALID;
   MojoHandle hc = MOJO_HANDLE_INVALID;
   EXPECT_EQ(MOJO_RESULT_OK, MojoCreateDataPipe(nullptr, &hp, &hc));
