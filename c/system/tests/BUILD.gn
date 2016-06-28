@@ -7,9 +7,6 @@ import("../../../mojo_sdk.gni")
 mojo_sdk_source_set("tests") {
   testonly = true
 
-  mojo_sdk_visibility =
-      [ "mojo/public/cpp/system/tests:mojo_public_system_unittests" ]
-
   cflags_c = [ "-Wundef" ]
 
   sources = [
@@ -74,7 +71,7 @@ mojo_sdk_source_set("perftests") {
 
   mojo_sdk_deps = [
     "mojo/public/c/environment",
-    "mojo/public/cpp/system",
+    "mojo/public/c/system",
     "mojo/public/cpp/test_support",
   ]
 }

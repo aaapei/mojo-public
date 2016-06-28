@@ -5,8 +5,6 @@
 // This file tests the C++ Mojo system macros and consists of "positive" tests,
 // i.e., those verifying that things work (without compile errors, or even
 // warnings if warnings are treated as errors).
-// TODO(vtl): Maybe rename "MacrosCppTest" -> "MacrosTest" if/when this gets
-// compiled into a different binary from the C API tests.
 // TODO(vtl): Fix no-compile tests (which are all disabled; crbug.com/105388)
 // and write some "negative" tests.
 
@@ -35,7 +33,7 @@ struct TestOverrideSubclass : public TestOverrideBaseClass {
   void AlsoToBeOverridden() override {}
 };
 
-TEST(MacrosCppTest, Override) {
+TEST(MacrosTest, Override) {
   TestOverrideSubclass x;
   x.ToBeOverridden();
   x.AlsoToBeOverridden();
@@ -53,7 +51,7 @@ class TestDisallowCopyAndAssignClass {
   MOJO_DISALLOW_COPY_AND_ASSIGN(TestDisallowCopyAndAssignClass);
 };
 
-TEST(MacrosCppTest, DisallowCopyAndAssign) {
+TEST(MacrosTest, DisallowCopyAndAssign) {
   TestDisallowCopyAndAssignClass x;
   x.NoOp();
   TestDisallowCopyAndAssignClass y(789);
@@ -65,7 +63,7 @@ const int kGlobalArray[5] = {1, 2, 3, 4, 5};
 static_assert(MOJO_ARRAYSIZE(kGlobalArray) == 5u,
               "MOJO_ARRAY_SIZE() failed in static_assert()");
 
-TEST(MacrosCppTest, ArraySize) {
+TEST(MacrosTest, ArraySize) {
   double local_array[4] = {6.7, 7.8, 8.9, 9.0};
   // MSVS considers this local variable unused since MOJO_ARRAYSIZE only takes
   // the size of the type of the local and not the values itself.
@@ -108,7 +106,7 @@ class MoveOnlyInt {
   MOJO_MOVE_ONLY_TYPE(MoveOnlyInt);
 };
 
-TEST(MacrosCppTest, MoveOnlyType) {
+TEST(MacrosTest, MoveOnlyType) {
   MoveOnlyInt x(123);
   EXPECT_TRUE(x.is_set());
   EXPECT_EQ(123, x.value());
@@ -135,7 +133,7 @@ int ReturnsIntYouMustUse() {
   return 123;
 }
 
-TEST(MacrosCppTest, IgnoreResult) {
+TEST(MacrosTest, IgnoreResult) {
   ignore_result(ReturnsIntYouMustUse());
 }
 

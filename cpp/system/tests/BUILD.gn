@@ -16,8 +16,5 @@ mojo_sdk_source_set("tests") {
     "//testing/gtest",
   ]
 
-  mojo_sdk_deps = [
-    "mojo/public/c/system/tests",
-    "mojo/public/cpp/system",
-  ]
+  mojo_sdk_deps = [ "mojo/public/cpp/system" ]
 }

@@ -3,8 +3,7 @@
 // found in the LICENSE file.
 
 // This file tests the C++ Mojo system core wrappers.
-// TODO(vtl): Maybe rename "CoreCppTest" -> "CoreTest" if/when this gets
-// compiled into a different binary from the C API tests.
+// TODO(vtl): Split this test into more reasonable units/files.
 
 #include <stddef.h>
 
@@ -23,13 +22,13 @@
 namespace mojo {
 namespace {
 
-TEST(CoreCppTest, GetTimeTicksNow) {
+TEST(CoreTest, GetTimeTicksNow) {
   const MojoTimeTicks start = GetTimeTicksNow();
   EXPECT_NE(static_cast<MojoTimeTicks>(0), start)
       << "GetTimeTicksNow should return nonzero value";
 }
 
-TEST(CoreCppTest, Basic) {
+TEST(CoreTest, Basic) {
   // Basic |Handle| implementation:
   {
     EXPECT_EQ(MOJO_HANDLE_INVALID, kInvalidHandleValue);
@@ -365,7 +364,7 @@ TEST(CoreCppTest, Basic) {
   // TODO(vtl): Test |reset()| more thoroughly?
 }
 
-TEST(CoreCppTest, TearDownWithMessagesEnqueued) {
+TEST(CoreTest, TearDownWithMessagesEnqueued) {
   // Tear down a message pipe which still has a message enqueued, with the
   // message also having a valid message pipe handle.
   {
@@ -473,7 +472,7 @@ TEST(CoreCppTest, TearDownWithMessagesEnqueued) {
   }
 }
 
-TEST(CoreCppTest, ScopedHandleMoveCtor) {
+TEST(CoreTest, ScopedHandleMoveCtor) {
   ScopedSharedBufferHandle buffer1;
   EXPECT_EQ(MOJO_RESULT_OK, CreateSharedBuffer(nullptr, 1024, &buffer1));
   EXPECT_TRUE(buffer1.is_valid());
@@ -490,7 +489,7 @@ TEST(CoreCppTest, ScopedHandleMoveCtor) {
   EXPECT_FALSE(buffer2.is_valid());
 }
 
-TEST(CoreCppTest, ScopedHandleMoveCtorSelf) {
+TEST(CoreTest, ScopedHandleMoveCtorSelf) {
   ScopedSharedBufferHandle buffer1;
   EXPECT_EQ(MOJO_RESULT_OK, CreateSharedBuffer(nullptr, 1024, &buffer1));
   EXPECT_TRUE(buffer1.is_valid());
@@ -500,7 +499,7 @@ TEST(CoreCppTest, ScopedHandleMoveCtorSelf) {
   EXPECT_TRUE(buffer1.is_valid());
 }
 
-TEST(CoreCppTest, WaitManyResult) {
+TEST(CoreTest, WaitManyResult) {
   {
     WaitManyResult wmr(MOJO_RESULT_OK);
     EXPECT_FALSE(wmr.IsIndexValid());
@@ -544,7 +543,7 @@ TEST(CoreCppTest, WaitManyResult) {
   }
 }
 
-TEST(CoreCppTest, DataPipe) {
+TEST(CoreTest, DataPipe) {
   ScopedDataPipeProducerHandle ph;
   ScopedDataPipeConsumerHandle ch;
 

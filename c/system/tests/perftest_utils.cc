@@ -8,8 +8,8 @@
 #include <stddef.h>
 #include <time.h>
 
+#include "mojo/public/c/system/macros.h"
 #include "mojo/public/c/system/time.h"
-#include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/test_support/test_support.h"
 
 namespace mojo {
