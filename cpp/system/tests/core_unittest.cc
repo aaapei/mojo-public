@@ -17,6 +17,7 @@
 #include "mojo/public/cpp/system/message_pipe.h"
 #include "mojo/public/cpp/system/time.h"
 #include "mojo/public/cpp/system/wait.h"
+#include "mojo/public/cpp/system/wait_set.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {
