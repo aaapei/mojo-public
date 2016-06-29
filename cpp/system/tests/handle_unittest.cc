@@ -171,5 +171,8 @@ TEST(HandleTest, ScopedHandleMoveCtorSelf) {
   EXPECT_TRUE(buffer1.is_valid());
 }
 
+// TODO(vtl): Test |CloseRaw()|.
+// TODO(vtl): Test |reset()| more thoroughly?
+
 }  // namespace mojo
 }  // namespace
