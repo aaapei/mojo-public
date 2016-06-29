@@ -78,9 +78,9 @@ define([
 
   function testReadAndWriteMessage(pipe) {
     var wait = core.waitMany([], [], 0);
-    expect(wait.result).toBe(core.RESULT_INVALID_ARGUMENT);
+    expect(wait.result).toBe(core.RESULT_DEADLINE_EXCEEDED);
     expect(wait.index).toBe(null);
-    expect(wait.signalsState).toBe(null);
+    expect(wait.signalsState.length).toBe(0);
 
     wait = core.wait(pipe.handle0, core.HANDLE_SIGNAL_READABLE, 0);
     expect(wait.result).toBe(core.RESULT_DEADLINE_EXCEEDED);

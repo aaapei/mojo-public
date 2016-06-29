@@ -71,6 +71,11 @@ MojoResult MojoWait(
 //
 // See |MojoWait()| for more details about |deadline|.
 //
+// Note that if |num_handles| is 0, this will wait until |deadline| has passed
+// (possibly forever if it is |MOJO_DEADLINE_INDEFINITE|), and handles|,
+// |signals|, |result_index|, and |signals_states| will all be ignored (so they
+// may be null or invalid pointers).
+//
 // |result_index| (optional) is used to return the index of the handle that
 //     caused the call to return. For example, the index |i| (from 0 to
 //     |num_handles-1|) if |handle[i]| satisfies a signal from |signals[i]|. You
