@@ -74,6 +74,7 @@ MOJO_BEGIN_EXTERN_C
 //       |*options| is invalid).
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
 //       been reached.
+//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
 MojoResult MojoCreateMessagePipe(
     const struct MojoCreateMessagePipeOptions* MOJO_RESTRICT
         options,                                      // Optional in.

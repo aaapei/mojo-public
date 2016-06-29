@@ -81,8 +81,7 @@ MOJO_BEGIN_EXTERN_C
 //       |options| is non null and |*options| is invalid).
 //   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
 //       been reached.
-//   |MOJO_ERROR_CODE_UNIMPLEMENTED| if some unknown/unsupported option has been
-//       specified in |*options|.
+//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
 MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions*
                                  MOJO_RESTRICT options,  // Optional in.
                              MojoHandle* handle);        // Out.
