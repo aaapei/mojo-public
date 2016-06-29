@@ -389,3 +389,8 @@ struct DartKeywordStruct {
   Keywords is;
   Keywords rethrow;
 };
+
+struct ArrayOfArrays {
+  array<array<int32>?> a;
+  array<array<int32>>? b;
+};

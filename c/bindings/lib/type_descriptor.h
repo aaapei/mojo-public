@@ -25,6 +25,7 @@
 #define MOJO_PUBLIC_C_BINDINGS_LIB_TYPE_DESCRIPTOR_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "mojo/public/c/system/macros.h"
@@ -35,25 +36,32 @@ MOJO_BEGIN_EXTERN_C
 // indicates which type the accompanying |elem_descriptor| is describing (if it
 // is describing a reference type), or to indicate that it's a handle type.
 // Values that correspond to an |elem_descriptor|'s pointer type:
-// - If MOJOM_TYPE_DESCRIPTOR_TYPE_STRUCT, then |elem_descriptor| points to a
-//   |MojomTypeDescriptorStruct|.
-// - If MOJOM_TYPE_DESCRIPTOR_TYPE_UNION, then |elem_descriptor| points to a
+// - If MOJOM_TYPE_DESCRIPTOR_TYPE_STRUCT_PTR, then |elem_descriptor| points to
+//   a |MojomTypeDescriptorStruct|.
+// - If MOJOM_TYPE_DESCRIPTOR_TYPE_UNION or
+//   MOJOM_TYPE_DESCRIPTOR_TYPE_UNION_PTR, then |elem_descriptor| points to a
 //   |MojomTypeDescriptorUnion|.
-// - If MOJOM_TYPE_DESCRIPTOR_TYPE_ARRAY, then |elem_descriptor| points to a
+// - If MOJOM_TYPE_DESCRIPTOR_TYPE_ARRAY_PTR, then |elem_descriptor| points to a
 //   |MojomTypeDescriptorArray|.
 // - For any other value, |elem_descriptor| is NULL.
 enum MojomTypeDescriptorType {
   // Note: A map is a mojom struct with 2 mojom arrays, so we don't have a
   // separate descriptor type for it.
-  MOJOM_TYPE_DESCRIPTOR_TYPE_STRUCT = 0,
-  MOJOM_TYPE_DESCRIPTOR_TYPE_ARRAY = 1,
-  MOJOM_TYPE_DESCRIPTOR_TYPE_UNION = 2,
-  MOJOM_TYPE_DESCRIPTOR_TYPE_HANDLE = 3,
-  MOJOM_TYPE_DESCRIPTOR_TYPE_INTERFACE = 4,
+  MOJOM_TYPE_DESCRIPTOR_TYPE_STRUCT_PTR = 0,
+  MOJOM_TYPE_DESCRIPTOR_TYPE_ARRAY_PTR = 1,
+  // A MOJOM_TYPE_DESCRIPTOR_TYPE_UNION_PTR only occurs inside a
+  // |MojomTypeDescriptorUnion|, since union fields inside unions are encoded as
+  // pointers to an out-of-line union.
+  MOJOM_TYPE_DESCRIPTOR_TYPE_UNION_PTR = 2,
+  // A union that is not inside a union is inlined, and described by
+  // MOJOM_TYPE_DESCRIPTOR_TYPE_UNION.
+  MOJOM_TYPE_DESCRIPTOR_TYPE_UNION = 3,
+  MOJOM_TYPE_DESCRIPTOR_TYPE_HANDLE = 4,
+  MOJOM_TYPE_DESCRIPTOR_TYPE_INTERFACE = 5,
   // This is only used in an array descriptor, and serves as a way to terminate
   // a chain of array descriptors; the last entry in the chain always contains a
   // plain-old-data type.
-  MOJOM_TYPE_DESCRIPTOR_TYPE_POD = 5,
+  MOJOM_TYPE_DESCRIPTOR_TYPE_POD = 6,
 };
 
 // Mojom structs are described using this struct.
@@ -122,6 +130,20 @@ struct MojomTypeDescriptorArray {
 // This describes a mojom string.
 // A mojom string is a mojom array of chars without a fixed-sized.
 extern const struct MojomTypeDescriptorArray g_mojom_string_type_description;
+
+// Returns true if |type| is a "pointer" type: an array or a struct, whose data
+// is referenced by a pointer (or an offset, if serialized).
+// Since unions being pointer types depends on their container, we don't include
+// them here.
+bool MojomType_IsPointer(enum MojomTypeDescriptorType type);
+
+// This helper function, depending on |type|, calls the appropriate
+// *_ComputeSerializedSize(|type_desc|, |data|).
+size_t MojomType_DispatchComputeSerializedSize(
+    bool nullable,
+    enum MojomTypeDescriptorType type,
+    const void* type_desc,
+    const void* data);
 
 MOJO_END_EXTERN_C
 

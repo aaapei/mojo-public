@@ -13,14 +13,17 @@ mojo_sdk_source_set("bindings") {
     "message.h",
     "string.h",
     "struct.h",
+    "union.h",
     "validation.h",
 
     # Implementation details.
     "lib/array.c",
     "lib/buffer.c",
     "lib/message.c",
+    "lib/struct.c",
     "lib/type_descriptor.c",
     "lib/type_descriptor.h",
+    "lib/union.c",
     "lib/util.h",
   ]
 

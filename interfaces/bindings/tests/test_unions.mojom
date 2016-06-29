@@ -46,6 +46,16 @@ struct StructOfUnions {
   map<int64, HandleUnion> m_hu;
 };
 
+union UnionOfReferences {
+  PodUnion? pod_union;
+  DummyStruct? dummy_struct;
+  array<int32> int_array;
+};
+
+struct StructOfUnionOfReferences {
+  UnionOfReferences? u;
+};
+
 union ObjectUnion {
   int8 f_int8;
   string f_string;

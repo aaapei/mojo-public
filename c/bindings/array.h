@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "mojo/public/c/bindings/buffer.h"
+#include "mojo/public/c/bindings/lib/type_descriptor.h"
 #include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
@@ -17,8 +18,8 @@ MOJO_BEGIN_EXTERN_C
 // sizeof(MojomArrayHeader)| bytes describing |num_elements| elements of the
 // array.
 struct MojomArrayHeader {
-  // num_bytes includes the size of this struct along with the
-  // accompanying array bytes that follow these fields.
+  // num_bytes includes the size of this struct along with the accompanying
+  // array bytes that follow these fields.
   uint32_t num_bytes;
   uint32_t num_elements;
 };
@@ -40,6 +41,22 @@ MOJO_STATIC_ASSERT(sizeof(union MojomArrayHeaderPtr) == 8,
 struct MojomArrayHeader* MojomArray_New(struct MojomBuffer* buffer,
                                         uint32_t num_elements,
                                         uint32_t element_byte_size);
+
+// This is a macro for accessing a particular element in a mojom array. Given
+// |base|, which pointers to a |struct MojomArrayHeader|, extracts the |index|th
+// element, where each element is |sizeof(type)| bytes.
+#define MOJOM_ARRAY_INDEX(base, type, index)                 \
+  ((type*)((char*)(base) + sizeof(struct MojomArrayHeader) + \
+           sizeof(type) * (index)))
+
+// Returns the number of bytes required to serialize this mojom array.
+// |in_type_desc| is the generated descriptor entry that describes |in_array|.
+// The user isn't expected to call this function directly, but this will
+// probably be called when |ComputeSerializedSize()|ing a user-defined mojom
+// struct.
+size_t MojomArray_ComputeSerializedSize(
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    const struct MojomArrayHeader* in_array_data);
 
 MOJO_END_EXTERN_C
 
