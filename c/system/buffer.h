@@ -126,6 +126,9 @@ MojoResult MojoCreateSharedBuffer(
     uint64_t num_bytes,                               // In.
     MojoHandle* MOJO_RESTRICT shared_buffer_handle);  // Out.
 
+// DEPRECATED: Use |MojoDuplicateHandle[WithReducedRights]()| instead.
+// TODO(vtl): Remove this function.
+//
 // |MojoDuplicateBufferHandle()|: Duplicates the handle |buffer_handle| (which
 // must have the |MOJO_HANDLE_RIGHT_DUPLICATE| right) to a buffer. This creates
 // another handle (returned in |*new_buffer_handle| on success), which can then

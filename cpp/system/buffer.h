@@ -53,32 +53,6 @@ inline MojoResult CreateSharedBuffer(
   return rv;
 }
 
-// Duplicates a handle to a buffer, most commonly so that the buffer can be
-// shared with other applications. See |MojoDuplicateBufferHandle()| for
-// complete documentation.
-//
-// TODO(ggowan): Rename this to DuplicateBufferHandle since it is making another
-// handle to the same buffer, not duplicating the buffer itself.
-//
-// TODO(vtl): This (and also the functions below) are templatized to allow for
-// future/other buffer types. A bit "safer" would be to overload this function
-// manually. (The template enforces that the in and out handles be of the same
-// type.)
-template <class BufferHandleType>
-inline MojoResult DuplicateBuffer(
-    BufferHandleType buffer,
-    const MojoDuplicateBufferHandleOptions* options,
-    ScopedHandleBase<BufferHandleType>* new_buffer) {
-  assert(new_buffer);
-  BufferHandleType handle;
-  MojoResult rv = MojoDuplicateBufferHandle(
-      buffer.value(), options, handle.mutable_value());
-  // Reset even on failure (reduces the chances that a "stale"/incorrect handle
-  // will be used).
-  new_buffer->reset(handle);
-  return rv;
-}
-
 // Maps a part of a buffer (specified by |buffer|, |offset|, and |num_bytes|)
 // into memory. See |MojoMapBuffer()| for complete documentation.
 template <class BufferHandleType>
