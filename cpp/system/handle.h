@@ -177,8 +177,7 @@ static_assert(sizeof(ScopedHandle) == sizeof(Handle),
 // Note: There's nothing to do, since the argument will be destroyed when it
 // goes out of scope.
 template <class HandleType>
-inline void Close(ScopedHandleBase<HandleType> /*handle*/) {
-}
+inline void Close(ScopedHandleBase<HandleType> /*handle*/) {}
 
 // Most users should typically use |Close()| (above) instead.
 inline MojoResult CloseRaw(Handle handle) {
@@ -188,6 +187,63 @@ inline MojoResult CloseRaw(Handle handle) {
 // Strict weak ordering, so that |Handle|s can be used as keys in |std::map|s,
 inline bool operator<(const Handle a, const Handle b) {
   return a.value() < b.value();
+}
+
+// Rights and duplication/replacement ------------------------------------------
+
+// |handle| must be valid.
+inline MojoHandleRights GetRights(Handle handle) {
+  assert(handle.is_valid());
+  MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
+  MojoResult result = MojoGetRights(handle.value(), &rights);
+  MOJO_ALLOW_UNUSED_LOCAL(result);
+  assert(result == MOJO_RESULT_OK);
+  return rights;
+}
+
+// |HandleType| should be some subclass of |Handle|; this is templated so that
+// it will work with multiple handle types. |*handle| must be valid. Returns
+// true on success or false on failure (in which case |*handle| is reset).
+template <class HandleType>
+inline bool ReplaceHandleWithReducedRights(ScopedHandleBase<HandleType>* handle,
+                                           MojoHandleRights rights_to_remove) {
+  assert(handle);
+  assert(handle->is_valid());
+  HandleType raw_handle = handle->release();
+  HandleType new_raw_handle;
+  if (MojoReplaceHandleWithReducedRights(raw_handle.value(), rights_to_remove,
+                                         new_raw_handle.mutable_value()) !=
+      MOJO_RESULT_OK) {
+    assert(false);  // This really shouldn't happen.
+    CloseRaw(raw_handle);
+    return false;
+  }
+  // Otherwise, |raw_handle| is invalidated.
+  handle->reset(new_raw_handle);
+  return true;
+}
+
+template <class HandleType>
+inline ScopedHandleBase<HandleType> DuplicateHandleWithReducedRights(
+    HandleType handle,
+    MojoHandleRights rights_to_remove) {
+  assert(handle.is_valid());
+  HandleType new_handle;
+  MojoResult result = MojoDuplicateHandleWithReducedRights(
+      handle.value(), rights_to_remove, new_handle.mutable_value());
+  MOJO_ALLOW_UNUSED_LOCAL(result);
+  assert(result == MOJO_RESULT_OK);
+  return MakeScopedHandle(new_handle);
+}
+
+template <class HandleType>
+inline ScopedHandleBase<HandleType> DuplicateHandle(HandleType handle) {
+  HandleType new_handle;
+  MojoResult result =
+      MojoDuplicateHandle(handle.value(), new_handle.mutable_value());
+  MOJO_ALLOW_UNUSED_LOCAL(result);
+  assert(result == MOJO_RESULT_OK);
+  return MakeScopedHandle(new_handle);
 }
 
 }  // namespace mojo

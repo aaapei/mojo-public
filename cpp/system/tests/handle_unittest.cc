@@ -162,13 +162,51 @@ TEST(HandleTest, ScopedHandleMoveCtor) {
 TEST(HandleTest, ScopedHandleMoveCtorSelf) {
   // We'll use a shared buffer handle (since we need a valid handle) in a
   // |ScopedSharedBufferHandle|.
+  ScopedSharedBufferHandle buffer;
+  EXPECT_EQ(MOJO_RESULT_OK, CreateSharedBuffer(nullptr, 1024, &buffer));
+  EXPECT_TRUE(buffer.is_valid());
+
+  buffer = buffer.Pass();
+
+  EXPECT_TRUE(buffer.is_valid());
+}
+
+TEST(HandleTest, RightsReplaceAndDuplicate) {
+  static constexpr auto kDuplicate = MOJO_HANDLE_RIGHT_DUPLICATE;
+  static constexpr auto kTransfer = MOJO_HANDLE_RIGHT_TRANSFER;
+  static constexpr auto kGetOptions = MOJO_HANDLE_RIGHT_GET_OPTIONS;
+
+  // We'll use a shared buffer handle (since we need a valid handle that's
+  // duplicatable) in a |ScopedSharedBufferHandle|.
   ScopedSharedBufferHandle buffer1;
   EXPECT_EQ(MOJO_RESULT_OK, CreateSharedBuffer(nullptr, 1024, &buffer1));
   EXPECT_TRUE(buffer1.is_valid());
 
-  buffer1 = buffer1.Pass();
+  EXPECT_EQ(kDuplicate | kTransfer | kGetOptions,
+            GetRights(buffer1.get()) & (kDuplicate | kTransfer | kGetOptions));
 
+  MojoHandle old_handle_value = buffer1.get().value();
+  EXPECT_TRUE(ReplaceHandleWithReducedRights(&buffer1, kTransfer));
   EXPECT_TRUE(buffer1.is_valid());
+  EXPECT_NE(buffer1.get().value(), old_handle_value);
+  EXPECT_EQ(kDuplicate | kGetOptions,
+            GetRights(buffer1.get()) & (kDuplicate | kTransfer | kGetOptions));
+
+  ScopedSharedBufferHandle buffer2 =
+      DuplicateHandleWithReducedRights(buffer1.get(), kGetOptions);
+  EXPECT_TRUE(buffer2.is_valid());
+  EXPECT_NE(buffer2.get().value(), buffer1.get().value());
+  EXPECT_EQ(kDuplicate,
+            GetRights(buffer2.get()) & (kDuplicate | kTransfer | kGetOptions));
+  EXPECT_EQ(kDuplicate | kGetOptions,
+            GetRights(buffer1.get()) & (kDuplicate | kTransfer | kGetOptions));
+
+  ScopedSharedBufferHandle buffer3 = DuplicateHandle(buffer2.get());
+  EXPECT_TRUE(buffer3.is_valid());
+  EXPECT_EQ(kDuplicate,
+            GetRights(buffer3.get()) & (kDuplicate | kTransfer | kGetOptions));
+  EXPECT_EQ(kDuplicate,
+            GetRights(buffer2.get()) & (kDuplicate | kTransfer | kGetOptions));
 }
 
 // TODO(vtl): Test |CloseRaw()|.
