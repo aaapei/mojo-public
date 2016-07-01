@@ -319,26 +319,26 @@ def GetDartTrueFalse(value):
   return 'true' if value else 'false'
 
 def GetArrayNullabilityFlags(kind):
-    """Returns nullability flags for an array type, see codec.dart.
+  """Returns nullability flags for an array type, see codec.dart.
 
-    As we have dedicated decoding functions for arrays, we have to pass
-    nullability information about both the array itself, as well as the array
-    element type there.
-    """
-    assert mojom.IsArrayKind(kind)
-    ARRAY_NULLABLE   = 'bindings.kArrayNullable'
-    ELEMENT_NULLABLE = 'bindings.kElementNullable'
-    NOTHING_NULLABLE = 'bindings.kNothingNullable'
+  As we have dedicated decoding functions for arrays, we have to pass
+  nullability information about both the array itself, as well as the array
+  element type there.
+  """
+  assert mojom.IsArrayKind(kind)
+  ARRAY_NULLABLE   = 'bindings.kArrayNullable'
+  ELEMENT_NULLABLE = 'bindings.kElementNullable'
+  NOTHING_NULLABLE = 'bindings.kNothingNullable'
 
-    flags_to_set = []
-    if mojom.IsNullableKind(kind):
-        flags_to_set.append(ARRAY_NULLABLE)
-    if mojom.IsNullableKind(kind.kind):
-        flags_to_set.append(ELEMENT_NULLABLE)
+  flags_to_set = []
+  if mojom.IsNullableKind(kind):
+      flags_to_set.append(ARRAY_NULLABLE)
+  if mojom.IsNullableKind(kind.kind):
+      flags_to_set.append(ELEMENT_NULLABLE)
 
-    if not flags_to_set:
-        flags_to_set = [NOTHING_NULLABLE]
-    return ' | '.join(flags_to_set)
+  if not flags_to_set:
+      flags_to_set = [NOTHING_NULLABLE]
+  return ' | '.join(flags_to_set)
 
 def AppendDecodeParams(initial_params, kind, bit):
   """ Appends standard parameters for decode calls. """

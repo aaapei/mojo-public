@@ -1,5 +1,5 @@
 {%- macro encode(variable, kind, offset, bit, level=0, check_for_null=True) %}
-{%- if kind|is_pointer_array_kind %}
+{%- if kind|is_pointer_array_kind or kind|is_enum_array_kind %}
 {%- set sub_kind = kind.kind %}
 {%- set sub_kind_size = "bindings.kPointerSize" %}
 {%-   if sub_kind|is_union_kind %}

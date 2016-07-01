@@ -89,6 +89,10 @@ struct ContainsArrayOfEnum {
   array<NormalEnum> array_of_enums;
 };
 
+struct ContainsNullableArrayOfEnum {
+  array<NormalEnum>? array_of_enums;
+};
+
 interface Regression551 {
   Get(array<string> key_prefixes) => (int32 result);
 };
