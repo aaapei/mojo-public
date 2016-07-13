@@ -345,6 +345,9 @@ bool RunLoop::NotifyResults(const std::vector<MojoWaitSetResult>& results) {
 
     auto handler = it->second.handler;
     handlers_.erase(it);
+    MojoResult r = WaitSetRemove(wait_set_.get(), id);
+    MOJO_ALLOW_UNUSED_LOCAL(r);
+    assert(r == MOJO_RESULT_OK);
     if (result.wait_result == MOJO_RESULT_OK)
       handler->OnHandleReady(id);
     else
