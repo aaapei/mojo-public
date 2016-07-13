@@ -29,6 +29,25 @@ size_t MojomStruct_ComputeSerializedSize(
     const struct MojomTypeDescriptorStruct* in_type_desc,
     const struct MojomStructHeader* in_struct);
 
+// Encodes the mojom struct described by the |inout_struct| buffer; note that
+// any references from the struct are also in the buffer backed by
+// |inout_struct|, and they are recursively encoded. Encodes all pointers to
+// relative offsets, and encodes all handles by moving them into
+// |inout_handles_buffer| encoding the index into the handle.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom struct.
+// |inout_struct|: Contains the struct, and any other references outside of the
+//                 struct.
+// |in_struct_size|:  Size of the buffer backed by |inout_struct| in bytes.
+// |inout_handles_buffer|:
+//   A buffer used to record handles during encoding. The |num_handles_used|
+//   field can be used to determine how many handles were moved into this
+//   buffer.
+void MojomStruct_EncodePointersAndHandles(
+    const struct MojomTypeDescriptorStruct* in_type_desc,
+    struct MojomStructHeader* inout_struct,
+    uint32_t in_struct_size,
+    struct MojomHandleBuffer* inout_handles_buffer);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_STRUCT_H_

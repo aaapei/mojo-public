@@ -58,6 +58,25 @@ size_t MojomArray_ComputeSerializedSize(
     const struct MojomTypeDescriptorArray* in_type_desc,
     const struct MojomArrayHeader* in_array_data);
 
+// Encodes the mojom array described by the |inout_array| buffer; note that any
+// references from the array are also in the buffer backed by |inout_array|, and
+// they are recursively encoded. Encodes all pointers to relative offsets, and
+// encodes all handles by moving them into |inout_handles_buffer| and encoding
+// the index into the handle.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom array.
+// |inout_array|: Contains the array, and any other references outside the
+//                array.
+// |in_array_size|: Size of the buffer backed by |inout_array| in bytes.
+// |inout_handles_buffer|:
+//   A buffer used to record handles during encoding. The |num_handles_used|
+//   field can be used to determine how many handles were moved into this
+//   buffer after this function returns.
+void MojomArray_EncodePointersAndHandles(
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    struct MojomArrayHeader* inout_array,
+    uint32_t in_array_size,
+    struct MojomHandleBuffer* inout_handles_buffer);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_ARRAY_H_

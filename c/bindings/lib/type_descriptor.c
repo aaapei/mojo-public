@@ -10,6 +10,7 @@
 #include "mojo/public/c/bindings/lib/util.h"
 #include "mojo/public/c/bindings/struct.h"
 #include "mojo/public/c/bindings/union.h"
+#include "mojo/public/c/bindings/interface.h"
 
 const struct MojomTypeDescriptorArray g_mojom_string_type_description = {
     MOJOM_TYPE_DESCRIPTOR_TYPE_POD,  // elem_type
@@ -25,9 +26,9 @@ bool MojomType_IsPointer(enum MojomTypeDescriptorType type) {
 }
 
 size_t MojomType_DispatchComputeSerializedSize(
-    bool nullable,
     enum MojomTypeDescriptorType type,
     const void* type_desc,
+    bool nullable,
     const void* data) {
   const void* data_ptr = data;
   size_t size = 0;
@@ -61,9 +62,105 @@ size_t MojomType_DispatchComputeSerializedSize(
       }
       break;
     }
-    default:
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_HANDLE:
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_INTERFACE:
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_POD:
       // We should never end up here.
       assert(false);
+      break;
   }
   return size;
+}
+
+static void encode_pointer(union MojomPointer* pointer, uint32_t max_offset) {
+  if (pointer->ptr == NULL) {
+    pointer->offset = 0;
+  } else {
+    assert((char*)pointer->ptr > (char*)pointer);
+    assert((char*)pointer->ptr - (char*)pointer < max_offset);
+    pointer->offset = (char*)(pointer->ptr) - (char*)pointer;
+  }
+}
+
+static void encode_handle(bool nullable, MojoHandle* handle,
+                          struct MojomHandleBuffer* handles_buffer) {
+  assert(handle);
+  assert(handles_buffer);
+  assert(handles_buffer->handles);
+
+  if (*handle == MOJO_HANDLE_INVALID) {
+    assert(nullable);
+    // The encoded invalid handle offset is '-1' of MojoHandle.
+    *handle = (MojoHandle)-1;
+  } else {
+    assert(handles_buffer->num_handles_used < handles_buffer->num_handles);
+
+    handles_buffer->handles[handles_buffer->num_handles_used] = *handle;
+    *handle = handles_buffer->num_handles_used;
+    handles_buffer->num_handles_used++;
+  }
+}
+
+void MojomType_DispatchEncodePointersAndHandles(
+    enum MojomTypeDescriptorType in_elem_type,
+    const void* in_type_desc,
+    bool in_nullable,
+    void* inout_buf,
+    uint32_t in_buf_size,
+    struct MojomHandleBuffer* inout_handles_buffer) {
+  assert(inout_buf);
+
+  void* union_buf = inout_buf;
+  switch (in_elem_type) {
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_STRUCT_PTR: {
+      struct MojomStructHeader* inout_struct =
+          ((union MojomPointer*)inout_buf)->ptr;
+      encode_pointer(inout_buf, in_buf_size);
+      if (!in_nullable || inout_struct != NULL)
+        MojomStruct_EncodePointersAndHandles(
+            (const struct MojomTypeDescriptorStruct*)in_type_desc,
+            inout_struct,
+            in_buf_size - ((char*)inout_struct - (char*)inout_buf),
+            inout_handles_buffer);
+      break;
+    }
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_ARRAY_PTR: {
+      struct MojomArrayHeader* inout_array =
+                ((union MojomPointer*)inout_buf)->ptr;
+      encode_pointer(inout_buf, in_buf_size);
+      if (!in_nullable || inout_array != NULL)
+        MojomArray_EncodePointersAndHandles(
+            (const struct MojomTypeDescriptorArray*)in_type_desc,
+            inout_array,
+            in_buf_size - ((char*)inout_array - (char*)inout_buf),
+            inout_handles_buffer);
+      break;
+    }
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_UNION_PTR:
+      union_buf = ((union MojomPointer*)inout_buf)->ptr;
+      encode_pointer(inout_buf, in_buf_size);
+      // Fall through
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_UNION: {
+      struct MojomUnionLayout* u_data = union_buf;
+      if (!in_nullable || (u_data != NULL && u_data->size != 0))
+        MojomUnion_EncodePointersAndHandles(
+            (const struct MojomTypeDescriptorUnion*)in_type_desc,
+            inout_buf,
+            in_buf_size,
+            inout_handles_buffer);
+      break;
+    }
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_HANDLE:
+      encode_handle(in_nullable, (MojoHandle*)inout_buf, inout_handles_buffer);
+      break;
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_INTERFACE: {
+      struct MojomInterfaceData* interface = inout_buf;
+      encode_handle(in_nullable, &interface->handle, inout_handles_buffer);
+      break;
+    }
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_POD:
+      // We shouldn't ever end up here.
+      assert(false);
+      break;
+  }
 }

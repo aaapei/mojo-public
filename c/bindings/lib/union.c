@@ -25,8 +25,33 @@ size_t MojomUnion_ComputeSerializedSize(
       continue;
 
     return MojomType_DispatchComputeSerializedSize(
-        entry->nullable, entry->elem_type, entry->elem_descriptor,
+        entry->elem_type, entry->elem_descriptor, entry->nullable,
         &(in_union_data->data.pointer.ptr));
   }
   return 0;
+}
+
+void MojomUnion_EncodePointersAndHandles(
+    const struct MojomTypeDescriptorUnion* in_type_desc,
+    struct MojomUnionLayout* inout_union,
+    uint32_t in_buf_size,
+    struct MojomHandleBuffer* inout_handles_buffer) {
+  for (size_t i = 0; i < in_type_desc->num_entries; i++) {
+    const struct MojomTypeDescriptorUnionEntry* entry =
+        &(in_type_desc->entries[i]);
+
+    if (inout_union->tag != entry->tag)
+      continue;
+
+    if (entry->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
+      continue;
+
+    MojomType_DispatchEncodePointersAndHandles(
+        entry->elem_type,
+        entry->elem_descriptor,
+        entry->nullable,
+        &(inout_union->data),
+        in_buf_size - ((char*)&(inout_union->data) - (char*)inout_union),
+        inout_handles_buffer);
+  }
 }

@@ -28,6 +28,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "mojo/public/c/bindings/buffer.h"
+#include "mojo/public/c/bindings/validation.h"
+#include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
@@ -140,10 +143,23 @@ bool MojomType_IsPointer(enum MojomTypeDescriptorType type);
 // This helper function, depending on |type|, calls the appropriate
 // *_ComputeSerializedSize(|type_desc|, |data|).
 size_t MojomType_DispatchComputeSerializedSize(
-    bool nullable,
     enum MojomTypeDescriptorType type,
     const void* type_desc,
+    bool nullable,
     const void* data);
+
+// This helper function, depending on |type|, calls the appropriate
+// *_DispatchEncodePointersAndHandles(...). If |type| describes a pointer, it
+// first encodes the pointer before calling the associated
+// *_DispatchEncodePointersAndHandles(...). If |type| describes a handle, it
+// encodes handle into |inout_handles|.
+void MojomType_DispatchEncodePointersAndHandles(
+    enum MojomTypeDescriptorType in_elem_type,
+    const void* in_type_desc,
+    bool in_nullable,
+    void* inout_buf,
+    uint32_t in_buf_size,
+    struct MojomHandleBuffer* inout_handles_buffer);
 
 MOJO_END_EXTERN_C
 
