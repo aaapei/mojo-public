@@ -4,6 +4,13 @@
 
 import("../../mojo_sdk.gni")
 
+group("bindings") {
+  public_deps = [
+    ":core",
+    ":utility",
+  ]
+}
+
 # This target provides source files and dependencies required for serializing
 # mojom types and has no references to the rest of the mojo system. It needs to
 # be linked with an |Environment| implementation for logging.
@@ -51,7 +58,9 @@ mojo_sdk_source_set("serialization") {
   ]
 }
 
-mojo_sdk_source_set("bindings") {
+# This target provides everything needed to build (and theoretically use) all
+# C++ generated from mojom files.
+mojo_sdk_source_set("core") {
   sources = [
     "binding.h",
     "interface_handle.h",
@@ -81,15 +90,28 @@ mojo_sdk_source_set("bindings") {
     "message.h",
     "message_validator.h",
     "no_interface.h",
-    "strong_binding.h",
     "synchronous_interface_ptr.h",
   ]
 
   public_deps = [
+    ":callback",
     ":serialization",
   ]
 
   mojo_sdk_deps = [ "mojo/public/interfaces/bindings:bindings_cpp_sources" ]
+}
+
+mojo_sdk_source_set("utility") {
+  sources = [
+    "binding_set.h",
+    "strong_binding.h",
+  ]
+
+  public_deps = [
+    ":core",
+  ]
+
+  mojo_sdk_deps = [ "mojo/public/cpp/system" ]
 }
 
 mojo_sdk_source_set("callback") {
