@@ -56,7 +56,7 @@ TEST(StructSerializedSizeTest, Basic) {
 }
 
 TEST(StructSerializationTest, StructOfStructs) {
-  char buffer_bytes[1000];
+  char buffer_bytes[1000] = {0};
   struct MojomBuffer buf = {buffer_bytes, sizeof(buffer_bytes), 0};
 
   struct mojo_test_RectPair* pair = static_cast<struct mojo_test_RectPair*>(
@@ -70,6 +70,11 @@ TEST(StructSerializationTest, StructOfStructs) {
   EXPECT_EQ(8U + 16U + 2 * (8U + 16U),
             mojo_test_RectPair_ComputeSerializedSize(pair));
 
+  // We save the underlying (unencoded) buffer. We can compare the two after
+  // deserialization to make sure deserialization is correct.
+  char buffer_bytes_copy[sizeof(buffer_bytes)];
+  memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes_copy));
+
   struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_RectPair_EncodePointersAndHandles(pair, buf.num_bytes_used,
                                               &handle_buf);
@@ -80,6 +85,11 @@ TEST(StructSerializationTest, StructOfStructs) {
   EXPECT_EQ(BYTES_LEFT_AFTER_FIELD(struct mojo_test_RectPair, second) +
                 sizeof(struct mojo_test_Rect),
             pair->second.offset);
+
+  mojo_test_RectPair_DecodePointersAndHandles(
+      reinterpret_cast<struct mojo_test_RectPair*>(buf.buf), buf.num_bytes_used,
+      NULL, 0);
+  EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
 }
 
 // Tests a struct that has:
@@ -131,6 +141,9 @@ TEST(StructSerializationTest, StructOfArrays) {
                      16U),  // rect payload (four ints)
             size);
 
+  char buffer_bytes_copy[sizeof(buffer_bytes)];
+  memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes_copy));
+
   struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_NamedRegion_EncodePointersAndHandles(
       named_region, buf.num_bytes_used, &handle_buf);
@@ -153,6 +166,11 @@ TEST(StructSerializationTest, StructOfArrays) {
       MOJOM_ARRAY_INDEX(rects, union mojo_test_RectPtr, 2)->offset);
   EXPECT_EQ(sizeof(union mojo_test_RectPtr) + sizeof(struct mojo_test_Rect) * 3,
             MOJOM_ARRAY_INDEX(rects, union mojo_test_RectPtr, 3)->offset);
+
+  mojo_test_NamedRegion_DecodePointersAndHandles(
+      reinterpret_cast<struct mojo_test_NamedRegion*>(buf.buf),
+      buf.num_bytes_used, NULL, 0);
+  EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
 }
 
 // Tests a struct that has:
@@ -167,6 +185,7 @@ TEST(StructSerializationTest, StructOfNullArrays) {
       {NULL},
       {NULL},
   };
+  struct mojo_test_NamedRegion named_region_copy = named_region;
 
   size_t size = mojo_test_NamedRegion_ComputeSerializedSize(&named_region);
   EXPECT_EQ(8U +      // header
@@ -180,6 +199,11 @@ TEST(StructSerializationTest, StructOfNullArrays) {
   EXPECT_EQ(0u, handle_buf.num_handles_used);
   EXPECT_EQ(0u, named_region.name.offset);
   EXPECT_EQ(0u, named_region.rects.offset);
+
+  mojo_test_NamedRegion_DecodePointersAndHandles(
+      &named_region, sizeof(struct mojo_test_NamedRegion), NULL, 0);
+  EXPECT_EQ(0, memcmp(&named_region, &named_region_copy,
+                      sizeof(struct mojo_test_NamedRegion)));
 }
 
 TEST(StructSerializationTest, StructOfUnion) {
@@ -228,11 +252,20 @@ TEST(StructSerializationTest, StructOfUnion) {
   EXPECT_EQ(0u, handle_buf.num_handles_used);
   EXPECT_EQ(0, memcmp(&u, &u_copy, sizeof(u)));
 
+  // Similarly, decoding shouldn't change the struct at all:
+  mojo_test_SmallStructNonNullableUnion_DecodePointersAndHandles(
+      &u, sizeof(struct mojo_test_SmallStructNonNullableUnion), NULL, 0);
+  EXPECT_EQ(0, memcmp(&u, &u_copy, sizeof(u)));
+
   struct mojo_test_SmallStructNonNullableUnion u_null_copy = u_null;
   mojo_test_SmallStructNonNullableUnion_EncodePointersAndHandles(
       &u_null, sizeof(struct mojo_test_SmallStructNonNullableUnion),
       &handle_buf);
   EXPECT_EQ(0u, handle_buf.num_handles_used);
+  EXPECT_EQ(0, memcmp(&u_null, &u_null_copy, sizeof(u_null)));
+
+  mojo_test_SmallStructNonNullableUnion_DecodePointersAndHandles(
+      &u_null, sizeof(struct mojo_test_SmallStructNonNullableUnion), NULL, 0);
   EXPECT_EQ(0, memcmp(&u_null, &u_null_copy, sizeof(u_null)));
 }
 
@@ -259,6 +292,11 @@ TEST(StructSerializationTest, StructWithHandle) {
   EXPECT_EQ(0u, handle_buf.num_handles_used);
   EXPECT_EQ(static_cast<MojoHandle>(-1), handle_struct.h);
 
+  mojo_test_NullableHandleStruct_DecodePointersAndHandles(
+      &handle_struct, sizeof(struct mojo_test_NullableHandleStruct), handles,
+      MOJO_ARRAYSIZE(handles));
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handle_struct.h);
+
   handle_struct.h = 123;
   mojo_test_NullableHandleStruct_EncodePointersAndHandles(
       &handle_struct, sizeof(struct mojo_test_NullableHandleStruct),
@@ -266,6 +304,12 @@ TEST(StructSerializationTest, StructWithHandle) {
   EXPECT_EQ(1u, handle_buf.num_handles_used);
   EXPECT_EQ(static_cast<MojoHandle>(0), handle_struct.h);
   EXPECT_EQ(static_cast<MojoHandle>(123), handles[0]);
+
+  mojo_test_NullableHandleStruct_DecodePointersAndHandles(
+      &handle_struct, sizeof(struct mojo_test_NullableHandleStruct), handles,
+      MOJO_ARRAYSIZE(handles));
+  EXPECT_EQ(static_cast<MojoHandle>(123), handle_struct.h);
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handles[0]);
 }
 
 }  // namespace

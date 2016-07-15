@@ -112,3 +112,33 @@ void MojomArray_EncodePointersAndHandles(
         inout_handles_buffer);
   }
 }
+
+void MojomArray_DecodePointersAndHandles(
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    struct MojomArrayHeader* inout_array,
+    uint32_t in_array_size,
+    MojoHandle* inout_handles,
+    uint32_t in_num_handles) {
+  assert(in_type_desc);
+  assert(inout_array);
+  assert(inout_handles != NULL || in_num_handles == 0);
+
+  // Nothing to encode for POD types.
+  if (in_type_desc->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
+    return;
+
+  for (size_t i = 0; i < inout_array->num_elements; i++) {
+    char* elem_data =
+        array_index_by_type(inout_array, in_type_desc->elem_type, i);
+    assert(elem_data < (char*)inout_array + in_array_size);
+
+    MojomType_DispatchDecodePointersAndHandles(
+        in_type_desc->elem_type,
+        in_type_desc->elem_descriptor,
+        in_type_desc->nullable,
+        elem_data,
+        in_array_size - (uint32_t)(elem_data - (char*)inout_array),
+        inout_handles,
+        in_num_handles);
+  }
+}

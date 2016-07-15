@@ -161,6 +161,20 @@ void MojomType_DispatchEncodePointersAndHandles(
     uint32_t in_buf_size,
     struct MojomHandleBuffer* inout_handles_buffer);
 
+// This helper function, depending on |type|, calls the appropriate
+// *_DispatchDeocdePointersAndHandles(...). If |type| describes a pointer, it
+// first decodes the offset into a pointer before calling the associated
+// *_DispatchDecodePointersAndHandles(...). If |type| describes a handle, it
+// decodes the handle by looking up it up in |inout_handles|.
+void MojomType_DispatchDecodePointersAndHandles(
+    enum MojomTypeDescriptorType in_elem_type,
+    const void* in_type_desc,
+    bool in_nullable,
+    void* inout_buf,
+    uint32_t in_buf_size,
+    MojoHandle* inout_handles,
+    uint32_t in_num_handles);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_LIB_TYPE_DESCRIPTOR_H_

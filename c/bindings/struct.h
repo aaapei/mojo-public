@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "mojo/public/c/bindings/buffer.h"
 #include "mojo/public/c/bindings/lib/type_descriptor.h"
 #include "mojo/public/c/system/macros.h"
 
@@ -47,6 +48,26 @@ void MojomStruct_EncodePointersAndHandles(
     struct MojomStructHeader* inout_struct,
     uint32_t in_struct_size,
     struct MojomHandleBuffer* inout_handles_buffer);
+
+// Decodes the mojom struct described by the |inout_struct| buffer; note that
+// any references from the struct are also in |inout_struct|, and they are
+// recursively decoded. Decodes all offsets to pointers, and decodes all handles
+// by moving them out of |inout_handles| array using the encoded index into the
+// array.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom struct.
+// |inout_struct|: Contains the struct, and any other references outside of the
+//              struct.
+// |in_struct_size|: Contains the struct, and any other references outside of
+//                   the struct.
+// |inout_handles|: Mojo handles are in this array, and are referenced by index
+//                  in |inout_buf|.
+// |in_num_handles|: Size in # of number elements available in |inout_handles|.
+void MojomStruct_DecodePointersAndHandles(
+    const struct MojomTypeDescriptorStruct* in_type_desc,
+    struct MojomStructHeader* inout_struct,
+    uint32_t in_struct_size,
+    MojoHandle* inout_handles,
+    uint32_t in_num_handles);
 
 MOJO_END_EXTERN_C
 

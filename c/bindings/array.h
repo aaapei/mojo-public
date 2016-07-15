@@ -77,6 +77,24 @@ void MojomArray_EncodePointersAndHandles(
     uint32_t in_array_size,
     struct MojomHandleBuffer* inout_handles_buffer);
 
+// Decodes the mojom array described by the |inout_array| buffer; note that any
+// references from the array are also in the buffer backed by |inout_array|, and
+// they are recursively decoded. Decodes all offset to pointers, and decodes all
+// handles by moving them out of |inout_handles| array using the encoded index.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom array.
+// |inout_array|: Contains the array, and any other references outside the
+//                array.
+// |in_array_size|: Size of the buffer backed by |inout_array|.
+// |inout_handles|: Mojo handles are moved out of this array, and are references
+// by index in |inout_buf|.
+// |in_num_handles|: Size in # of number elements available in |inout_handles|.
+void MojomArray_DecodePointersAndHandles(
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    struct MojomArrayHeader* inout_array,
+    uint32_t in_array_size,
+    MojoHandle* inout_handles,
+    uint32_t in_num_handles);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_ARRAY_H_

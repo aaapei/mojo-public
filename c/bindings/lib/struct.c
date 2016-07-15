@@ -64,3 +64,35 @@ void MojomStruct_EncodePointersAndHandles(
         inout_handles_buffer);
   }
 }
+
+void MojomStruct_DecodePointersAndHandles(
+    const struct MojomTypeDescriptorStruct* in_type_desc,
+    struct MojomStructHeader* inout_struct,
+    uint32_t in_struct_size,
+    MojoHandle* inout_handles,
+    uint32_t in_num_handles) {
+  assert(in_type_desc);
+  assert(inout_struct);
+  assert(inout_handles != NULL || in_num_handles == 0);
+
+  for (size_t i = 0; i < in_type_desc->num_entries; i++) {
+    const struct MojomTypeDescriptorStructEntry* entry =
+        &(in_type_desc->entries[i]);
+
+    if (inout_struct->version < entry->min_version)
+      continue;
+
+    assert(sizeof(struct MojomStructHeader) + entry->offset < in_struct_size);
+    void* elem_data = ((char*)inout_struct + sizeof(struct MojomStructHeader) +
+                       entry->offset);
+
+    MojomType_DispatchDecodePointersAndHandles(
+        entry->elem_type,
+        entry->elem_descriptor,
+        entry->nullable,
+        elem_data,
+        in_struct_size - ((char*)elem_data - (char*)inout_struct),
+        inout_handles,
+        in_num_handles);
+  }
+}

@@ -36,6 +36,8 @@ void MojomUnion_EncodePointersAndHandles(
     struct MojomUnionLayout* inout_union,
     uint32_t in_buf_size,
     struct MojomHandleBuffer* inout_handles_buffer) {
+  assert(in_buf_size >= sizeof(struct MojomUnionLayout));
+
   for (size_t i = 0; i < in_type_desc->num_entries; i++) {
     const struct MojomTypeDescriptorUnionEntry* entry =
         &(in_type_desc->entries[i]);
@@ -50,8 +52,38 @@ void MojomUnion_EncodePointersAndHandles(
         entry->elem_type,
         entry->elem_descriptor,
         entry->nullable,
-        &(inout_union->data),
-        in_buf_size - ((char*)&(inout_union->data) - (char*)inout_union),
+        &inout_union->data,
+        in_buf_size - ((char*)&inout_union->data - (char*)inout_union),
         inout_handles_buffer);
+  }
+}
+
+void MojomUnion_DecodePointersAndHandles(
+    const struct MojomTypeDescriptorUnion* in_type_desc,
+    struct MojomUnionLayout* inout_union,
+    uint32_t in_union_size,
+    MojoHandle* inout_handles,
+    uint32_t in_num_handles) {
+  assert(in_union_size >= sizeof(struct MojomUnionLayout));
+  assert(inout_handles != NULL || in_num_handles == 0);
+
+  for (size_t i = 0; i < in_type_desc->num_entries; i++) {
+    const struct MojomTypeDescriptorUnionEntry* entry =
+        &(in_type_desc->entries[i]);
+
+    if (inout_union->tag != entry->tag)
+      continue;
+
+    if (entry->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
+      continue;
+
+    MojomType_DispatchDecodePointersAndHandles(
+        entry->elem_type,
+        entry->elem_descriptor,
+        entry->nullable,
+        &inout_union->data,
+        in_union_size - ((char*)&inout_union->data - (char*)inout_union),
+        inout_handles,
+        in_num_handles);
   }
 }

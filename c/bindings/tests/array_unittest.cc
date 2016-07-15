@@ -50,7 +50,7 @@ TEST(ArrayTest, New) {
 
 // Tests serialized size of an array of unions.
 TEST(ArraySerializationTest, ArrayOfUnions) {
-  char bytes_buffer[1000];
+  char bytes_buffer[1000] = {0};
   MojomBuffer buf = {bytes_buffer, sizeof(bytes_buffer), 0};
 
   struct mojo_test_SmallStruct* small_struct =
@@ -94,6 +94,11 @@ TEST(ArraySerializationTest, ArrayOfUnions) {
                 + (8u + 16u * 2),  // array of 2 unions
             mojo_test_SmallStruct_ComputeSerializedSize(small_struct));
 
+  // Save the underlying buffer before encoding, so we can decode+compare
+  // later.
+  char bytes_buffer_copy[sizeof(bytes_buffer)];
+  memcpy(bytes_buffer_copy, bytes_buffer, sizeof(bytes_buffer));
+
   struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_SmallStruct_EncodePointersAndHandles(
       small_struct, buf.num_bytes_used, &handle_buf);
@@ -111,11 +116,15 @@ TEST(ArraySerializationTest, ArrayOfUnions) {
       sizeof(struct mojo_test_SmallStruct) -
           offsetof(struct mojo_test_SmallStruct, nullable_pod_union_array),
       small_struct->nullable_pod_union_array.offset);
+
+  mojo_test_SmallStruct_DecodePointersAndHandles(small_struct,
+                                                 buf.num_bytes_used, NULL, 0);
+  EXPECT_EQ(0, memcmp(buf.buf, bytes_buffer_copy, buf.num_bytes_used));
 }
 
 // Tests serialized size of an array of arrays.
 TEST(ArraySerializationTest, ArrayOfArrays) {
-  char bytes_buffer[1000];
+  char bytes_buffer[1000] = {0};
   MojomBuffer buf = {bytes_buffer, sizeof(bytes_buffer), 0};
 
   struct mojo_test_ArrayOfArrays* arr =
@@ -152,6 +161,11 @@ TEST(ArraySerializationTest, ArrayOfArrays) {
                 + (8u + 8u),     // first array<int> in a
             mojo_test_ArrayOfArrays_ComputeSerializedSize(arr));
 
+  // Save the underlying buffer before encoding, so we can decode+compare
+  // later.
+  char bytes_buffer_copy[sizeof(bytes_buffer)];
+  memcpy(bytes_buffer_copy, bytes_buffer, sizeof(bytes_buffer));
+
   struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_ArrayOfArrays_EncodePointersAndHandles(arr, buf.num_bytes_used,
                                                    &handle_buf);
@@ -168,11 +182,15 @@ TEST(ArraySerializationTest, ArrayOfArrays) {
             MOJOM_ARRAY_INDEX(a_array, union MojomArrayHeaderPtr, 0)->offset);
   EXPECT_EQ(0u,
             MOJOM_ARRAY_INDEX(a_array, union MojomArrayHeaderPtr, 1)->offset);
+
+  mojo_test_ArrayOfArrays_DecodePointersAndHandles(arr, buf.num_bytes_used,
+                                                   NULL, 0);
+  EXPECT_EQ(0, memcmp(buf.buf, bytes_buffer_copy, buf.num_bytes_used));
 }
 
 // Tests serialization of an array of handles.
 TEST(ArraySerializationTest, ArrayOfHandles) {
-  char buffer_bytes[1000];
+  char buffer_bytes[1000] = {0};
   MojomBuffer buf = {buffer_bytes, sizeof(buffer_bytes), 0};
 
   struct mojo_test_StructWithNullableHandles* handle_struct =
@@ -197,6 +215,11 @@ TEST(ArraySerializationTest, ArrayOfHandles) {
       8u + 4u + 4u + 8u + 4u + (8u + 3 * 4u),
       mojo_test_StructWithNullableHandles_ComputeSerializedSize(handle_struct));
 
+  // Save the underlying buffer before encoding, so we can decode+compare
+  // later.
+  char buffer_bytes_copy[sizeof(buffer_bytes)];
+  memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes));
+
   MojoHandle handles[5] = {};
   struct MojomHandleBuffer handle_buf = {handles, MOJO_ARRAYSIZE(handles), 0u};
   mojo_test_StructWithNullableHandles_EncodePointersAndHandles(
@@ -215,6 +238,15 @@ TEST(ArraySerializationTest, ArrayOfHandles) {
   EXPECT_EQ(sizeof(struct mojo_test_StructWithNullableHandles) -
                 offsetof(struct mojo_test_StructWithNullableHandles, array_h),
             handle_struct->array_h.offset);
+
+  mojo_test_StructWithNullableHandles_DecodePointersAndHandles(
+      handle_struct, buf.num_bytes_used, handles, MOJO_ARRAYSIZE(handles));
+  EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
+
+  // Check that the handles in the handles array are invalidated:
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handles[0]);
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handles[1]);
+  EXPECT_EQ(MOJO_HANDLE_INVALID, handles[2]);
 }
 
 }  // namespace

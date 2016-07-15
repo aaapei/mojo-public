@@ -34,7 +34,7 @@ struct mojo_test_StructOfUnionOfReferences* MakeStructOfUnionReference(
 
 // Test serialization when a union points to a union.
 TEST(UnionSerializationTest, UnionOfUnion) {
-  char buffer_bytes[1000];
+  char buffer_bytes[1000] = {0};
   struct MojomBuffer buf = {buffer_bytes, sizeof(buffer_bytes), 0};
   struct mojo_test_StructOfUnionOfReferences* struct_with_union =
       MakeStructOfUnionReference(&buf);
@@ -62,6 +62,11 @@ TEST(UnionSerializationTest, UnionOfUnion) {
             mojo_test_StructOfUnionOfReferences_ComputeSerializedSize(
                 struct_with_union));
 
+  // We save the underlying (unencoded) buffer. We can compare the two after
+  // deserialization to make sure deserialization is correct.
+  char buffer_bytes_copy[sizeof(buffer_bytes)];
+  memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes_copy));
+
   struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles(
       struct_with_union, buf.num_bytes_used, &handle_buf);
@@ -70,6 +75,10 @@ TEST(UnionSerializationTest, UnionOfUnion) {
   EXPECT_EQ(sizeof(struct mojo_test_StructOfUnionOfReferences) -
                 offsetof(struct mojo_test_StructOfUnionOfReferences, u.data),
             struct_with_union->u.data.f_pod_union.offset);
+
+  mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles(
+      struct_with_union, buf.num_bytes_used, NULL, 0);
+  EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
 }
 
 // Test when a union points to a struct.
@@ -100,6 +109,11 @@ TEST(UnionSerializationTest, UnionOfStruct) {
             mojo_test_StructOfUnionOfReferences_ComputeSerializedSize(
                 struct_with_union));
 
+  // We save the underlying (unencoded) buffer. We can compare the two after
+  // deserialization to make sure deserialization is correct.
+  char buffer_bytes_copy[sizeof(buffer_bytes)];
+  memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes_copy));
+
   struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles(
       struct_with_union, buf.num_bytes_used, &handle_buf);
@@ -108,6 +122,10 @@ TEST(UnionSerializationTest, UnionOfStruct) {
   EXPECT_EQ(sizeof(struct mojo_test_StructOfUnionOfReferences) -
                 offsetof(struct mojo_test_StructOfUnionOfReferences, u.data),
             struct_with_union->u.data.f_dummy_struct.offset);
+
+  mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles(
+      struct_with_union, buf.num_bytes_used, NULL, 0);
+  EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
 }
 
 // Test when a union points to an array of int32
@@ -134,6 +152,11 @@ TEST(UnionSerializationTest, UnionOfArray) {
             mojo_test_StructOfUnionOfReferences_ComputeSerializedSize(
                 struct_with_union));
 
+  // We save the underlying (unencoded) buffer. We can compare the two after
+  // deserialization to make sure deserialization is correct.
+  char buffer_bytes_copy[sizeof(buffer_bytes)];
+  memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes_copy));
+
   struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles(
       struct_with_union, buf.num_bytes_used, &handle_buf);
@@ -142,6 +165,10 @@ TEST(UnionSerializationTest, UnionOfArray) {
   EXPECT_EQ(sizeof(struct mojo_test_StructOfUnionOfReferences) -
                 offsetof(struct mojo_test_StructOfUnionOfReferences, u.data),
             struct_with_union->u.data.f_int_array.offset);
+
+  mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles(
+      struct_with_union, buf.num_bytes_used, NULL, 0);
+  EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
 }
 
 }  // namespace

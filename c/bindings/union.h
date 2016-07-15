@@ -48,7 +48,7 @@ size_t MojomUnion_ComputeSerializedSize(
 // |in_type_desc|: Describes the pointer and handle fields of the mojom union.
 // |inout_union|: Contains the union, and any other references outside the
 //                union.
-// |in_union_size|:  Size of the buffer backed by |inout_union| in bytes.
+// |in_union_size|: Size of the buffer backed by |inout_union| in bytes.
 // |inout_handles_buffer|:
 //   A buffer used to record handles during encoding. The |num_handles_used|
 //   field can be used to determine how many handles were moved into this
@@ -58,6 +58,24 @@ void MojomUnion_EncodePointersAndHandles(
     struct MojomUnionLayout* inout_union,
     uint32_t in_union_size,
     struct MojomHandleBuffer* inout_handles_buffer);
+
+// Decodes the mojom union described by the |inout_union| buffer; note that any
+// references from the union are also in the buffer backed by |inout_union|, and
+// they are recursively decoded. Decodes all offsets to pointers, and decodes
+// all handles by moving them out of |inout_handles| using the encoded index.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom union.
+// |inout_union|: Contains the union, and any other references outside the
+//                union.
+// |in_union_size|: Size of the buffer backed by |inout_union| in bytes.
+// |inout_handles|: Mojo handles are moved out of this array and into
+//                  |inout_union|, using the encoded index into this array.
+// |in_num_handles|: Size in # of number elements available in |inout_handles|.
+void MojomUnion_DecodePointersAndHandles(
+    const struct MojomTypeDescriptorUnion* in_type_desc,
+    struct MojomUnionLayout* inout_union,
+    uint32_t in_union_size,
+    MojoHandle* inout_handles,
+    uint32_t in_num_handles);
 
 MOJO_END_EXTERN_C
 
