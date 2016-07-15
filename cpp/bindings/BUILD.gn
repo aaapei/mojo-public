@@ -104,7 +104,9 @@ mojo_sdk_source_set("core") {
 mojo_sdk_source_set("utility") {
   sources = [
     "binding_set.h",
+    "interface_ptr_set.h",
     "strong_binding.h",
+    "strong_binding_set.h",
   ]
 
   public_deps = [
