@@ -102,7 +102,7 @@ pub struct MojoWaitSetAddOptions {
     pub _align: [u64; 0], // Hack to align struct to 8 byte boundary
 }
 
-#[link(name = "system_thunks")]
+#[link]
 extern "C" {
     // From //mojo/public/c/system/buffer.h
     pub fn MojoCreateSharedBuffer(options: *const MojoCreateSharedBufferOptions,
