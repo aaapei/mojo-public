@@ -141,6 +141,7 @@ mod macros {
     }
 }
 
+pub mod bindings;
 pub mod system;
 
 pub use system::MojoResult;
