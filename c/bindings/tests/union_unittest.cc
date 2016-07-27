@@ -26,7 +26,7 @@ struct mojo_test_StructOfUnionOfReferences* MakeStructOfUnionReference(
           sizeof(struct mojo_test_StructOfUnionOfReferences), 0,
       },
       {
-          0u, mojo_test_UnionOfReferences_Tag__UNKNOWN__,
+          0u, mojo_test_UnionOfReferences_Tag__UNKNOWN__, {},
       }  // null
   };
   return struct_with_union;
@@ -99,6 +99,7 @@ TEST(UnionSerializationTest, UnionOfStruct) {
           0u  // version
       },
       13,  // int8
+      {},  // padding
   };
   struct_with_union->u.size = 16u;
   struct_with_union->u.tag = mojo_test_UnionOfReferences_Tag_dummy_struct;
