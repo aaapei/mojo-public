@@ -45,6 +45,7 @@ static void* array_index_by_type(const struct MojomArrayHeader* array,
                                  size_t index) {
   switch (type) {
     case MOJOM_TYPE_DESCRIPTOR_TYPE_STRUCT_PTR:
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_MAP_PTR:
     case MOJOM_TYPE_DESCRIPTOR_TYPE_ARRAY_PTR:
       return MOJOM_ARRAY_INDEX(array, union MojomPointer, index);
     case MOJOM_TYPE_DESCRIPTOR_TYPE_UNION:
@@ -141,4 +142,77 @@ void MojomArray_DecodePointersAndHandles(
         inout_handles,
         in_num_handles);
   }
+}
+
+// Rounds up to nearest byte.
+static uint64_t bits_to_bytes(uint64_t bits) {
+  return (bits + 7) / 8;
+}
+
+static MojomValidationResult validate_array_header(
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    const struct MojomArrayHeader* in_array,
+    uint32_t in_buf_size) {
+  if (in_buf_size < sizeof(struct MojomArrayHeader))
+    return MOJOM_VALIDATION_ILLEGAL_MEMORY_RANGE;
+
+  if (in_array->num_bytes < sizeof(struct MojomArrayHeader))
+    return MOJOM_VALIDATION_UNEXPECTED_ARRAY_HEADER;
+
+  if (in_array->num_bytes > in_buf_size)
+    return MOJOM_VALIDATION_ILLEGAL_MEMORY_RANGE;
+
+  if (in_type_desc->num_elements != 0 &&
+      in_array->num_elements != in_type_desc->num_elements)
+    return MOJOM_VALIDATION_UNEXPECTED_ARRAY_HEADER;
+
+  // Array size is less than what we need to fit the elements.
+  if (in_array->num_bytes <
+      sizeof(struct MojomArrayHeader) +
+          bits_to_bytes((uint64_t)in_type_desc->elem_num_bits *
+                        (uint64_t)in_array->num_elements)) {
+    return MOJOM_VALIDATION_UNEXPECTED_ARRAY_HEADER;
+  }
+
+  return MOJOM_VALIDATION_ERROR_NONE;
+}
+
+MojomValidationResult MojomArray_Validate(
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    const struct MojomArrayHeader* in_array,
+    uint32_t in_array_size,
+    uint32_t in_num_handles,
+    struct MojomValidationContext* inout_context) {
+  assert(in_type_desc);
+  assert(in_array);
+
+  MojomValidationResult result =
+      validate_array_header(in_type_desc, in_array, in_array_size);
+  if (result != MOJOM_VALIDATION_ERROR_NONE)
+    return result;
+
+  // From here on out, all pointers need to point past the end of this struct.
+  inout_context->next_pointer = (char*)in_array + in_array->num_bytes;
+
+  // Nothing to validate for POD types.
+  if (in_type_desc->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
+    return MOJOM_VALIDATION_ERROR_NONE;
+
+  for (size_t i = 0; i < in_array->num_elements; i++) {
+    char* elem_data =
+        array_index_by_type(in_array, in_type_desc->elem_type, i);
+
+    MojomValidationResult result = MojomType_DispatchValidate(
+        in_type_desc->elem_type,
+        in_type_desc->elem_descriptor,
+        in_type_desc->nullable,
+        elem_data,
+        in_array_size - (uint32_t)(elem_data - (char*)in_array),
+        in_num_handles,
+        inout_context);
+    if (result != MOJOM_VALIDATION_ERROR_NONE)
+      return result;
+  }
+
+  return MOJOM_VALIDATION_ERROR_NONE;
 }

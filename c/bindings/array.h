@@ -95,6 +95,25 @@ void MojomArray_DecodePointersAndHandles(
     MojoHandle* inout_handles,
     uint32_t in_num_handles);
 
+// Validates the mojom array described by the |in_struct| buffer. Any
+// references from the array are also recursively validated, and are expected
+// to be in the same buffer backing |in_array|.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom array.
+// |in_array|: Buffer containing the array, and any other references outside of
+//             the array
+// |in_array_size|: Size of the buffer backed by |in_array| in bytes.
+// |in_num_handles|: Number of valid handles expected to be referenced from
+//                   |in_array|.
+// |inout_context|: An initialized context that contains the expected location
+//                  of the next pointer and next offset. This is used to
+//                  validate that no two pointers or handles are shared.
+MojomValidationResult MojomArray_Validate(
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    const struct MojomArrayHeader* in_array,
+    uint32_t in_array_size,
+    uint32_t in_num_handles,
+    struct MojomValidationContext* inout_context);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_ARRAY_H_

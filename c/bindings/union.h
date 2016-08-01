@@ -77,6 +77,26 @@ void MojomUnion_DecodePointersAndHandles(
     MojoHandle* inout_handles,
     uint32_t in_num_handles);
 
+// Validates the mojom union described by the |in_union| buffer. Any
+// references from the union are also recursively validated, and are expected to
+// be in the same buffer backing |in_union|.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom union.
+// |in_union|: Buffer containing the union, and any other references
+//             outside of the union.
+// |in_union_size|: Size of the buffer backed by |in_union| in bytes.
+// |in_num_handles|: Number of valid handles expected to be referenced from
+//                   |in_union|.
+// |inout_context|: An initialized context that contains the expected location
+//                  of the next pointer and next offset. This is used to
+//                  validate that no two pointers or handles are shared.
+MojomValidationResult MojomUnion_Validate(
+    const struct MojomTypeDescriptorUnion* in_type_desc,
+    bool in_nullable,
+    const struct MojomUnionLayout* in_union,
+    uint32_t in_union_size,
+    uint32_t in_num_handles,
+    struct MojomValidationContext* inout_context);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_UNION_H_

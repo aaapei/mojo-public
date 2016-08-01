@@ -10,6 +10,7 @@
 
 #include "mojo/public/c/bindings/buffer.h"
 #include "mojo/public/c/bindings/lib/type_descriptor.h"
+#include "mojo/public/c/bindings/lib/util.h"
 #include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
@@ -56,9 +57,8 @@ void MojomStruct_EncodePointersAndHandles(
 // array.
 // |in_type_desc|: Describes the pointer and handle fields of the mojom struct.
 // |inout_struct|: Contains the struct, and any other references outside of the
-//              struct.
-// |in_struct_size|: Contains the struct, and any other references outside of
-//                   the struct.
+//                 struct.
+// |in_struct_size|: Size of the buffer backed by |inout_struct| in bytes.
 // |inout_handles|: Mojo handles are in this array, and are referenced by index
 //                  in |inout_buf|.
 // |in_num_handles|: Size in # of number elements available in |inout_handles|.
@@ -68,6 +68,25 @@ void MojomStruct_DecodePointersAndHandles(
     uint32_t in_struct_size,
     MojoHandle* inout_handles,
     uint32_t in_num_handles);
+
+// Validates the mojom struct described by the |in_struct| buffer. Any
+// references from the struct are also recursively validated, and are expected
+// to be in the same buffer backing |in_struct|.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom struct.
+// |inout_struct|: Buffer containing the struct, and any other references
+//                 outside of the struct.
+// |in_struct_size|: Size of the buffer backed by |inout_struct| in bytes.
+// |in_num_handles|: Number of valid handles expected to be referenced from
+//                   |in_struct|.
+// |inout_context|: An initialized context that contains the expected location
+//                  of the next pointer and next offset. This is used to
+//                  validate that no two pointers or handles are shared.
+MojomValidationResult MojomStruct_Validate(
+    const struct MojomTypeDescriptorStruct* in_type_desc,
+    const struct MojomStructHeader* in_struct,
+    uint32_t in_struct_size,
+    uint32_t in_num_handles,
+    struct MojomValidationContext* inout_context);
 
 MOJO_END_EXTERN_C
 

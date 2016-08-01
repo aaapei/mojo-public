@@ -48,6 +48,7 @@ mojo_sdk_source_set("tests") {
 
   deps = [
     ":mojo_public_bindings_test_utils",
+    ":validation_util",
     "//testing/gtest",
   ]
 
@@ -86,6 +87,8 @@ mojo_sdk_source_set("perftests") {
   ]
 }
 
+# TODO(vardhan): This should be testonly, but for that to happen, its
+# dependents (cython etc.) need also be testonly.
 mojo_sdk_source_set("mojo_public_bindings_test_utils") {
   sources = [
     "validation_test_input_parser.cc",
@@ -93,6 +96,26 @@ mojo_sdk_source_set("mojo_public_bindings_test_utils") {
   ]
 
   mojo_sdk_deps = [ "mojo/public/c/system" ]
+}
+
+# TODO(vardhan): Merge with mojo_public_bindings_test_utils. 
+mojo_sdk_source_set("validation_util") {
+  testonly = true
+
+  sources = [
+    "validation_util.cc",
+    "validation_util.h",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/c/system",
+    "mojo/public/cpp/test_support",
+  ]
+
+  deps = [
+    ":mojo_public_bindings_test_utils",
+    "//testing/gtest",
+  ]
 }
 
 mojo_native_application("versioning_test_service") {

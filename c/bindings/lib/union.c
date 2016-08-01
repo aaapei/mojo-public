@@ -87,3 +87,37 @@ void MojomUnion_DecodePointersAndHandles(
         in_num_handles);
   }
 }
+
+MojomValidationResult MojomUnion_Validate(
+    const struct MojomTypeDescriptorUnion* in_type_desc,
+    bool in_nullable,
+    const struct MojomUnionLayout* in_union,
+    uint32_t in_union_size,
+    uint32_t in_num_handles,
+    struct MojomValidationContext* inout_context) {
+  for (size_t i = 0; i < in_type_desc->num_entries; i++) {
+    const struct MojomTypeDescriptorUnionEntry* entry =
+        &(in_type_desc->entries[i]);
+
+    if (in_union->tag != entry->tag)
+      continue;
+
+    if (entry->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
+      continue;
+
+    if (!in_nullable && in_union->size != sizeof(struct MojomUnionLayout))
+      return MOJOM_VALIDATION_UNEXPECTED_NULL_UNION;
+
+    MojomValidationResult result = MojomType_DispatchValidate(
+        entry->elem_type,
+        entry->elem_descriptor,
+        entry->nullable,
+        &(in_union->data),
+        in_union_size - ((char*)&(in_union->data) - (char*)in_union),
+        in_num_handles,
+        inout_context);
+    if (result != MOJOM_VALIDATION_ERROR_NONE)
+      return result;
+  }
+  return MOJOM_VALIDATION_ERROR_NONE;
+}
