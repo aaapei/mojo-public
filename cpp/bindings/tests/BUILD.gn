@@ -98,7 +98,7 @@ mojo_sdk_source_set("mojo_public_bindings_test_utils") {
   mojo_sdk_deps = [ "mojo/public/c/system" ]
 }
 
-# TODO(vardhan): Merge with mojo_public_bindings_test_utils. 
+# TODO(vardhan): Merge with mojo_public_bindings_test_utils.
 mojo_sdk_source_set("validation_util") {
   testonly = true
 
