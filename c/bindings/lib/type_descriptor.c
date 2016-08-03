@@ -5,6 +5,7 @@
 #include "mojo/public/c/bindings/lib/type_descriptor.h"
 
 #include <assert.h>
+#include <stddef.h>
 
 #include "mojo/public/c/bindings/array.h"
 #include "mojo/public/c/bindings/interface.h"
@@ -85,7 +86,7 @@ static void encode_pointer(union MojomPointer* pointer, uint32_t max_offset) {
     pointer->offset = 0;
   } else {
     assert((char*)pointer->ptr > (char*)pointer);
-    assert((char*)pointer->ptr - (char*)pointer < max_offset);
+    assert((size_t)((char*)pointer->ptr - (char*)pointer) < max_offset);
     pointer->offset = (char*)(pointer->ptr) - (char*)pointer;
   }
 }
