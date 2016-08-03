@@ -18,6 +18,7 @@ const struct MojomTypeDescriptorArray g_mojom_string_type_description = {
     MOJOM_TYPE_DESCRIPTOR_TYPE_POD,  // elem_type
     NULL,                            // elem_descriptor
     0,                               // num_elements
+    8,                               // elem_num_bits
     false,                           // nullable
 };
 
