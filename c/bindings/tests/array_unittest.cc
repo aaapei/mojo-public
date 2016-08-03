@@ -200,7 +200,10 @@ TEST(ArraySerializationTest, ArrayOfHandles) {
   *handle_struct = mojo_test_StructWithNullableHandles{
       // header
       {sizeof(struct mojo_test_StructWithNullableHandles), 0},
-      // We will initialize the other fields below.
+      // These fields will be initialized below.
+      MOJO_HANDLE_INVALID,
+      {0},
+      {NULL},
   };
 
   handle_struct->h = 10;
