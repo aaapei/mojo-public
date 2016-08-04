@@ -15,11 +15,11 @@
 #include "mojo/public/c/bindings/union.h"
 
 const struct MojomTypeDescriptorArray g_mojom_string_type_description = {
-    MOJOM_TYPE_DESCRIPTOR_TYPE_POD,  // elem_type
-    NULL,                            // elem_descriptor
-    0,                               // num_elements
-    8,                               // elem_num_bits
-    false,                           // nullable
+  .elem_type = MOJOM_TYPE_DESCRIPTOR_TYPE_POD,
+  .elem_descriptor = NULL,
+  .num_elements = 0,
+  .elem_num_bits = 8,
+  .nullable = false,
 };
 
 // The encoding of a MojoHandle is an index into an array of Handles. A
