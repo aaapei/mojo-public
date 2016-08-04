@@ -5,6 +5,7 @@
 #include "mojo/public/c/bindings/struct.h"
 
 #include <assert.h>
+#include <string.h>
 
 #include "mojo/public/c/bindings/lib/type_descriptor.h"
 #include "mojo/public/c/bindings/union.h"
@@ -162,4 +163,43 @@ MojomValidationResult MojomStruct_Validate(
   }
 
   return MOJOM_VALIDATION_ERROR_NONE;
+}
+
+bool MojomStruct_DeepCopy(
+    struct MojomBuffer* buffer,
+    const struct MojomTypeDescriptorStruct* in_type_desc,
+    const struct MojomStructHeader* in_struct,
+    struct MojomStructHeader** out_struct) {
+  assert(in_type_desc);
+  assert(in_struct);
+  assert(out_struct);
+
+  *out_struct = MojomBuffer_Allocate(buffer, in_struct->num_bytes);
+  if (*out_struct == NULL)
+    return false;
+
+  memcpy(*out_struct, in_struct, in_struct->num_bytes);
+
+  for (size_t i = 0; i < in_type_desc->num_entries; i++) {
+    const struct MojomTypeDescriptorStructEntry* entry =
+        &(in_type_desc->entries[i]);
+
+    if (in_struct->version < entry->min_version)
+        continue;
+
+    void* in_elem_data =
+        ((char*)in_struct + sizeof(struct MojomStructHeader) + entry->offset);
+    void* out_elem_data = ((char*)*out_struct +
+                           sizeof(struct MojomStructHeader) + entry->offset);
+    if (!MojomType_DispatchDeepCopy(
+        buffer,
+        entry->elem_type,
+        entry->elem_descriptor,
+        in_elem_data,
+        out_elem_data)) {
+      return false;
+    }
+  }
+
+  return true;
 }

@@ -12,6 +12,7 @@ mojo_sdk_source_set("tests") {
     "buffer_unittest.cc",
     "message_unittest.cc",
     "struct_unittest.cc",
+    "testing_util.h",
     "union_unittest.cc",
     "validation_unittest.cc",
   ]

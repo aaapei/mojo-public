@@ -97,6 +97,23 @@ MojomValidationResult MojomUnion_Validate(
     uint32_t in_num_handles,
     struct MojomValidationContext* inout_context);
 
+// Copies over |in_union_data| into |out_union_data|, recursively copying any
+// references from |in_union_data| using |buffer| to allocate space, and
+// updating the references to point to the new copies. Note that a space is
+// never allocated for the new union data in this function -- |out_union_data|
+// should already be allocated for this function ahead of time. Returns false if
+// the copy couldn't be made (insufficient space, or unrecognized tag), in which
+// case the buffer may be partially used.
+// |buffer|: A mojom buffer used to allocate space for any references from the
+//           union.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom union.
+// |in_union_data|: The unencoded mojom union to be copied.
+// |out_union_data|: Where |in_union_data| should be copied to.
+bool MojomUnion_DeepCopy(struct MojomBuffer* buffer,
+                         const struct MojomTypeDescriptorUnion* in_type_desc,
+                         const struct MojomUnionLayout* in_union_data,
+                         struct MojomUnionLayout* out_union_data);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_UNION_H_

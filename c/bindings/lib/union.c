@@ -5,8 +5,11 @@
 #include "mojo/public/c/bindings/union.h"
 
 #include <assert.h>
+#include <string.h>
 
 #include "mojo/public/c/bindings/lib/type_descriptor.h"
+
+#define UNION_TAG_UNKNOWN ((uint32_t)0xFFFFFFFF)
 
 size_t MojomUnion_ComputeSerializedSize(
     const struct MojomTypeDescriptorUnion* in_type_desc,
@@ -22,7 +25,7 @@ size_t MojomUnion_ComputeSerializedSize(
 
     // We should skip non-pointer types.
     if (!MojomType_IsPointer(entry->elem_type))
-      continue;
+      break;
 
     return MojomType_DispatchComputeSerializedSize(
         entry->elem_type, entry->elem_descriptor, entry->nullable,
@@ -46,7 +49,7 @@ void MojomUnion_EncodePointersAndHandles(
       continue;
 
     if (entry->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
-      continue;
+      break;
 
     MojomType_DispatchEncodePointersAndHandles(
         entry->elem_type,
@@ -55,6 +58,8 @@ void MojomUnion_EncodePointersAndHandles(
         &inout_union->data,
         in_buf_size - ((char*)&inout_union->data - (char*)inout_union),
         inout_handles_buffer);
+
+    break;
   }
 }
 
@@ -75,7 +80,7 @@ void MojomUnion_DecodePointersAndHandles(
       continue;
 
     if (entry->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
-      continue;
+      break;
 
     MojomType_DispatchDecodePointersAndHandles(
         entry->elem_type,
@@ -85,6 +90,8 @@ void MojomUnion_DecodePointersAndHandles(
         in_union_size - ((char*)&inout_union->data - (char*)inout_union),
         inout_handles,
         in_num_handles);
+
+    break;
   }
 }
 
@@ -103,12 +110,12 @@ MojomValidationResult MojomUnion_Validate(
       continue;
 
     if (entry->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
-      continue;
+      break;
 
     if (!in_nullable && in_union->size != sizeof(struct MojomUnionLayout))
       return MOJOM_VALIDATION_UNEXPECTED_NULL_UNION;
 
-    MojomValidationResult result = MojomType_DispatchValidate(
+    return MojomType_DispatchValidate(
         entry->elem_type,
         entry->elem_descriptor,
         entry->nullable,
@@ -116,8 +123,38 @@ MojomValidationResult MojomUnion_Validate(
         in_union_size - ((char*)&(in_union->data) - (char*)in_union),
         in_num_handles,
         inout_context);
-    if (result != MOJOM_VALIDATION_ERROR_NONE)
-      return result;
   }
   return MOJOM_VALIDATION_ERROR_NONE;
+}
+
+bool MojomUnion_DeepCopy(struct MojomBuffer* buffer,
+                         const struct MojomTypeDescriptorUnion* in_type_desc,
+                         const struct MojomUnionLayout* in_union_data,
+                         struct MojomUnionLayout* out_union_data) {
+  memcpy(out_union_data, in_union_data, sizeof(struct MojomUnionLayout));
+
+  // Unions with size 0 are null.
+  if (in_union_data->size == 0)
+    return true;
+
+  for (size_t i = 0; i < in_type_desc->num_entries; i++) {
+    const struct MojomTypeDescriptorUnionEntry* entry =
+        &(in_type_desc->entries[i]);
+    if (in_union_data->tag != entry->tag)
+      continue;
+
+    // We should skip non-pointer types.
+    if (entry->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
+      return true;
+
+    return MojomType_DispatchDeepCopy(
+        buffer, entry->elem_type, entry->elem_descriptor,
+        &(in_union_data->data), &(out_union_data->data));
+  }
+  // We reach here if we don't recognize the tag. If it's the UNKNOWN tag, it's
+  // not a failure. If it's an unrecognized tag (erroneous or because this union
+  // is from a future-version), we don't know how to copy it, so the copy is a
+  // failure.
+  return in_union_data->tag < in_type_desc->num_fields ||
+         in_union_data->tag == UNION_TAG_UNKNOWN;
 }

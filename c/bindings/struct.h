@@ -88,6 +88,22 @@ MojomValidationResult MojomStruct_Validate(
     uint32_t in_num_handles,
     struct MojomValidationContext* inout_context);
 
+// Creates a new copy of |in_struct| using |buffer| to allocate space.
+// Recursively creates new copies of any references from |in_struct|, and
+// updates the references to point to the new copies. This operation is useful
+// if you want to linearize |in_struct| using the buffer backed by |buffer|. If
+// there is insufficient space in the buffer or has unknown-typed data, this
+// function returns false and the supplied buffer may be partially used.
+// Otherwise, |out_struct| is set to the new copy of the struct.
+// |buffer|: A mojom buffer used to allocate space for the new struct.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom struct.
+// |in_struct|: The unencoded mojom struct to be copied.
+// |out_struct|: Will be set to the new unencoded mojom struct.
+bool MojomStruct_DeepCopy(struct MojomBuffer* buffer,
+                          const struct MojomTypeDescriptorStruct* in_type_desc,
+                          const struct MojomStructHeader* in_struct,
+                          struct MojomStructHeader** out_struct);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_STRUCT_H_

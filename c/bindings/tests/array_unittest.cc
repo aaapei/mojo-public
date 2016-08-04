@@ -9,6 +9,7 @@
 #include <stddef.h>
 
 #include "mojo/public/c/bindings/struct.h"
+#include "mojo/public/c/bindings/tests/testing_util.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/bindings/tests/test_structs.mojom-c.h"
 #include "mojo/public/interfaces/bindings/tests/test_unions.mojom-c.h"
@@ -85,7 +86,7 @@ TEST(ArraySerializationTest, ArrayOfUnions) {
   // 1st element is not NULL.
   struct mojo_test_PodUnion* e1 = MOJOM_ARRAY_INDEX(
       small_struct->nullable_pod_union_array.ptr, struct mojo_test_PodUnion, 0);
-  e1->size = 16;
+  e1->size = sizeof(struct mojo_test_PodUnion);
   e1->tag = mojo_test_PodUnion_Tag_f_int8;
   e1->data.f_f_int8 = 13;
 
@@ -99,10 +100,8 @@ TEST(ArraySerializationTest, ArrayOfUnions) {
   char bytes_buffer_copy[sizeof(bytes_buffer)];
   memcpy(bytes_buffer_copy, bytes_buffer, sizeof(bytes_buffer));
 
-  struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
-  mojo_test_SmallStruct_EncodePointersAndHandles(
-      small_struct, buf.num_bytes_used, &handle_buf);
-  EXPECT_EQ(0u, handle_buf.num_handles_used);
+  mojo_test_SmallStruct_EncodePointersAndHandles(small_struct,
+                                                 buf.num_bytes_used, NULL);
 
   // The null pointers should now be 0-offsets:
   EXPECT_EQ(0u, small_struct->dummy_struct.offset);
@@ -120,6 +119,15 @@ TEST(ArraySerializationTest, ArrayOfUnions) {
   mojo_test_SmallStruct_DecodePointersAndHandles(small_struct,
                                                  buf.num_bytes_used, NULL, 0);
   EXPECT_EQ(0, memcmp(buf.buf, bytes_buffer_copy, buf.num_bytes_used));
+
+  {
+    char bytes_buffer2[sizeof(bytes_buffer)] = {0};
+    struct MojomBuffer buf2 = {bytes_buffer2, sizeof(bytes_buffer2), 0};
+    CopyAndCompare(&buf2, small_struct, buf.num_bytes_used,
+                   mojo_test_SmallStruct_DeepCopy,
+                   mojo_test_SmallStruct_EncodePointersAndHandles,
+                   mojo_test_SmallStruct_DecodePointersAndHandles);
+  }
 }
 
 // Tests serialized size of an array of arrays.
@@ -166,10 +174,8 @@ TEST(ArraySerializationTest, ArrayOfArrays) {
   char bytes_buffer_copy[sizeof(bytes_buffer)];
   memcpy(bytes_buffer_copy, bytes_buffer, sizeof(bytes_buffer));
 
-  struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_ArrayOfArrays_EncodePointersAndHandles(arr, buf.num_bytes_used,
-                                                   &handle_buf);
-  EXPECT_EQ(0u, handle_buf.num_handles_used);
+                                                   NULL);
 
   EXPECT_EQ(sizeof(struct mojo_test_ArrayOfArrays) -
                 offsetof(struct mojo_test_ArrayOfArrays, a),
@@ -186,6 +192,15 @@ TEST(ArraySerializationTest, ArrayOfArrays) {
   mojo_test_ArrayOfArrays_DecodePointersAndHandles(arr, buf.num_bytes_used,
                                                    NULL, 0);
   EXPECT_EQ(0, memcmp(buf.buf, bytes_buffer_copy, buf.num_bytes_used));
+
+  {
+    char bytes_buffer2[sizeof(bytes_buffer)] = {0};
+    struct MojomBuffer buf2 = {bytes_buffer2, sizeof(bytes_buffer2), 0};
+    CopyAndCompare(&buf2, arr, buf.num_bytes_used,
+                   mojo_test_ArrayOfArrays_DeepCopy,
+                   mojo_test_ArrayOfArrays_EncodePointersAndHandles,
+                   mojo_test_ArrayOfArrays_DecodePointersAndHandles);
+  }
 }
 
 // Tests serialization of an array of handles.
@@ -250,6 +265,30 @@ TEST(ArraySerializationTest, ArrayOfHandles) {
   EXPECT_EQ(MOJO_HANDLE_INVALID, handles[0]);
   EXPECT_EQ(MOJO_HANDLE_INVALID, handles[1]);
   EXPECT_EQ(MOJO_HANDLE_INVALID, handles[2]);
+
+  {
+    char buffer_bytes2[sizeof(buffer_bytes)] = {0};
+    struct MojomBuffer buf2 = {buffer_bytes2, sizeof(buffer_bytes2), 0};
+    auto* copied_struct =
+        mojo_test_StructWithNullableHandles_DeepCopy(&buf2, handle_struct);
+
+    // The copy should still have the handles.
+    EXPECT_EQ(static_cast<MojoHandle>(10u), handle_struct->h);
+    EXPECT_EQ(static_cast<MojoHandle>(20u),
+              *MOJOM_ARRAY_INDEX(handle_struct->array_h.ptr, MojoHandle, 0));
+    EXPECT_EQ(MOJO_HANDLE_INVALID,
+              *MOJOM_ARRAY_INDEX(handle_struct->array_h.ptr, MojoHandle, 1));
+    EXPECT_EQ(static_cast<MojoHandle>(30u),
+              *MOJOM_ARRAY_INDEX(handle_struct->array_h.ptr, MojoHandle, 2));
+    // The new struct should have the handles now:
+    EXPECT_EQ(static_cast<MojoHandle>(10u), copied_struct->h);
+    EXPECT_EQ(static_cast<MojoHandle>(20u),
+              *MOJOM_ARRAY_INDEX(copied_struct->array_h.ptr, MojoHandle, 0));
+    EXPECT_EQ(MOJO_HANDLE_INVALID,
+              *MOJOM_ARRAY_INDEX(copied_struct->array_h.ptr, MojoHandle, 1));
+    EXPECT_EQ(static_cast<MojoHandle>(30u),
+              *MOJOM_ARRAY_INDEX(copied_struct->array_h.ptr, MojoHandle, 2));
+  }
 }
 
 }  // namespace

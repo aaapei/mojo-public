@@ -114,6 +114,22 @@ MojomValidationResult MojomArray_Validate(
     uint32_t in_num_handles,
     struct MojomValidationContext* inout_context);
 
+// Creates a new copy of |in_array| using |buffer| to allocate space.
+// Recursively creates new copies of any references from |in_array|, and updates
+// the references to point to the new copies. This operation is useful if you
+// want to linearize |in_array| using the buffer backed by |buffer|. If there is
+// insufficient space in the buffer or has unknown-typed data, this function
+// returns false and the supplied buffer may be partially used. Otherwise,
+// |out_array| is set to the new copy of the struct.
+// |buffer|: A mojom buffer used to allocate space for the new array.
+// |in_type_desc|: Describes the pointer and handle fields of the mojom array.
+// |in_array|: The unencoded mojom array to be copied.
+// |out_array|: Will be set to the new unencoded mojom array.
+bool MojomArray_DeepCopy(struct MojomBuffer* buffer,
+                         const struct MojomTypeDescriptorArray* in_type_desc,
+                         const struct MojomArrayHeader* in_array,
+                         struct MojomArrayHeader** out_array);
+
 MOJO_END_EXTERN_C
 
 #endif  // MOJO_PUBLIC_C_BINDINGS_ARRAY_H_

@@ -78,12 +78,12 @@ struct MojomTypeDescriptorStructVersion {
 
 // Mojom structs are described using this struct.
 struct MojomTypeDescriptorStruct {
-  size_t num_versions;
+  uint32_t num_versions;
   // Increasing ordered by version.
   struct MojomTypeDescriptorStructVersion* versions;
   // |entries| is an array of |num_entries|, each describing a field of
   // reference or handle type.
-  size_t num_entries;
+  uint32_t num_entries;
   const struct MojomTypeDescriptorStructEntry* entries;
 };
 
@@ -112,7 +112,11 @@ struct MojomTypeDescriptorStructEntry {
 
 // Mojom unions are described using this struct.
 struct MojomTypeDescriptorUnion {
-  size_t num_entries;
+  // Number of fields in the union.
+  uint32_t num_fields;
+  // Number of elements in the |entries| array below.
+  uint32_t num_entries;
+  // |entries| only includes entries for pointer and handle types.
   const struct MojomTypeDescriptorUnionEntry* entries;
 };
 
@@ -163,11 +167,11 @@ size_t MojomType_DispatchComputeSerializedSize(
     bool nullable,
     const void* data);
 
-// This helper function, depending on |type|, calls the appropriate
-// *_DispatchEncodePointersAndHandles(...). If |type| describes a pointer, it
+// This helper function, depending on |in_elem_type|, calls the appropriate
+// *_EncodePointersAndHandles(...). If |in_elem_type| describes a pointer, it
 // first encodes the pointer before calling the associated
-// *_DispatchEncodePointersAndHandles(...). If |type| describes a handle, it
-// encodes handle into |inout_handles|.
+// *_EncodePointersAndHandles(...). If |in_elem_type| describes a handle, it
+// encodes the handle into |inout_handles|.
 void MojomType_DispatchEncodePointersAndHandles(
     enum MojomTypeDescriptorType in_elem_type,
     const void* in_type_desc,
@@ -176,10 +180,10 @@ void MojomType_DispatchEncodePointersAndHandles(
     uint32_t in_buf_size,
     struct MojomHandleBuffer* inout_handles_buffer);
 
-// This helper function, depending on |type|, calls the appropriate
-// *_DispatchDeocdePointersAndHandles(...). If |type| describes a pointer, it
+// This helper function, depending on |in_elem_type|, calls the appropriate
+// *_DecodePointersAndHandles(...). If |in_elem_type| describes a pointer, it
 // first decodes the offset into a pointer before calling the associated
-// *_DispatchDecodePointersAndHandles(...). If |type| describes a handle, it
+// *_DecodePointersAndHandles(...). If |in_elem_type| describes a handle, it
 // decodes the handle by looking up it up in |inout_handles|.
 void MojomType_DispatchDecodePointersAndHandles(
     enum MojomTypeDescriptorType in_elem_type,
@@ -198,6 +202,17 @@ MojomValidationResult MojomType_DispatchValidate(
     uint32_t in_buf_size,
     uint32_t in_num_handles,
     struct MojomValidationContext* inout_context);
+
+// This helper function, depending on |in_elem_type|, calls the appropriate
+// *_DeepCopy(...). The result of that call is then assigned to |out_data|. If
+// |in_type_type| describes a pointer to a union, it allocates space for the
+// new union before dispatching a call to MojomUnion_DeepCopy. Returns false if
+// the copy failed due to insufficient space in the buffer.
+bool MojomType_DispatchDeepCopy(struct MojomBuffer* buffer,
+                                enum MojomTypeDescriptorType in_elem_type,
+                                const void* in_type_desc,
+                                const void* in_data,
+                                void* out_data);
 
 MOJO_END_EXTERN_C
 

@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "mojo/public/c/bindings/buffer.h"
 #include "mojo/public/c/bindings/interface.h"
@@ -215,4 +216,39 @@ MojomValidationResult MojomArray_Validate(
   }
 
   return MOJOM_VALIDATION_ERROR_NONE;
+}
+
+bool MojomArray_DeepCopy(
+    struct MojomBuffer* buffer,
+    const struct MojomTypeDescriptorArray* in_type_desc,
+    const struct MojomArrayHeader* in_array,
+    struct MojomArrayHeader** out_array) {
+  assert(in_type_desc);
+  assert(in_array);
+  assert(out_array);
+
+  *out_array = MojomBuffer_Allocate(buffer, in_array->num_bytes);
+  if (*out_array == NULL)
+    return false;
+
+  memcpy(*out_array, in_array, in_array->num_bytes);
+
+  // Nothing else to copy for POD types.
+  if (in_type_desc->elem_type == MOJOM_TYPE_DESCRIPTOR_TYPE_POD)
+    return true;
+
+  for (size_t i = 0; i < in_array->num_elements; i++) {
+    void* in_elem_data =
+        array_index_by_type(in_array, in_type_desc->elem_type, i);
+    void* out_elem_data =
+        array_index_by_type(*out_array, in_type_desc->elem_type, i);
+
+    if (!MojomType_DispatchDeepCopy(buffer, in_type_desc->elem_type,
+                               in_type_desc->elem_descriptor, in_elem_data,
+                               out_elem_data)) {
+      return false;
+    }
+  }
+
+  return true;
 }

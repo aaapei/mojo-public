@@ -7,6 +7,7 @@
 #include "mojo/public/c/bindings/union.h"
 
 #include "mojo/public/c/bindings/array.h"
+#include "mojo/public/c/bindings/tests/testing_util.h"
 #include "mojo/public/interfaces/bindings/tests/test_structs.mojom-c.h"
 #include "mojo/public/interfaces/bindings/tests/test_unions.mojom-c.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -67,10 +68,8 @@ TEST(UnionSerializationTest, UnionOfUnion) {
   char buffer_bytes_copy[sizeof(buffer_bytes)];
   memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes_copy));
 
-  struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles(
-      struct_with_union, buf.num_bytes_used, &handle_buf);
-  EXPECT_EQ(0u, handle_buf.num_handles_used);
+      struct_with_union, buf.num_bytes_used, NULL);
 
   EXPECT_EQ(sizeof(struct mojo_test_StructOfUnionOfReferences) -
                 offsetof(struct mojo_test_StructOfUnionOfReferences, u.data),
@@ -79,6 +78,16 @@ TEST(UnionSerializationTest, UnionOfUnion) {
   mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles(
       struct_with_union, buf.num_bytes_used, NULL, 0);
   EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
+
+  {
+    char buffer_bytes2[sizeof(buffer_bytes)] = {0};
+    struct MojomBuffer buf2 = {buffer_bytes2, sizeof(buffer_bytes2), 0};
+    CopyAndCompare(
+        &buf2, struct_with_union, buf.num_bytes_used,
+        mojo_test_StructOfUnionOfReferences_DeepCopy,
+        mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles,
+        mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles);
+  }
 }
 
 // Test when a union points to a struct.
@@ -115,10 +124,8 @@ TEST(UnionSerializationTest, UnionOfStruct) {
   char buffer_bytes_copy[sizeof(buffer_bytes)];
   memcpy(buffer_bytes_copy, buffer_bytes, sizeof(buffer_bytes_copy));
 
-  struct MojomHandleBuffer handle_buf = {NULL, 0u, 0u};
   mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles(
-      struct_with_union, buf.num_bytes_used, &handle_buf);
-  EXPECT_EQ(0u, handle_buf.num_handles_used);
+      struct_with_union, buf.num_bytes_used, NULL);
 
   EXPECT_EQ(sizeof(struct mojo_test_StructOfUnionOfReferences) -
                 offsetof(struct mojo_test_StructOfUnionOfReferences, u.data),
@@ -127,6 +134,16 @@ TEST(UnionSerializationTest, UnionOfStruct) {
   mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles(
       struct_with_union, buf.num_bytes_used, NULL, 0);
   EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
+
+  {
+    char buffer_bytes2[sizeof(buffer_bytes)] = {0};
+    struct MojomBuffer buf2 = {buffer_bytes2, sizeof(buffer_bytes2), 0};
+    CopyAndCompare(
+        &buf2, struct_with_union, buf.num_bytes_used,
+        mojo_test_StructOfUnionOfReferences_DeepCopy,
+        mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles,
+        mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles);
+  }
 }
 
 // Test when a union points to an array of int32
@@ -170,6 +187,16 @@ TEST(UnionSerializationTest, UnionOfArray) {
   mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles(
       struct_with_union, buf.num_bytes_used, NULL, 0);
   EXPECT_EQ(0, memcmp(buf.buf, buffer_bytes_copy, buf.num_bytes_used));
+
+  {
+    char buffer_bytes2[sizeof(buffer_bytes)] = {0};
+    struct MojomBuffer buf2 = {buffer_bytes2, sizeof(buffer_bytes2), 0};
+    CopyAndCompare(
+        &buf2, struct_with_union, buf.num_bytes_used,
+        mojo_test_StructOfUnionOfReferences_DeepCopy,
+        mojo_test_StructOfUnionOfReferences_EncodePointersAndHandles,
+        mojo_test_StructOfUnionOfReferences_DecodePointersAndHandles);
+  }
 }
 
 }  // namespace

@@ -401,3 +401,60 @@ MojomValidationResult MojomType_DispatchValidate(
   }
   return MOJOM_VALIDATION_ERROR_NONE;
 }
+
+bool MojomType_DispatchDeepCopy(struct MojomBuffer* buffer,
+                        enum MojomTypeDescriptorType in_elem_type,
+                        const void* in_type_desc,
+                        const void* in_data,
+                        void* out_data) {
+  assert(in_data);
+
+  const struct MojomUnionLayout* in_union_data =
+      (const struct MojomUnionLayout*)in_data;
+  struct MojomUnionLayout* out_union_data = (struct MojomUnionLayout*)out_data;
+  const union MojomPointer* in_pointer = in_data;
+  switch (in_elem_type) {
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_MAP_PTR:
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_STRUCT_PTR:
+      if (in_pointer->ptr == NULL) {
+        ((union MojomPointer*)out_data)->ptr = NULL;
+        break;
+      }
+      return MojomStruct_DeepCopy(
+          buffer, (const struct MojomTypeDescriptorStruct*)in_type_desc,
+          ((union MojomPointer*)in_data)->ptr,
+          out_data);
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_ARRAY_PTR:
+      if (in_pointer->ptr == NULL) {
+        ((union MojomPointer*)out_data)->ptr = NULL;
+        break;
+      }
+      return MojomArray_DeepCopy(
+          buffer, (const struct MojomTypeDescriptorArray*)in_type_desc,
+          ((union MojomPointer*)in_data)->ptr,
+          out_data);
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_UNION_PTR:
+      in_union_data = ((const union MojomPointer*)in_data)->ptr;
+      if (in_union_data == NULL) {
+        ((union MojomPointer*)out_data)->ptr = NULL;
+        break;
+      }
+      out_union_data =
+          MojomBuffer_Allocate(buffer, sizeof(struct MojomUnionLayout));
+      if (out_union_data == NULL)
+        return false;
+      ((union MojomPointer*)out_data)->ptr = out_union_data;
+      // Fall through.
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_UNION:
+      return MojomUnion_DeepCopy(buffer,
+                          (const struct MojomTypeDescriptorUnion*)in_type_desc,
+                          in_union_data,
+                          out_union_data);
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_HANDLE:
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_INTERFACE:
+    case MOJOM_TYPE_DESCRIPTOR_TYPE_POD:
+      break;
+  }
+
+  return true;
+}
