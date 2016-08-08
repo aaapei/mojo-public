@@ -223,7 +223,7 @@ template("mojom") {
         rebase_path(root_gen_dir),
         "--no-gen-imports",
         "--generators",
-        "legacy,c",
+        "legacy,c,go",
       ]
 
       if (defined(invoker.generate_type_info) && invoker.generate_type_info) {
