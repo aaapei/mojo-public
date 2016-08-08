@@ -5,10 +5,10 @@
 #include "mojo/public/c/system/tests/perftest_utils.h"
 
 #include <assert.h>
+#include <mojo/macros.h>
 #include <stddef.h>
 #include <time.h>
 
-#include "mojo/public/c/system/macros.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/cpp/test_support/test_support.h"
 

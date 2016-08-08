@@ -300,7 +300,12 @@ template("mojom") {
     public_configs =
         rebase_path([ "mojo/public/build/config:mojo_sdk" ], ".", mojo_root)
 
-    public_deps = rebase_path([ "mojo/public/c/bindings" ], ".", mojo_root)
+    public_deps = rebase_path([
+                                "mojo/public/c",
+                                "mojo/public/c/bindings",
+                              ],
+                              ".",
+                              mojo_root)
     foreach(d, rebased_mojo_sdk_public_deps) {
       full_name = get_label_info(d, "label_no_toolchain")
       public_deps += [ "${full_name}_c" ]

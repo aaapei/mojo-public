@@ -1,0 +1,41 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../mojo_sdk.gni")
+
+config("c_config") {
+  include_dirs = [ "include" ]
+}
+
+# Catch-all for all public C headers/libraries, except for the implementation
+# libraries that are meant to be replaceable ("pluggable"), like ...
+# (TODO(vtl)).
+group("c") {
+  public_deps = [
+    ":common",
+    ":system",
+  ]
+}
+
+# Headers in include/mojo (to be include as <mojo/HEADER.h>).
+mojo_sdk_source_set("common") {
+  public_configs = [ ":c_config" ]
+
+  sources = [
+    "include/mojo/macros.h",
+  ]
+}
+
+# Headers in include/mojo/system (to be include as <mojo/system/HEADER.h>).
+mojo_sdk_source_set("system") {
+  public_configs = [ ":c_config" ]
+
+  sources = [
+    # Nothing here yet.
+  ]
+
+  public_deps = [
+    ":common",
+  ]
+}
