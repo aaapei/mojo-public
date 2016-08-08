@@ -7,6 +7,7 @@
 
 // Include all the header files that are meant to be compilable as C.
 #include <mojo/macros.h>
+#include <mojo/result.h>
 
 // Include all the header files that are meant to be compilable as C.
 #include "mojo/public/c/environment/async_waiter.h"
@@ -16,7 +17,6 @@
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/main.h"
 #include "mojo/public/c/system/message_pipe.h"
-#include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
 #include "mojo/public/c/system/wait_set.h"

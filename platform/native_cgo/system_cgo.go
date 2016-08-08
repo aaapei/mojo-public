@@ -4,11 +4,12 @@
 
 package native_cgo
 
+//#include <mojo/result.h>
+//
 //#include "mojo/public/c/system/buffer.h"
 //#include "mojo/public/c/system/data_pipe.h"
 //#include "mojo/public/c/system/handle.h"
 //#include "mojo/public/c/system/message_pipe.h"
-//#include "mojo/public/c/system/result.h"
 //#include "mojo/public/c/system/time.h"
 //#include "mojo/public/c/system/wait.h"
 //

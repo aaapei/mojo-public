@@ -13,7 +13,7 @@ from cpython.buffer cimport PyObject_GetBuffer
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t, uintptr_t
 
-cdef extern from "mojo/public/c/system/result.h" nogil:
+cdef extern from "mojo/result.h" nogil:
   ctypedef int32_t MojoResult
   const MojoResult MOJO_RESULT_OK
   const MojoResult MOJO_RESULT_CANCELLED

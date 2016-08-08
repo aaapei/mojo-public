@@ -32,11 +32,14 @@ python_binary_source_set("system_embedded") {
   ]
   configs = [ "../build/config:mojo_sdk" ]
   deps = [
-    "../c/system",
     "../cpp/bindings:callback",
     "../cpp/system",
     "../cpp/utility",
     "../platform/native:system",
+  ]
+  public_deps = [
+    "../c:system",
+    "../c/system",
   ]
 }
 

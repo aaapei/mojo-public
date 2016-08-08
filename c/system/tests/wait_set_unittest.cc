@@ -7,9 +7,10 @@
 
 #include "mojo/public/c/system/wait_set.h"
 
+#include <mojo/result.h>
+
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
-#include "mojo/public/c/system/result.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {

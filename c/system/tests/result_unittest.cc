@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 // This file tests the C result API (the macros declared in
-// mojo/public/c/system/result.h).
+// mojo/public/c/include/mojo/result.h).
 
-#include "mojo/public/c/system/result.h"
+#include <mojo/result.h>
 
 #include "testing/gtest/include/gtest/gtest.h"
 

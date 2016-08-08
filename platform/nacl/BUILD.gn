@@ -10,7 +10,8 @@ mojo_sdk_source_set("mojo_irt_header") {
     "mojo_initial_handle.h",
     "mojo_irt.h",
   ]
-  mojo_sdk_deps = [
+  mojo_sdk_public_deps = [
+    "mojo/public/c:system",
     "mojo/public/c/gpu:MGL",
     "mojo/public/c/gpu:MGL_onscreen",
     "mojo/public/c/gpu:MGL_signal_sync_point",

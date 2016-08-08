@@ -2,15 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <cstdio>
-#include <cstring>
+#include <mojo/result.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+
 #include <memory>
 #include <mutex>
 #include <set>
 #include <unordered_map>
 #include <vector>
-
-#include <sys/time.h>
 
 #include "mojo/public/platform/dart/dart_handle_watcher.h"
 
@@ -19,7 +20,6 @@
 
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
-#include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
 

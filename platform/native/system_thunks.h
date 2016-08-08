@@ -7,13 +7,13 @@
 #ifndef MOJO_PUBLIC_PLATFORM_NATIVE_SYSTEM_THUNKS_H_
 #define MOJO_PUBLIC_PLATFORM_NATIVE_SYSTEM_THUNKS_H_
 
+#include <mojo/result.h>
 #include <stddef.h>
 
 #include "mojo/public/c/system/buffer.h"
 #include "mojo/public/c/system/data_pipe.h"
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
-#include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
 #include "mojo/public/c/system/wait_set.h"

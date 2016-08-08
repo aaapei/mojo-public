@@ -24,6 +24,7 @@ mojo_sdk_source_set("common") {
 
   sources = [
     "include/mojo/macros.h",
+    "include/mojo/result.h",
   ]
 }
 

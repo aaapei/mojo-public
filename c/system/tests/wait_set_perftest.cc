@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <mojo/macros.h>
+#include <mojo/result.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -17,7 +18,6 @@
 
 #include "mojo/public/c/system/handle.h"
 #include "mojo/public/c/system/message_pipe.h"
-#include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/tests/perftest_utils.h"
 #include "mojo/public/cpp/test_support/test_support.h"
 #include "testing/gtest/include/gtest/gtest.h"

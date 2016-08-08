@@ -9,6 +9,7 @@ mojo_sdk_source_set("tests") {
 
   cflags_c = [ "-Wundef" ]
 
+  # TODO(vtl): Move {macros,result}_unittest.cc to a separate target.
   sources = [
     "buffer_unittest.cc",
     "compile_unittest.cc",

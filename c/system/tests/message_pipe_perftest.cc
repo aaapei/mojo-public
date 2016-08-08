@@ -8,13 +8,13 @@
 
 #include <assert.h>
 #include <mojo/macros.h>
+#include <mojo/result.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #include <thread>
 
 #include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/result.h"
 #include "mojo/public/c/system/tests/perftest_utils.h"
 #include "mojo/public/c/system/time.h"
 #include "mojo/public/c/system/wait.h"
