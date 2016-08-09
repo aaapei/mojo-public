@@ -3,13 +3,13 @@
 // found in the LICENSE file.
 
 // This file tests the C buffer API (the functions declared in
-// mojo/public/c/system/buffer.h).
+// mojo/public/c/include/mojo/system/buffer.h).
 
-#include "mojo/public/c/system/buffer.h"
+#include <mojo/system/buffer.h>
 
 #include <mojo/result.h>
+#include <mojo/system/handle.h>
 
-#include "mojo/public/c/system/handle.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {

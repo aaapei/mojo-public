@@ -24,6 +24,8 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_LIB_TYPE_DESCRIPTOR_H_
 #define MOJO_PUBLIC_C_BINDINGS_LIB_TYPE_DESCRIPTOR_H_
 
+#include <mojo/macros.h>
+#include <mojo/system/handle.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -31,8 +33,6 @@
 #include "mojo/public/c/bindings/buffer.h"
 #include "mojo/public/c/bindings/lib/util.h"
 #include "mojo/public/c/bindings/validation.h"
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
 

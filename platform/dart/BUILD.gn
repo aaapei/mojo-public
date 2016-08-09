@@ -18,7 +18,6 @@ mojo_sdk_source_set("mojo_internal_impl") {
 
   mojo_sdk_public_deps = [
     "mojo/public/c:system",
-    "mojo/public/c/system",
     "mojo/public/cpp/environment",
     "mojo/public/cpp/system",
   ]

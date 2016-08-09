@@ -3,15 +3,15 @@
 // found in the LICENSE file.
 
 // This file tests the C handle API (the functions declared in
-// mojo/public/c/system/handle.h). Note: The functionality of these APIs for
-// specific types of handles are tested with the APIs for those types of
-// handles.
+// mojo/public/c/include/mojo/system/handle.h). Note: The functionality of these
+// APIs for specific types of handles are tested with the APIs for those types
+// of handles.
 
-#include "mojo/public/c/system/handle.h"
+#include <mojo/system/handle.h>
 
 #include <mojo/result.h>
+#include <mojo/system/message_pipe.h>
 
-#include "mojo/public/c/system/message_pipe.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {

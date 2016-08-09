@@ -27,15 +27,15 @@ group("public") {
   if (is_android) {
     deps += [
       "java:application",
-      "java:system",
       "java:bindings",
+      "java:system",
     ]
   }
 }
 
 group("sdk") {
   deps = [
-    "c/system",
+    "c:system",
     "cpp/application:standalone",
     "cpp/bindings",
     "cpp/environment:standalone",

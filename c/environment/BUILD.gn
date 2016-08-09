@@ -10,5 +10,5 @@ mojo_sdk_source_set("environment") {
     "logger.h",
   ]
 
-  mojo_sdk_deps = [ "mojo/public/c/system" ]
+  mojo_sdk_deps = [ "mojo/public/c:system" ]
 }

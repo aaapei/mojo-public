@@ -5,11 +5,11 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_
 #define MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_
 
+#include <mojo/macros.h>
 #include <stdint.h>
 
 #include "mojo/public/c/bindings/struct.h"
 #include "mojo/public/c/bindings/validation.h"
-#include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
 

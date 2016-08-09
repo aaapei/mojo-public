@@ -3,13 +3,13 @@
 // found in the LICENSE file.
 
 // This file tests the C wait API (the functions declared in
-// mojo/public/c/system/wait.h).
+// mojo/public/c/include/mojo/system/wait.h).
 
-#include "mojo/public/c/system/wait.h"
+#include <mojo/system/wait.h>
 
 #include <mojo/result.h>
+#include <mojo/system/handle.h>
 
-#include "mojo/public/c/system/handle.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {

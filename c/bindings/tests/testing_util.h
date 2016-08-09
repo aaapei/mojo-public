@@ -5,12 +5,12 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_TESTS_TESTING_UTIL_H_
 #define MOJO_PUBLIC_C_BINDINGS_TESTS_TESTING_UTIL_H_
 
+#include <mojo/system/handle.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "mojo/public/c/bindings/buffer.h"
-#include "mojo/public/c/system/handle.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 // This will copy the supplied |in_struct| and compare it against the new

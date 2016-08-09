@@ -7,10 +7,10 @@
 #ifndef MOJO_PUBLIC_C_GPU_MGL_MGL_H_
 #define MOJO_PUBLIC_C_GPU_MGL_MGL_H_
 
+#include <mojo/system/handle.h>
 #include <stdint.h>
 
 #include "mojo/public/c/gpu/MGL/mgl_types.h"
-#include "mojo/public/c/system/handle.h"
 
 #ifdef __cplusplus
 extern "C" {

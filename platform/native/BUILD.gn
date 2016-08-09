@@ -10,10 +10,7 @@ mojo_sdk_source_set("system") {
     "system_thunks.c",
     "system_thunks.h",
   ]
-  mojo_sdk_public_deps = [
-    "mojo/public/c:system",
-    "mojo/public/c/system",
-  ]
+  mojo_sdk_public_deps = [ "mojo/public/c:system" ]
 
   # The GYP target analogous to this one builds this code into a
   # static library.  When building for Android, both the GYP and GN
@@ -62,9 +59,9 @@ mojo_sdk_source_set("gles2") {
   configs = [ "../../c/gpu:gpu_configs" ]
 
   mojo_sdk_deps = [
+    "mojo/public/c:system",
     "mojo/public/c/gpu:GLES2",
     "mojo/public/c/environment",
-    "mojo/public/c/system",
   ]
 }
 
@@ -106,7 +103,7 @@ mojo_sdk_source_set("platform_handle") {
 
   mojo_sdk_deps = [
     "mojo/public/platform/native:platform_handle_api",
-    "mojo/public/c/system",
+    "mojo/public/c:system",
   ]
 }
 
@@ -115,10 +112,7 @@ mojo_sdk_source_set("platform_handle_api") {
   sources = [
     "platform_handle_private.h",
   ]
-  mojo_sdk_public_deps = [
-    "mojo/public/c:system",
-    "mojo/public/c/system",
-  ]
+  mojo_sdk_public_deps = [ "mojo/public/c:system" ]
 }
 
 mojo_native_application("platform_handle_private_apptest") {

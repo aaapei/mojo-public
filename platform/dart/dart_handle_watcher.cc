@@ -3,6 +3,10 @@
 // found in the LICENSE file.
 
 #include <mojo/result.h>
+#include <mojo/system/handle.h>
+#include <mojo/system/message_pipe.h>
+#include <mojo/system/time.h>
+#include <mojo/system/wait.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
@@ -17,11 +21,6 @@
 
 #include "dart/runtime/include/dart_api.h"
 #include "dart/runtime/include/dart_native_api.h"
-
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/message_pipe.h"
-#include "mojo/public/c/system/time.h"
-#include "mojo/public/c/system/wait.h"
 
 namespace mojo {
 namespace dart {

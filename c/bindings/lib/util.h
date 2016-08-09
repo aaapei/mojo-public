@@ -5,7 +5,7 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_LIB_UTIL_H_
 #define MOJO_PUBLIC_C_BINDINGS_LIB_UTIL_H_
 
-#include "mojo/public/c/system/macros.h"
+#include <mojo/macros.h>
 
 // Rounds-up |num| to 8. The result is undefined if this results in an overflow.
 #define MOJOM_INTERNAL_ROUND_TO_8(num) (((num) + 7) & ~7)

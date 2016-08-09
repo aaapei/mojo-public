@@ -5,14 +5,14 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_MAP_H_
 #define MOJO_PUBLIC_C_BINDINGS_MAP_H_
 
+#include <mojo/macros.h>
+#include <mojo/system/handle.h>
 #include <stdint.h>
 
 #include "mojo/public/c/bindings/array.h"
 #include "mojo/public/c/bindings/lib/type_descriptor.h"
 #include "mojo/public/c/bindings/lib/util.h"
 #include "mojo/public/c/bindings/struct.h"
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
 

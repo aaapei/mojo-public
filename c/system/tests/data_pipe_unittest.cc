@@ -3,15 +3,15 @@
 // found in the LICENSE file.
 
 // This file tests the C data pipe API (the functions declared in
-// mojo/public/c/system/data_pipe.h).
+// mojo/public/c/include/mojo/system/data_pipe.h).
 
-#include "mojo/public/c/system/data_pipe.h"
+#include <mojo/system/data_pipe.h>
 
 #include <mojo/result.h>
+#include <mojo/system/handle.h>
+#include <mojo/system/wait.h>
 #include <string.h>
 
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/wait.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {

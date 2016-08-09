@@ -5,12 +5,11 @@
 #ifndef MOJO_PUBLIC_C_ENVIRONMENT_ASYNC_WAITER_H_
 #define MOJO_PUBLIC_C_ENVIRONMENT_ASYNC_WAITER_H_
 
+#include <mojo/macros.h>
+#include <mojo/result.h>
+#include <mojo/system/handle.h>
+#include <mojo/system/time.h>
 #include <stdint.h>
-
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/macros.h"
-#include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/time.h"
 
 typedef uint64_t MojoAsyncWaitID;
 MOJO_STATIC_ASSERT(sizeof(uintptr_t) <= sizeof(uint64_t),

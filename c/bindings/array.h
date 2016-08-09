@@ -5,11 +5,11 @@
 #ifndef MOJO_PUBLIC_C_BINDINGS_ARRAY_H_
 #define MOJO_PUBLIC_C_BINDINGS_ARRAY_H_
 
+#include <mojo/macros.h>
 #include <stdint.h>
 
 #include "mojo/public/c/bindings/buffer.h"
 #include "mojo/public/c/bindings/lib/type_descriptor.h"
-#include "mojo/public/c/system/macros.h"
 
 MOJO_BEGIN_EXTERN_C
 

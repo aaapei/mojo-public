@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 // This file tests the C time API (the functions declared in
-// mojo/public/c/system/time.h).
+// mojo/public/c/include/mojo/system/time.h).
 
-#include "mojo/public/c/system/time.h"
+#include <mojo/system/time.h>
 
 #include "testing/gtest/include/gtest/gtest.h"
 

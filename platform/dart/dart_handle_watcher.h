@@ -6,6 +6,7 @@
 #define MOJO_PUBLIC_PLATFORM_DART_DART_HANDLE_WATCHER_H_
 
 #include <mojo/result.h>
+#include <mojo/system/handle.h>
 
 #include <mutex>
 #include <thread>
@@ -13,7 +14,6 @@
 
 #include "dart/runtime/include/dart_api.h"
 
-#include "mojo/public/c/system/handle.h"
 #include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/system/macros.h"
 

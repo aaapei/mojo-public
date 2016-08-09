@@ -172,7 +172,7 @@ template("mojo_native_application") {
       }
 
       deps = rebase_path([
-                           "mojo/public/c/system",
+                           "mojo/public/c:system",
                            "mojo/public/platform/nacl:system",
                          ],
                          ".",

@@ -6,13 +6,12 @@
 //
 // Note: This header should be compilable as C.
 
-#ifndef MOJO_PUBLIC_C_SYSTEM_HANDLE_H_
-#define MOJO_PUBLIC_C_SYSTEM_HANDLE_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_HANDLE_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_HANDLE_H_
 
+#include <mojo/macros.h>
+#include <mojo/result.h>
 #include <stdint.h>
-
-#include "mojo/public/c/system/macros.h"
-#include "mojo/public/c/system/result.h"
 
 // |MojoHandle|: Handles to Mojo objects.
 //   |MOJO_HANDLE_INVALID| - A value that is never a valid handle.
@@ -202,4 +201,4 @@ MojoResult MojoDuplicateHandle(MojoHandle handle,
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_SYSTEM_HANDLE_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_HANDLE_H_

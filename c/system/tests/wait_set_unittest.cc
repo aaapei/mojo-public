@@ -3,14 +3,14 @@
 // found in the LICENSE file.
 
 // This file tests the C wait set API (the functions declared in
-// mojo/public/c/system/wait_set.h).
+// mojo/public/c/include/mojo/system/wait_set.h).
 
-#include "mojo/public/c/system/wait_set.h"
+#include <mojo/system/wait_set.h>
 
 #include <mojo/result.h>
+#include <mojo/system/handle.h>
+#include <mojo/system/message_pipe.h>
 
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/message_pipe.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {

@@ -15,7 +15,6 @@ mojo_sdk_source_set("mojo_irt_header") {
     "mojo/public/c/gpu:MGL",
     "mojo/public/c/gpu:MGL_onscreen",
     "mojo/public/c/gpu:MGL_signal_sync_point",
-    "mojo/public/c/system",
   ]
 }
 
@@ -27,7 +26,7 @@ if (is_nacl) {
       "libmojo.cc",
       "mgl_irt.cc",
     ]
-    mojo_sdk_deps = [ "mojo/public/c/system" ]
+    mojo_sdk_deps = [ "mojo/public/c:system" ]
     deps = [
       ":mojo_irt_header",
     ]
@@ -37,7 +36,7 @@ if (is_nacl) {
     sources = [
       "mojo_main_thunk.cc",
     ]
-    mojo_sdk_deps = [ "mojo/public/c/system" ]
+    mojo_sdk_deps = [ "mojo/public/c:system" ]
     deps = [
       ":mojo",
       ":mojo_irt_header",

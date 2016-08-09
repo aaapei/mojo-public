@@ -6,10 +6,10 @@
 
 #include <assert.h>
 #include <mojo/macros.h>
+#include <mojo/system/time.h>
 #include <stddef.h>
 #include <time.h>
 
-#include "mojo/public/c/system/time.h"
 #include "mojo/public/cpp/test_support/test_support.h"
 
 namespace mojo {

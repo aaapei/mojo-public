@@ -3,11 +3,11 @@
 // found in the LICENSE file.
 
 #include <mojo/result.h>
+#include <mojo/system/time.h>
 
 #include <string>
 
 #include "mojo/public/c/environment/async_waiter.h"
-#include "mojo/public/c/system/time.h"
 #include "mojo/public/cpp/environment/environment.h"
 #include "mojo/public/cpp/system/handle.h"
 #include "mojo/public/cpp/system/macros.h"

@@ -6,15 +6,14 @@
 //
 // Note: This header should be compilable as C.
 
-#ifndef MOJO_PUBLIC_C_SYSTEM_WAIT_SET_H_
-#define MOJO_PUBLIC_C_SYSTEM_WAIT_SET_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_WAIT_SET_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_WAIT_SET_H_
 
+#include <mojo/macros.h>
+#include <mojo/result.h>
+#include <mojo/system/handle.h>
+#include <mojo/system/time.h>
 #include <stdint.h>
-
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/macros.h"
-#include "mojo/public/c/system/result.h"
-#include "mojo/public/c/system/time.h"
 
 // |MojoCreateWaitSetOptions|: Used to specify creation parameters for a wait
 // set to |MojoCreateWaitSet()|.
@@ -188,4 +187,4 @@ MojoResult MojoWaitSetWait(
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_SYSTEM_WAIT_SET_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_WAIT_SET_H_

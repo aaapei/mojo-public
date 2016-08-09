@@ -5,11 +5,11 @@
 #include "mojo/public/c/environment/tests/async_waiter_perftest_helpers.h"
 
 #include <assert.h>
+#include <mojo/system/handle.h>
+#include <mojo/system/message_pipe.h>
 
 #include <vector>
 
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/message_pipe.h"
 #include "mojo/public/cpp/system/macros.h"
 
 #undef CHECK_OK

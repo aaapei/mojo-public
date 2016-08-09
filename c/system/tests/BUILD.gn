@@ -31,7 +31,6 @@ mojo_sdk_source_set("tests") {
   mojo_sdk_deps = [
     "mojo/public/c:system",
     "mojo/public/c/environment",
-    "mojo/public/c/system",
   ]
 }
 
@@ -53,7 +52,6 @@ mojo_sdk_source_set("pure_tests") {
   mojo_sdk_deps = [
     "mojo/public/c:system",
     "mojo/public/c/environment",
-    "mojo/public/c/system",
   ]
 }
 
@@ -75,7 +73,6 @@ mojo_sdk_source_set("perftests") {
   mojo_sdk_deps = [
     "mojo/public/c:system",
     "mojo/public/c/environment",
-    "mojo/public/c/system",
     "mojo/public/cpp/test_support",
   ]
 }

@@ -9,20 +9,20 @@
 // Include all the header files that are meant to be compilable as C.
 #include <mojo/macros.h>
 #include <mojo/result.h>
+#include <mojo/system/buffer.h>
+#include <mojo/system/data_pipe.h>
+#include <mojo/system/handle.h>
+#include <mojo/system/main.h>
+#include <mojo/system/message_pipe.h>
+#include <mojo/system/time.h>
+#include <mojo/system/wait.h>
+#include <mojo/system/wait_set.h>
 #include <stddef.h>
 #include <string.h>
 
 // Include all the header files that are meant to be compilable as C.
 #include "mojo/public/c/environment/async_waiter.h"
 #include "mojo/public/c/environment/logger.h"
-#include "mojo/public/c/system/buffer.h"
-#include "mojo/public/c/system/data_pipe.h"
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/main.h"
-#include "mojo/public/c/system/message_pipe.h"
-#include "mojo/public/c/system/time.h"
-#include "mojo/public/c/system/wait.h"
-#include "mojo/public/c/system/wait_set.h"
 
 // The joys of the C preprocessor....
 #define STRINGIFY(x) #x

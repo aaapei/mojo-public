@@ -5,9 +5,9 @@
 #ifndef MOJO_PUBLIC_C_SYSTEM_TESTS_PERFTEST_UTILS_H_
 #define MOJO_PUBLIC_C_SYSTEM_TESTS_PERFTEST_UTILS_H_
 
-#include <functional>
+#include <mojo/system/time.h>
 
-#include "mojo/public/c/system/time.h"
+#include <functional>
 
 namespace mojo {
 namespace test {

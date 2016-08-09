@@ -6,12 +6,12 @@
 //
 // Note: This header should be compilable as C.
 
-#ifndef MOJO_PUBLIC_C_SYSTEM_DATA_PIPE_H_
-#define MOJO_PUBLIC_C_SYSTEM_DATA_PIPE_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_DATA_PIPE_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_DATA_PIPE_H_
 
-#include "mojo/public/c/system/handle.h"
-#include "mojo/public/c/system/macros.h"
-#include "mojo/public/c/system/result.h"
+#include <mojo/macros.h>
+#include <mojo/result.h>
+#include <mojo/system/handle.h>
 
 // |MojoCreateDataPipeOptions|: Used to specify creation parameters for a data
 // pipe to |MojoCreateDataPipe()|.
@@ -508,4 +508,4 @@ MojoResult MojoEndReadData(MojoHandle data_pipe_consumer_handle,  // In.
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_SYSTEM_DATA_PIPE_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_DATA_PIPE_H_
