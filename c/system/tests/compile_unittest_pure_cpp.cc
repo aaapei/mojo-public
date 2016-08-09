@@ -6,6 +6,8 @@
 // more stringent warnings, in particular with "-Wundef".
 
 // Include all the header files that are meant to be compilable as C.
+#include <mojo/environment/async_waiter.h>
+#include <mojo/environment/logger.h>
 #include <mojo/macros.h>
 #include <mojo/result.h>
 #include <mojo/system/buffer.h>
@@ -16,10 +18,6 @@
 #include <mojo/system/time.h>
 #include <mojo/system/wait.h>
 #include <mojo/system/wait_set.h>
-
-// Include all the header files that are meant to be compilable as C.
-#include "mojo/public/c/environment/async_waiter.h"
-#include "mojo/public/c/environment/logger.h"
 
 // We don't actually want to test anything; we just want to make sure that this
 // file is compiled/linked in (this function is called from core_unittest.cc).

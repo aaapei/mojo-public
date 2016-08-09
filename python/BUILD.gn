@@ -56,8 +56,8 @@ python_binary_module("mojo_system_impl") {
   configs = [ "../build/config:mojo_sdk" ]
   deps = [
     ":python_common",
+    "../c:environment",
     "../c:system",
-    "../c/environment",
     "../cpp/bindings:callback",
     "../cpp/environment:standalone",
     "../cpp/system",
@@ -73,7 +73,7 @@ python_binary_source_set("python_common") {
   ]
   configs = [ "../build/config:mojo_sdk" ]
   deps = [
-    "../c/environment:environment",
+    "../c:environment",
     "../cpp/bindings:callback",
     "../cpp/environment:environment",
     "../cpp/system:system",

@@ -16,7 +16,7 @@ cdef extern from "mojo/system/time.h" nogil:
   ctypedef uint64_t MojoDeadline
 
 
-cdef extern from "mojo/public/c/environment/async_waiter.h"  nogil:
+cdef extern from "mojo/environment/async_waiter.h" nogil:
   ctypedef intptr_t MojoAsyncWaitID
 
 

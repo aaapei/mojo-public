@@ -7,6 +7,8 @@
 #endif
 
 // Include all the header files that are meant to be compilable as C.
+#include <mojo/environment/async_waiter.h>
+#include <mojo/environment/logger.h>
 #include <mojo/macros.h>
 #include <mojo/result.h>
 #include <mojo/system/buffer.h>
@@ -19,10 +21,6 @@
 #include <mojo/system/wait_set.h>
 #include <stddef.h>
 #include <string.h>
-
-// Include all the header files that are meant to be compilable as C.
-#include "mojo/public/c/environment/async_waiter.h"
-#include "mojo/public/c/environment/logger.h"
 
 // The joys of the C preprocessor....
 #define STRINGIFY(x) #x

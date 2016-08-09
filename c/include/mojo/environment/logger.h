@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_ENVIRONMENT_LOGGER_H_
-#define MOJO_PUBLIC_C_ENVIRONMENT_LOGGER_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_ENVIRONMENT_LOGGER_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_ENVIRONMENT_LOGGER_H_
 
 #include <stdint.h>
 
@@ -19,7 +19,7 @@ const MojoLogLevel MOJO_LOG_LEVEL_WARNING = 1;
 const MojoLogLevel MOJO_LOG_LEVEL_ERROR = 2;
 const MojoLogLevel MOJO_LOG_LEVEL_FATAL = 3;
 #else
-#define MOJO_LOG_LEVEL_VERBOSE ((MojoLogLevel) - 1)
+#define MOJO_LOG_LEVEL_VERBOSE ((MojoLogLevel)-1)
 #define MOJO_LOG_LEVEL_INFO ((MojoLogLevel)0)
 #define MOJO_LOG_LEVEL_WARNING ((MojoLogLevel)1)
 #define MOJO_LOG_LEVEL_ERROR ((MojoLogLevel)2)
@@ -58,4 +58,4 @@ struct MojoLogger {
   void (*SetMinimumLogLevel)(MojoLogLevel minimum_log_level);
 };
 
-#endif  // MOJO_PUBLIC_C_ENVIRONMENT_LOGGER_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_ENVIRONMENT_LOGGER_H_

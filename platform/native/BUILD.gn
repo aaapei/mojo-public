@@ -59,9 +59,9 @@ mojo_sdk_source_set("gles2") {
   configs = [ "../../c/gpu:gpu_configs" ]
 
   mojo_sdk_deps = [
+    "mojo/public/c:environment",
     "mojo/public/c:system",
     "mojo/public/c/gpu:GLES2",
-    "mojo/public/c/environment",
   ]
 }
 

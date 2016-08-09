@@ -8,9 +8,7 @@ config("c_config") {
   include_dirs = [ "include" ]
 }
 
-# Catch-all for all public C headers/libraries, except for the implementation
-# libraries that are meant to be replaceable ("pluggable"), like ...
-# (TODO(vtl)).
+# Catch-all for all public C headers/libraries, except for the bindings.
 group("c") {
   public_deps = [
     ":common",
@@ -18,7 +16,7 @@ group("c") {
   ]
 }
 
-# Headers in include/mojo (to be include as <mojo/HEADER.h>).
+# Headers in include/mojo (to be included as <mojo/HEADER.h>).
 mojo_sdk_source_set("common") {
   public_configs = [ ":c_config" ]
 
@@ -28,7 +26,22 @@ mojo_sdk_source_set("common") {
   ]
 }
 
-# Headers in include/mojo/system (to be include as <mojo/system/HEADER.h>).
+# Headers in include/mojo/environment (to be included as
+# <mojo//environment/HEADER.h>).
+mojo_sdk_source_set("environment") {
+  public_configs = [ ":c_config" ]
+
+  sources = [
+    "include/mojo/environment/async_waiter.h",
+    "include/mojo/environment/logger.h",
+  ]
+
+  public_deps = [
+    ":system",
+  ]
+}
+
+# Headers in include/mojo/system (to be included as <mojo/system/HEADER.h>).
 mojo_sdk_source_set("system") {
   public_configs = [ ":c_config" ]
 

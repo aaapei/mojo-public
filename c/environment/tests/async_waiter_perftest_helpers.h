@@ -5,11 +5,10 @@
 #ifndef MOJO_PUBLIC_C_ENVIRONMENT_TESTS_ASYNC_WAITER_PERFTEST_HELPERS_H_
 #define MOJO_PUBLIC_C_ENVIRONMENT_TESTS_ASYNC_WAITER_PERFTEST_HELPERS_H_
 
+#include <mojo/environment/async_waiter.h>
 #include <stdint.h>
 
 #include <functional>
-
-#include "mojo/public/c/environment/async_waiter.h"
 
 namespace mojo {
 namespace test {
