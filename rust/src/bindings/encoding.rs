@@ -41,6 +41,13 @@ impl Bits {
         1 << (self.0 & 7)
     }
 
+    pub fn checked_mul(self, val: usize) -> Option<Bits> {
+        match val.checked_mul(self.0) {
+            Some(result) => Some(Bits(result)),
+            None => None,
+        }
+    }
+
     /// Align the bits to some number of bytes.
     pub fn align_to_bytes(&mut self, bytes: usize) {
         self.0 = util::align_bytes(self.0, 8 * bytes);
@@ -72,7 +79,7 @@ impl Mul<usize> for Bits {
 pub trait MojomNumeric: Copy + Clone + Sized + Add<Self> + Sub<Self, Output=Self> + Mul<Self> +
     Div<Self, Output=Self> + Rem<Self, Output=Self> + PartialEq<Self> + Default {
 
-    /// Converts the primitive to a little-endian representation (the mojom endianness).
+/// Converts the primitive to a little-endian representation (the mojom endianness).
     fn to_mojom_endian(self) -> Self;
 }
 
@@ -221,7 +228,10 @@ impl<'slice> EncodingState<'slice> {
     ///
     /// Note: the encoder will not allocate a buffer for you, rather
     /// a pre-allocated buffer must be passed in.
-    pub fn new(buffer: &'slice mut [u8], header: &DataHeader, offset: usize) -> EncodingState<'slice> {
+    pub fn new(buffer: &'slice mut [u8],
+               header: &DataHeader,
+               offset: usize)
+               -> EncodingState<'slice> {
         let mut state = EncodingState {
             data: buffer,
             global_offset: offset,

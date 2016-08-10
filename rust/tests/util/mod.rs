@@ -68,7 +68,7 @@ pub fn parse_validation_test(input: &str) -> Result<(Vec<u8>, usize), String> {
                             &mut data_len as *mut usize)
     };
     if error == ptr::null_mut() {
-        if data == ptr::null_mut() {
+        if data == ptr::null_mut() || data_len == 0 {
             // We assume we were just given an empty file
             Ok((Vec::new(), 0))
         } else {

@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use bindings::decoding::{Decoder, ValidationError};
 use bindings::encoding;
 use bindings::encoding::{Bits, Encoder, Context, DATA_HEADER_SIZE, DataHeader, DataHeaderValue};
-use bindings::decoding::Decoder;
-
 use bindings::message::MessageHeader;
 
 use std::cmp::Eq;
@@ -24,6 +23,9 @@ use system::wait_set;
 
 /// The size of a Mojom map plus header in bytes.
 const MAP_SIZE: usize = 24;
+
+/// The sorted set of versions for a map.
+const MAP_VERSIONS: [(u32, u32); 1] = [(0, MAP_SIZE as u32)];
 
 /// The size of a Mojom union in bytes (header included).
 pub const UNION_SIZE: usize = 16;
@@ -63,7 +65,7 @@ pub trait MojomEncodable: Sized {
     fn encode(self, encoder: &mut Encoder, context: Context);
 
     /// Using a decoder, decodes itself out of a byte buffer.
-    fn decode(decoder: &mut Decoder, context: Context) -> Self;
+    fn decode(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError>;
 }
 
 /// Whatever implements this trait is a Mojom pointer type which means
@@ -80,7 +82,7 @@ pub trait MojomPointer: MojomEncodable {
     fn encode_value(self, encoder: &mut Encoder, context: Context);
 
     /// Decodes the actual values of the type into the decoder.
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self;
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError>;
 
     /// Writes a pointer inlined into the current context before calling
     /// encode_value.
@@ -93,9 +95,11 @@ pub trait MojomPointer: MojomEncodable {
 
     /// Reads a pointer inlined into the current context before calling
     /// decode_value.
-    fn decode_new(decoder: &mut Decoder, _context: Context, pointer: u64) -> Self {
-        let new_context = decoder.claim(pointer as usize).unwrap();
-        Self::decode_value(decoder, new_context)
+    fn decode_new(decoder: &mut Decoder, _context: Context, pointer: u64) -> Result<Self, ValidationError> {
+        match decoder.claim(pointer as usize) {
+            Ok(new_context) => Self::decode_value(decoder, new_context),
+            Err(err) => Err(err),
+        }
     }
 }
 
@@ -110,7 +114,7 @@ pub trait MojomUnion: MojomEncodable {
     fn encode_value(self, encoder: &mut Encoder, context: Context);
 
     /// Decode the actual value of the union.
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self;
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError>;
 
     /// The embed_size for when the union acts as a pointer type.
     fn nested_embed_size() -> Bits {
@@ -131,13 +135,21 @@ pub trait MojomUnion: MojomEncodable {
     }
 
     /// The decoding routine for when the union acts as a pointer type.
-    fn nested_decode(decoder: &mut Decoder, context: Context) -> Self {
+    fn nested_decode(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
         let global_offset = {
             let state = decoder.get_mut(&context);
-            state.decode_pointer() as usize
+            match state.decode_pointer() {
+                Some(ptr) => ptr as usize,
+                None => return Err(ValidationError::IllegalPointer),
+            }
         };
-        let new_context = decoder.claim(global_offset).unwrap();
-        Self::decode_value(decoder, new_context)
+        if global_offset == (MOJOM_NULL_POINTER as usize) {
+            return Err(ValidationError::UnexpectedNullPointer);
+        }
+        match decoder.claim(global_offset as usize) {
+            Ok(new_context) => Self::decode_value(decoder, new_context),
+            Err(err) => Err(err),
+        }
     }
 
     /// The embed_size for when the union is inlined into the current context.
@@ -162,7 +174,7 @@ pub trait MojomUnion: MojomEncodable {
     }
 
     /// The decoding routine for when the union is inlined into the current context.
-    fn inline_decode(decoder: &mut Decoder, context: Context) -> Self {
+    fn inline_decode(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
         {
             let mut state = decoder.get_mut(&context);
             state.align_to_byte();
@@ -244,7 +256,7 @@ pub trait MojomInterfaceRecv: MojomInterface {
     type Container: MojomMessageOption;
 
     /// Tries to read a message from a pipe and decodes it.
-    fn recv_response(&self) -> Self::Container {
+    fn recv_response(&self) -> Result<Self::Container, ValidationError> {
         // TODO(mknyszek): Actually handle errors with reading
         let (buffer, handles) = self.pipe().read(mpflags!(Read::None)).unwrap();
         Self::Container::decode_message(buffer, handles)
@@ -274,7 +286,7 @@ pub trait MojomStruct: MojomPointer {
     }
 
     /// Decode the type from a byte array and a set of handles.
-    fn deserialize(buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
+    fn deserialize(buffer: &[u8], handles: Vec<UntypedHandle>) -> Result<Self, ValidationError> {
         let mut decoder = Decoder::new(buffer, handles);
         Self::decode_new(&mut decoder, Default::default(), 0)
     }
@@ -295,14 +307,17 @@ pub trait MojomMessageOption: Sized {
     /// Decodes the actual payload of the message.
     ///
     /// Implemented by a code generator.
-    fn decode_payload(name: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self;
+    fn decode_payload(header: MessageHeader, buffer: &[u8], handles: Vec<UntypedHandle>) -> Result<Self, ValidationError>;
 
     /// Decodes the message header and then the payload, returning a new
     /// copy of itself.
-    fn decode_message(mut buffer: Vec<u8>, handles: Vec<UntypedHandle>) -> Self {
-        let header = MessageHeader::deserialize(&buffer[..], Vec::new());
-        let payload_buffer = &mut buffer[header.serialized_size(&Default::default())..];
-        Self::decode_payload(header.name, payload_buffer, handles)
+    fn decode_message(buffer: Vec<u8>, handles: Vec<UntypedHandle>) -> Result<Self, ValidationError> {
+        let header = match MessageHeader::deserialize(&buffer[..], Vec::new()) {
+            Ok(header) => header,
+            Err(err) => return Err(err),
+        };
+        let payload_buffer = &buffer[header.serialized_size(&Default::default())..];
+        Self::decode_payload(header, payload_buffer, handles)
     }
 }
 
@@ -330,9 +345,9 @@ macro_rules! impl_encodable_for_prim {
                 let mut state = encoder.get_mut(&context);
                 state.encode(self);
             }
-            fn decode(decoder: &mut Decoder, context: Context) -> Self {
+            fn decode(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
                 let mut state = decoder.get_mut(&context);
-                state.decode::<Self>()
+                Ok(state.decode::<Self>())
             }
         }
         )*
@@ -343,7 +358,7 @@ impl_encodable_for_prim!(i8, i16, i32, i64, u8, u16, u32, u64, f32, f64);
 
 impl MojomEncodable for bool {
     fn mojom_alignment() -> usize {
-        panic!("Should never check mojom_alignment of bools (they're bit-aligned)!");
+        panic!("Should never check_decode mojom_alignment of bools (they're bit-aligned)!");
     }
     fn mojom_type() -> MojomType {
         MojomType::Simple
@@ -358,9 +373,9 @@ impl MojomEncodable for bool {
         let mut state = encoder.get_mut(&context);
         state.encode_bool(self);
     }
-    fn decode(decoder: &mut Decoder, context: Context) -> Self {
+    fn decode(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
         let mut state = decoder.get_mut(&context);
-        state.decode_bool()
+        Ok(state.decode_bool())
     }
 }
 
@@ -401,7 +416,7 @@ impl<T: MojomEncodable> MojomEncodable for Option<T> {
             },
         }
     }
-    fn decode(decoder: &mut Decoder, context: Context) -> Self {
+    fn decode(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
         let skipped = {
             let mut state = decoder.get_mut(&context);
             match T::mojom_type() {
@@ -413,9 +428,12 @@ impl<T: MojomEncodable> MojomEncodable for Option<T> {
             }
         };
         if skipped {
-            None
+            Ok(None)
         } else {
-            Some(T::decode(decoder, context))
+            match T::decode(decoder, context) {
+                Ok(value) => Ok(Some(value)),
+                Err(err) => Err(err),
+            }
         }
     }
 }
@@ -455,18 +473,22 @@ impl<T: MojomEncodable> MojomPointer for Vec<T> {
             elem.encode(encoder, context.clone());
         }
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Vec<T> {
-        // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
-        let (_bytes, elems) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Vec<T>, ValidationError> {
+        let elems = {
             let mut state = decoder.get_mut(&context);
-            (state.decode::<u32>(), state.decode::<u32>())
+            match state.decode_array_header::<T>() {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
         let mut value = Vec::with_capacity(elems as usize);
-        // TODO(mknyszek): Don't trust elems blindly
         for _ in 0..elems {
-            value.push(T::decode(decoder, context.clone()));
+            match T::decode(decoder, context.clone()) {
+                Ok(elem) => value.push(elem),
+                Err(err) => return Err(err),
+            }
         }
-        value
+        Ok(value)
     }
 }
 
@@ -480,7 +502,7 @@ macro_rules! impl_encodable_for_fixed_array {
         impl<T: MojomEncodable> MojomPointer for [T; $len] {
             impl_pointer_for_array!();
             fn encode_value(mut self, encoder: &mut Encoder, context: Context) {
-                let mut panic_err = None;
+                let mut panic_error = None;
                 let mut moves = 0;
                 unsafe {
                     // In order to move elements out of an array we need to replace the
@@ -496,12 +518,12 @@ macro_rules! impl_encodable_for_fixed_array {
                             owned_elem.encode(encoder, next_context);
                         }));
                         if let Err(err) = result {
-                            panic_err = Some(err);
+                            panic_error = Some(err);
                             break;
                         }
                         moves += 1;
                     }
-                    if let Some(err) = panic_err {
+                    if let Some(err) = panic_error {
                         for i in moves..self.len() {
                             ptr::drop_in_place(&mut self[i] as *mut T);
                         }
@@ -515,16 +537,21 @@ macro_rules! impl_encodable_for_fixed_array {
                     mem::forget(self);
                 }
             }
-            fn decode_value(mut decoder: &mut Decoder, context: Context) -> [T; $len] {
-                // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
-                let (_bytes, elems) = {
+            fn decode_value(decoder: &mut Decoder, context: Context) -> Result<[T; $len], ValidationError> {
+                let elems = {
                     let mut state = decoder.get_mut(&context);
-                    (state.decode::<u32>(), state.decode::<u32>())
+                    match state.decode_array_header::<T>() {
+                        Ok(header) => header.data(),
+                        Err(err) => return Err(err),
+                    }
                 };
-                assert_eq!(elems, $len);
+                if elems != $len {
+                    return Err(ValidationError::UnexpectedArrayHeader);
+                }
                 let mut array: [T; $len];
-                let mut panic_err = None;
+                let mut panic_error = None;
                 let mut inits = 0;
+                let mut error = None;
                 unsafe {
                     // Since we don't force Clone to be implemented on Mojom types
                     // (mainly due to handles) we need to create this array as uninitialized
@@ -544,26 +571,34 @@ macro_rules! impl_encodable_for_fixed_array {
                             T::decode(decoder, next_context)
                         }));
                         match result {
-                            Ok(value) => ptr::write(elem, value),
+                            Ok(non_panic_value) => match non_panic_value {
+                                Ok(value) => ptr::write(elem, value),
+                                Err(err) => {
+                                    error = Some(err);
+                                    break;
+                                },
+                            },
                             Err(err) => {
-                                panic_err = Some(err);
+                                panic_error = Some(err);
                                 break;
                             },
                         }
                         inits += 1;
                     }
-                    if let Some(err) = panic_err {
+                    if panic_error.is_some() || error.is_some() {
                         // Drop everything that was initialized
                         for i in 0..inits {
                             ptr::drop_in_place(&mut array[i] as *mut T);
                         }
                         // Forget the array to prevent a drop
                         mem::forget(array);
-                        // Continue unwinding
-                        panic::resume_unwind(err);
+                        if let Some(err) = panic_error {
+                            panic::resume_unwind(err);
+                        }
+                        return Err(error.take().expect("Corrupted stack?"));
                     }
                 }
-                array
+                Ok(array)
             }
         }
         impl<T: MojomEncodable> MojomEncodable for [T; $len] {
@@ -590,8 +625,11 @@ impl<T: MojomEncodable> MojomPointer for Box<[T]> {
             elem.encode(encoder, context.clone());
         }
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Box<[T]> {
-        Vec::<T>::decode_value(decoder, context).into_boxed_slice()
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Box<[T]>, ValidationError> {
+        match Vec::<T>::decode_value(decoder, context) {
+            Ok(vec) => Ok(vec.into_boxed_slice()),
+            Err(err) => Err(err),
+        }
     }
 }
 
@@ -613,19 +651,18 @@ impl MojomPointer for String {
             byte.encode(encoder, context.clone());
         }
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> String {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<String, ValidationError> {
         let mut state = decoder.get_mut(&context);
-        // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
-        let _bytes = state.decode::<u32>();
-        let elems = state.decode::<u32>();
+        let elems = match state.decode_array_header::<u8>() {
+            Ok(header) => header.data(),
+            Err(err) => return Err(err),
+        };
         let mut value = Vec::with_capacity(elems as usize);
-        // TODO(mknyszek): Don't trust elems blindly
         for _ in 0..elems {
             value.push(state.decode::<u8>());
         }
         match String::from_utf8(value) {
-            Ok(string) => string,
-            // TODO(mknyszek): Don't panic and return an error
+            Ok(string) => Ok(string),
             Err(err) => panic!("Error decoding String: {}", err),
         }
     }
@@ -636,6 +673,22 @@ impl MojomEncodable for String {
     fn compute_size(&self, context: Context) -> usize {
         encoding::align_default(self.serialized_size(&context))
     }
+}
+
+/// Helper function to clean up duplicate code in HashMap.
+fn array_claim_and_decode_header<T: MojomEncodable>(decoder: &mut Decoder, offset: usize) -> Result<(Context, usize), ValidationError> {
+    let context = match decoder.claim(offset) {
+        Ok(new_context) => new_context,
+        Err(err) => return Err(err),
+    };
+    let elems = {
+        let state = decoder.get_mut(&context);
+        match state.decode_array_header::<T>() {
+            Ok(header) => header.data(),
+            Err(err) => return Err(err),
+        }
+    };
+    Ok((context, elems as usize))
 }
 
 impl<K: MojomEncodable + Eq + Hash, V: MojomEncodable> MojomPointer for HashMap<K, V> {
@@ -671,42 +724,56 @@ impl<K: MojomEncodable + Eq + Hash, V: MojomEncodable> MojomPointer for HashMap<
         // Encode vals
         vals_vec.encode(encoder, context.clone())
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> HashMap<K, V> {
-        // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<HashMap<K, V>, ValidationError> {
         let (keys_offset, vals_offset) = {
-            let mut state = decoder.get_mut(&context);
-            let _bytes = state.decode::<u32>();
-            let _version = state.decode::<u32>();
-            let keys_offset = state.decode_pointer() as usize;
-            let vals_offset = state.decode_pointer() as usize;
-            (keys_offset, vals_offset)
+            let state = decoder.get_mut(&context);
+            match state.decode_struct_header(&MAP_VERSIONS) {
+                Ok(_) => (),
+                Err(err) => return Err(err),
+            };
+            // Decode the keys pointer and check for overflow
+            let keys_offset = match state.decode_pointer() {
+                Some(ptr) => ptr,
+                None => return Err(ValidationError::IllegalPointer),
+            };
+            // Decode the keys pointer and check for overflow
+            let vals_offset = match state.decode_pointer() {
+                Some(ptr) => ptr,
+                None => return Err(ValidationError::IllegalPointer),
+            };
+            if keys_offset == MOJOM_NULL_POINTER || vals_offset == MOJOM_NULL_POINTER {
+                return Err(ValidationError::UnexpectedNullPointer);
+            }
+            (keys_offset as usize, vals_offset as usize)
         };
-        let keys_context = decoder.claim(keys_offset).unwrap();
-        let keys_elems = {
-            let state = decoder.get_mut(&keys_context);
-            let _size_keys = state.decode::<u32>();
-            state.decode::<u32>()
+        let (keys_context, keys_elems) = match array_claim_and_decode_header::<K>(decoder, keys_offset) {
+            Ok((context, elems)) => (context, elems),
+            Err(err) => return Err(err),
         };
         let mut keys_vec: Vec<K> = Vec::with_capacity(keys_elems as usize);
         for _ in 0..keys_elems {
-            let key = K::decode(decoder, keys_context.clone());
+            let key = match K::decode(decoder, keys_context.clone()) {
+                Ok(value) => value,
+                Err(err) => return Err(err),
+            };
             keys_vec.push(key);
         }
-        let vals_context = decoder.claim(vals_offset).unwrap();
-        let vals_elems = {
-            let state = decoder.get_mut(&vals_context);
-            let _size_vals = state.decode::<u32>();
-            state.decode::<u32>()
+        let (vals_context, vals_elems) = match array_claim_and_decode_header::<V>(decoder, vals_offset) {
+            Ok((context, elems)) => (context, elems),
+            Err(err) => return Err(err),
         };
-        // TODO(mknyszek): Do a validation error instead
-        assert_eq!(keys_elems, vals_elems);
-        // TODO(mknyszek): Don't trust elems blindly
+        if keys_elems != vals_elems {
+            return Err(ValidationError::DifferentSizedArraysInMap);
+        }
         let mut map = HashMap::with_capacity(keys_elems as usize);
         for key in keys_vec.into_iter() {
-            let val = V::decode(decoder, vals_context.clone());
+            let val = match V::decode(decoder, vals_context.clone()) {
+                Ok(value) => value,
+                Err(err) => return Err(err),
+            };
             map.insert(key, val);
         }
-        map
+        Ok(map)
     }
 }
 
@@ -758,8 +825,7 @@ macro_rules! impl_encodable_for_handle {
             let mut state = encoder.get_mut(&context);
             state.encode(pos as i32);
         }
-        fn decode(decoder: &mut Decoder, context: Context) -> $handle_type {
-            // TODO(mknyszek): Verify handle index
+        fn decode(decoder: &mut Decoder, context: Context) -> Result<$handle_type, ValidationError> {
             let handle_index = {
                 let mut state = decoder.get_mut(&context);
                 state.decode::<i32>()

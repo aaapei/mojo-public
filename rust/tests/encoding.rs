@@ -57,7 +57,7 @@ macro_rules! encoding_tests {
                             mock_handles.push(unsafe { system::acquire(0) });
                         }
                         println!("{}: Decoding header", stringify!($name));
-                        let header = MessageHeader::deserialize(&mut data[..], Vec::new());
+                        let header = MessageHeader::deserialize(&mut data[..], Vec::new()).expect("Should not error");
                         let ctxt: Context = Default::default();
                         let header_size = header.serialized_size(&ctxt);
                         let header_cls = $header_cls;
@@ -66,13 +66,13 @@ macro_rules! encoding_tests {
                         let payload_buffer = &mut data[header_size..];
                         let cls = $cls;
                         println!("{}: Decoding payload", stringify!($name));
-                        let decoded_payload = $req_type::deserialize(payload_buffer, mock_handles);
+                        let decoded_payload = $req_type::deserialize(payload_buffer, mock_handles).expect("Should not error");
                         println!("{}: Verifying decoded payload", stringify!($name));
                         cls(&decoded_payload);
                         println!("{}: Re-encoding payload", stringify!($name));
                         let (mut encoded_payload, handles) = decoded_payload.auto_serialize();
                         println!("{}: Decoding payload again", stringify!($name));
-                        let redecoded_payload = $req_type::deserialize(&mut encoded_payload[..], handles);
+                        let redecoded_payload = $req_type::deserialize(&mut encoded_payload[..], handles).expect("Should not error");
                         println!("{}: Verifying decoded payload again", stringify!($name));
                         cls(&redecoded_payload);
                     },

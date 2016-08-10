@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use bindings::encoding::{Bits, Context, MojomNumeric};
-use bindings::mojom::{MOJOM_NULL_POINTER, UNION_SIZE};
+use bindings::encoding::{Bits, Context, DataHeader, DataHeaderValue, DATA_HEADER_SIZE,
+                         MojomNumeric};
+use bindings::mojom::{MojomEncodable, MOJOM_NULL_POINTER, UNION_SIZE};
 use bindings::util;
 
 use std::mem;
@@ -12,6 +13,43 @@ use std::vec::Vec;
 
 use system;
 use system::{Handle, CastHandle, UntypedHandle};
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum ValidationError {
+    DifferentSizedArraysInMap,
+    IllegalHandle,
+    IllegalMemoryRange,
+    IllegalPointer,
+    MessageHeaderInvalidFlags,
+    MessageHeaderMissingRequestId,
+    MessageHeaderUnknownMethod,
+    MisalignedObject,
+    UnexpectedArrayHeader,
+    UnexpectedInvalidHandle,
+    UnexpectedNullPointer,
+    UnexpectedNullUnion,
+    UnexpectedStructHeader,
+}
+
+impl ValidationError {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ValidationError::DifferentSizedArraysInMap => "VALIDATION_ERROR_DIFFERENT_SIZED_ARRAYS_IN_MAP",
+            ValidationError::IllegalHandle => "VALIDATION_ERROR_ILLEGAL_HANDLE",
+            ValidationError::IllegalMemoryRange => "VALIDATION_ERROR_ILLEGAL_MEMORY_RANGE",
+            ValidationError::IllegalPointer => "VALIDATION_ERROR_ILLEGAL_POINTER",
+            ValidationError::MessageHeaderInvalidFlags => "VALIDATION_ERROR_MESSAGE_HEADER_INVALID_FLAGS",
+            ValidationError::MessageHeaderMissingRequestId => "VALIDATION_ERROR_MESSAGE_HEADER_MISSING_REQUEST_ID",
+            ValidationError::MessageHeaderUnknownMethod => "VALIDATION_ERROR_MESSAGE_HEADER_UNKNOWN_METHOD",
+            ValidationError::MisalignedObject => "VALIDATION_ERROR_MISALIGNED_OBJECT",
+            ValidationError::UnexpectedArrayHeader => "VALIDATION_ERROR_UNEXPECTED_ARRAY_HEADER",
+            ValidationError::UnexpectedInvalidHandle => "VALIDATION_ERROR_UNEXPECTED_INVALID_HANDLE",
+            ValidationError::UnexpectedNullPointer => "VALIDATION_ERROR_UNEXPECTED_NULL_POINTER",
+            ValidationError::UnexpectedNullUnion => "VALIDATION_ERROR_UNEXPECTED_NULL_UNION",
+            ValidationError::UnexpectedStructHeader => "VALIDATION_ERROR_UNEXPECTED_STRUCT_HEADER",
+        }
+    }
+}
 
 /// An decoding state represents the decoding logic for a single
 /// Mojom object that is NOT inlined, such as a struct or an array.
@@ -152,11 +190,91 @@ impl<'slice> DecodingState<'slice> {
     /// The pointer in the buffer is an offset relative to the pointer to another
     /// location in the buffer. We convert that to an absolute offset with respect
     /// to the buffer before returning. This is our defintion of a pointer.
-    pub fn decode_pointer(&mut self) -> u64 {
+    pub fn decode_pointer(&mut self) -> Option<u64> {
         self.align_to_byte();
         self.align_to_bytes(8);
         let current_location = (self.global_offset + self.offset) as u64;
-        self.read::<u64>() + current_location
+        let offset = self.read::<u64>();
+        if offset == MOJOM_NULL_POINTER {
+            Some(MOJOM_NULL_POINTER)
+        } else {
+            offset.checked_add(current_location)
+        }
+    }
+
+    /// A routine for decoding an array header.
+    ///
+    /// Must be called with offset zero (that is, it must be the first thing
+    /// decoded). Performs numerous validation checks.
+    pub fn decode_array_header<T>(&mut self) -> Result<DataHeader, ValidationError>
+        where T: MojomEncodable
+    {
+        debug_assert_eq!(self.offset, 0);
+        // Make sure we can read the size first...
+        if self.data.len() < mem::size_of::<u32>() {
+            return Err(ValidationError::UnexpectedArrayHeader);
+        }
+        let bytes = self.decode::<u32>();
+        if (bytes as usize) < DATA_HEADER_SIZE {
+            return Err(ValidationError::UnexpectedArrayHeader);
+        }
+        let elems = self.decode::<u32>();
+        match T::embed_size(&Default::default()).checked_mul(elems as usize) {
+            Some(value) => {
+                if (bytes as usize) < value.as_bytes() + DATA_HEADER_SIZE {
+                    return Err(ValidationError::UnexpectedArrayHeader);
+                }
+            }
+            None => return Err(ValidationError::UnexpectedArrayHeader),
+        }
+        Ok(DataHeader::new(bytes as usize, DataHeaderValue::Elements(elems)))
+    }
+
+    /// A routine for decoding an struct header.
+    ///
+    /// Must be called with offset zero (that is, it must be the first thing
+    /// decoded). Performs numerous validation checks.
+    pub fn decode_struct_header(&mut self,
+                                versions: &[(u32, u32)])
+                                -> Result<DataHeader, ValidationError> {
+        debug_assert_eq!(self.offset, 0);
+        // Make sure we can read the size first...
+        if self.data.len() < mem::size_of::<u32>() {
+            return Err(ValidationError::UnexpectedStructHeader);
+        }
+        let bytes = self.decode::<u32>();
+        if (bytes as usize) < DATA_HEADER_SIZE {
+            return Err(ValidationError::UnexpectedStructHeader);
+        }
+        let version = self.decode::<u32>();
+        // Versioning validation: versions are generated as a sorted array of tuples, so
+        // to find the version we are given by the header we use a binary search.
+        match versions.binary_search_by(|val| val.0.cmp(&version)) {
+            Ok(idx) => {
+                let (_, size) = versions[idx];
+                if bytes != size {
+                    return Err(ValidationError::UnexpectedStructHeader);
+                }
+            }
+            Err(idx) => {
+                if idx == 0 {
+                    panic!("Should be earliest version? \
+                            Versions: {:?}, \
+                            Version: {}, \
+                            Size: {}", versions, version, bytes);
+                }
+                let len = versions.len();
+                let (latest_version, _) = versions[len - 1];
+                let (_, size) = versions[idx - 1];
+                // If this is higher than any version we know, its okay for the size to be bigger,
+                // but if its a version we know about, it must match the size.
+                if (version > latest_version && bytes < size) ||
+                   (version <= latest_version && bytes != size) {
+                    return Err(ValidationError::UnexpectedStructHeader);
+                }
+            }
+        }
+        Ok(DataHeader::new(bytes as usize, DataHeaderValue::Version(version)))
     }
 }
 
@@ -167,29 +285,48 @@ pub struct Decoder<'slice> {
     buffer: Option<&'slice [u8]>,
     states: Vec<DecodingState<'slice>>,
     handles: Vec<UntypedHandle>,
+    handles_claimed: usize, // A length that claims all handles were claimed up to this index
+    max_offset: usize, // Represents the maximum value an offset may have
 }
 
 impl<'slice> Decoder<'slice> {
     /// Create a new Decoder.
     pub fn new(buffer: &'slice [u8], handles: Vec<UntypedHandle>) -> Decoder<'slice> {
+        let max_offset = buffer.len();
         Decoder {
             bytes: 0,
             buffer: Some(buffer),
             states: Vec::new(),
             handles: handles,
+            handles_claimed: 0,
+            max_offset: max_offset,
         }
     }
 
     /// Claim space in the buffer to start decoding some object.
     ///
     /// Creates a new decoding state for the object and returns a context.
-    pub fn claim(&mut self, offset: usize) -> Option<Context> {
+    pub fn claim(&mut self, offset: usize) -> Result<Context, ValidationError> {
+        // Check if the layout order is sane
         if offset < self.bytes {
-            panic!("Tried to claim already-claimed space!");
+            return Err(ValidationError::IllegalMemoryRange);
+        }
+        // Check for 8-byte alignment
+        if offset & 7 != 0 {
+            return Err(ValidationError::MisalignedObject);
+        }
+        // Bounds check on offset
+        if offset > self.max_offset {
+            return Err(ValidationError::IllegalPointer);
         }
         let mut buffer = self.buffer.take().expect("No buffer?");
         let space = offset - self.bytes;
         buffer = &buffer[space..];
+        // Make sure we can even read the bytes in the header
+        if buffer.len() < mem::size_of::<u32>() {
+            return Err(ValidationError::IllegalMemoryRange);
+        }
+        // Read the number of bytes in the memory region according to the data header
         let mut read_size: u32 = 0;
         unsafe {
             ptr::copy_nonoverlapping(mem::transmute::<*const u8, *const u32>(buffer.as_ptr()),
@@ -197,29 +334,38 @@ impl<'slice> Decoder<'slice> {
                                      mem::size_of::<u32>());
         }
         let size = u32::from_le(read_size) as usize;
+        // Make sure the size we read is sane...
+        if size > buffer.len() {
+            return Err(ValidationError::IllegalMemoryRange);
+        }
         // TODO(mknyszek): Check size for validation
         let (claimed, unclaimed) = buffer.split_at(size);
         self.states.push(DecodingState::new(claimed, offset));
         self.buffer = Some(unclaimed);
         self.bytes += space + size;
-        Some(Context::new(self.states.len() - 1))
+        Ok(Context::new(self.states.len() - 1))
     }
 
     /// Claims a handle at some particular index in the given handles array.
     ///
     /// Returns the handle with all type information in-tact.
-    pub fn claim_handle<T: Handle + CastHandle>(&mut self, index: i32) -> T {
+    pub fn claim_handle<T: Handle + CastHandle>(&mut self,
+                                                index: i32)
+                                                -> Result<T, ValidationError> {
         let real_index = if index >= 0 {
             index as usize
         } else {
-            panic!("Tried to claim null handle!");
+            return Err(ValidationError::UnexpectedInvalidHandle);
         };
-        // TODO(mknyszek): Check to make sure index is valid
+        // If the index exceeds our number of handles or if we have already claimed that handle
+        if real_index >= self.handles.len() || real_index < self.handles_claimed {
+            return Err(ValidationError::IllegalHandle);
+        }
+        self.handles_claimed = real_index + 1;
         let raw_handle = self.handles[real_index].get_native_handle();
         unsafe {
-            // TODO(mknyszek): Return an error instead of panicking
             self.handles[real_index].invalidate();
-            T::from_untyped(system::acquire(raw_handle))
+            Ok(T::from_untyped(system::acquire(raw_handle)))
         }
     }
 

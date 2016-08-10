@@ -30,12 +30,19 @@ macro_rules! impl_encodable_for_pointer {
             }
             self.encode_new(encoder, context);
         }
-        fn decode(decoder: &mut $crate::bindings::decoding::Decoder, context: $crate::bindings::encoding::Context) -> Self {
+        fn decode(decoder: &mut $crate::bindings::decoding::Decoder, context: $crate::bindings::encoding::Context) -> Result<Self, ValidationError> {
             let ptr = {
                 let state = decoder.get_mut(&context);
-                state.decode_pointer()
+                match state.decode_pointer() {
+                    Some(ptr) => ptr,
+                    None => return Err(ValidationError::IllegalPointer),
+                }
             };
-            Self::decode_new(decoder, context, ptr)
+            if ptr == $crate::bindings::mojom::MOJOM_NULL_POINTER {
+                Err(ValidationError::UnexpectedNullPointer)
+            } else {
+                Self::decode_new(decoder, context, ptr)
+            }
         }
     };
 }
@@ -71,7 +78,7 @@ macro_rules! impl_encodable_for_union {
                 self.inline_encode(encoder, context.set_is_union(true));
             }
         }
-        fn decode(decoder: &mut $crate::bindings::decoding::Decoder, context: $crate::bindings::encoding::Context) -> Self {
+        fn decode(decoder: &mut $crate::bindings::decoding::Decoder, context: $crate::bindings::encoding::Context) -> Result<Self, ValidationError> {
             if context.is_union() {
                 Self::nested_decode(decoder, context)
             } else {
@@ -111,14 +118,13 @@ macro_rules! impl_encodable_for_interface {
             state.encode(pos as i32);
             state.encode(Self::version() as u32);
         }
-        fn decode(decoder: &mut $crate::bindings::decoding::Decoder, context: $crate::bindings::encoding::Context) -> Self {
-            // TODO(mknyszek): verify version
+        fn decode(decoder: &mut $crate::bindings::decoding::Decoder, context: $crate::bindings::encoding::Context) -> Result<Self, ValidationError> {
             let (handle_index, _version) = {
                 let mut state = decoder.get_mut(&context);
                 (state.decode::<i32>(), state.decode::<u32>())
             };
-            Self::new(decoder.claim_handle::<$crate::system::message_pipe::MessageEndpoint>(handle_index))
+            let handle = try!(decoder.claim_handle::<$crate::system::message_pipe::MessageEndpoint>(handle_index));
+            Ok(Self::new(handle))
         }
     }
 }
-

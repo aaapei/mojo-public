@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use bindings::decoding::Decoder;
+use bindings::decoding::{Decoder, ValidationError};
 use bindings::encoding;
 use bindings::encoding::{Context, DATA_HEADER_SIZE, DataHeaderValue, Encoder};
 use bindings::mojom::{MojomEncodable, MojomPointer, MojomStruct};
@@ -17,6 +17,8 @@ pub const MESSAGE_HEADER_EXPECT_RESPONSE: u32 = 1;
 /// A flag for the message header indicating that this message is
 /// a response.
 pub const MESSAGE_HEADER_IS_RESPONSE: u32 = 2;
+
+const MESSAGE_HEADER_VERSIONS: [(u32, u32); 2] = [(0, 16), (1, 24)];
 
 /// A message header object implemented as a Mojom struct.
 pub struct MessageHeader {
@@ -68,30 +70,36 @@ impl MojomPointer for MessageHeader {
         }
     }
 
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
         let mut state = decoder.get_mut(&context);
-        // TODO(mknyszek): Verify bytes and T::embed_size match
-        let bytes = state.decode::<u32>();
-        let version = state.decode::<u32>();
-        // TODO(mknyszek): Don't trust bytes blindly
+        let version = match state.decode_struct_header(&MESSAGE_HEADER_VERSIONS) {
+            Ok(header) => header.data(),
+            Err(err) => return Err(err),
+        };
         let name = state.decode::<u32>();
         let flags = state.decode::<u32>();
-        if (bytes as usize) == DATA_HEADER_SIZE + 8 {
-            MessageHeader {
+        if flags > MESSAGE_HEADER_IS_RESPONSE {
+            return Err(ValidationError::MessageHeaderInvalidFlags);
+        }
+        if version == 0 {
+            if flags == MESSAGE_HEADER_IS_RESPONSE || flags == MESSAGE_HEADER_EXPECT_RESPONSE {
+                return Err(ValidationError::MessageHeaderMissingRequestId);
+            }
+            Ok(MessageHeader {
                 version: version,
                 name: name,
                 flags: flags,
                 request_id: 0,
-            }
-        } else if (bytes as usize) == DATA_HEADER_SIZE + 16 {
-            MessageHeader {
+            })
+        } else if version == 1 {
+            Ok(MessageHeader {
                 version: version,
                 name: name,
                 flags: flags,
                 request_id: state.decode::<u64>(),
-            }
+            })
         } else {
-            panic!("Invalid message header size found: `{}`", bytes);
+            return Err(ValidationError::UnexpectedStructHeader);
         }
     }
 }
@@ -104,4 +112,3 @@ impl MojomEncodable for MessageHeader {
 }
 
 impl MojomStruct for MessageHeader {}
-

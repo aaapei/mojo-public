@@ -4,7 +4,8 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use mojo::bindings::decoding::Decoder;
+use mojo::bindings::decoding;
+use mojo::bindings::decoding::{Decoder, ValidationError};
 use mojo::bindings::encoding;
 use mojo::bindings::encoding::{Context, DataHeaderValue, DATA_HEADER_SIZE, Encoder};
 use mojo::bindings::message;
@@ -48,16 +49,19 @@ impl MojomPointer for StructA {
         MojomEncodable::encode(self.i, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructAVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let i = <u64>::decode(decoder, context.clone());
-        StructA { i: i }
+        let i = match <u64>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(StructA { i: i })
     }
 }
 
@@ -93,16 +97,19 @@ impl MojomPointer for StructB {
         MojomEncodable::encode(self.struct_a, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructBVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let struct_a = <StructA>::decode(decoder, context.clone());
-        StructB { struct_a: struct_a }
+        let struct_a = match <StructA>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(StructB { struct_a: struct_a })
     }
 }
 
@@ -138,16 +145,19 @@ impl MojomPointer for StructC {
         MojomEncodable::encode(self.data, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructCVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let data = <Vec<u8>>::decode(decoder, context.clone());
-        StructC { data: data }
+        let data = match <Vec<u8>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(StructC { data: data })
     }
 }
 
@@ -183,17 +193,19 @@ impl MojomPointer for StructD {
         MojomEncodable::encode(self.message_pipes, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructDVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let message_pipes =
-            <Vec<message_pipe::MessageEndpoint>>::decode(decoder, context.clone());
-        StructD { message_pipes: message_pipes }
+        let message_pipes = match <Vec<message_pipe::MessageEndpoint>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(StructD { message_pipes: message_pipes })
     }
 }
 
@@ -231,21 +243,27 @@ impl MojomPointer for StructE {
         MojomEncodable::encode(self.data_pipe_consumer, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructEVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let struct_d = <StructD>::decode(decoder, context.clone());
+        let struct_d = match <StructD>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
         let data_pipe_consumer =
-            <system::data_pipe::Consumer<u8>>::decode(decoder, context.clone());
-        StructE {
+            match <system::data_pipe::Consumer<u8>>::decode(decoder, context.clone()) {
+                Ok(value) => value,
+                Err(err) => return Err(err),
+            };
+        Ok(StructE {
             struct_d: struct_d,
             data_pipe_consumer: data_pipe_consumer,
-        }
+        })
     }
 }
 
@@ -282,16 +300,19 @@ impl MojomPointer for StructF {
         MojomEncodable::encode(self.fixed_size_array, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructFVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let fixed_size_array = <[u8; 3]>::decode(decoder, context.clone());
-        StructF { fixed_size_array: fixed_size_array }
+        let fixed_size_array = match <[u8; 3]>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(StructF { fixed_size_array: fixed_size_array })
     }
 }
 
@@ -333,36 +354,48 @@ impl MojomPointer for StructG {
         MojomEncodable::encode(self.str, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructGVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let i = <i32>::decode(decoder, context.clone());
+        let i = match <i32>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
         let b = if version >= 3 {
-            <bool>::decode(decoder, context.clone())
+            match <bool>::decode(decoder, context.clone()) {
+                Ok(value) => value,
+                Err(err) => return Err(err),
+            }
         } else {
             Default::default()
         };
         let struct_a = if version >= 1 {
-            <Option<StructA>>::decode(decoder, context.clone())
+            match <Option<StructA>>::decode(decoder, context.clone()) {
+                Ok(value) => value,
+                Err(err) => return Err(err),
+            }
         } else {
             Default::default()
         };
         let str = if version >= 3 {
-            <Option<String>>::decode(decoder, context.clone())
+            match <Option<String>>::decode(decoder, context.clone()) {
+                Ok(value) => value,
+                Err(err) => return Err(err),
+            }
         } else {
             Default::default()
         };
-        StructG {
+        Ok(StructG {
             i: i,
             b: b,
             struct_a: struct_a,
             str: str,
-        }
+        })
     }
 }
 
@@ -407,26 +440,41 @@ impl MojomPointer for StructH {
         MojomEncodable::encode(self.e, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructHVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let a = <bool>::decode(decoder, context.clone());
-        let b = <u8>::decode(decoder, context.clone());
-        let c = <Option<UnionA>>::decode(decoder, context.clone());
-        let d = <Option<Vec<UnionA>>>::decode(decoder, context.clone());
-        let e = <Option<HashMap<u8, UnionA>>>::decode(decoder, context.clone());
-        StructH {
+        let a = match <bool>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let b = match <u8>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let c = match <Option<UnionA>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let d = match <Option<Vec<UnionA>>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let e = match <Option<HashMap<u8, UnionA>>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(StructH {
             a: a,
             b: b,
             c: c,
             d: d,
             e: e,
-        }
+        })
     }
 }
 
@@ -464,16 +512,19 @@ impl MojomPointer for BasicStruct {
         MojomEncodable::encode(self.a, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&BasicStructVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let a = <i32>::decode(decoder, context.clone());
-        BasicStruct { a: a }
+        let a = match <i32>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(BasicStruct { a: a })
     }
 }
 
@@ -514,15 +565,15 @@ impl MojomPointer for StructWithEnum {
         8
     }
     fn encode_value(self, encoder: &mut Encoder, context: Context) {}
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&StructWithEnumVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        StructWithEnum {}
+        Ok(StructWithEnum {})
     }
 }
 
@@ -601,29 +652,98 @@ impl MojomUnion for UnionA {
             UnionA::_Unknown(val) => MojomEncodable::encode(val, encoder, context.clone()),
         }
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and tag
-        let (_bytes, tag) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let tag = {
             let mut state = decoder.get_mut(&context);
             let bytes = state.decode::<u32>();
-            let tag = state.decode::<u32>();
-            (bytes, tag)
-        };
-        match tag {
-            UnionATag_a => UnionA::a(<u16>::decode(decoder, context.clone())),
-            UnionATag_b => UnionA::b(<u32>::decode(decoder, context.clone())),
-            UnionATag_c => UnionA::c(<Option<StructA>>::decode(decoder, context.clone())),
-            UnionATag_d => UnionA::d(<Option<Vec<u8>>>::decode(decoder, context.clone())),
-            UnionATag_e => {
-                UnionA::e(<Option<HashMap<String, u8>>>::decode(decoder, context.clone()))
+            if (bytes as usize) != UNION_SIZE {
+                return Err(ValidationError::UnexpectedNullUnion);
             }
-            UnionATag_f => UnionA::f(<Option<UnionB>>::decode(decoder, context.clone())),
-            UnionATag_g => UnionA::g(<StructA>::decode(decoder, context.clone())),
-            UnionATag_h => UnionA::h(<Vec<u8>>::decode(decoder, context.clone())),
-            UnionATag_i => UnionA::i(<HashMap<String, u8>>::decode(decoder, context.clone())),
-            UnionATag_j => UnionA::j(<UnionB>::decode(decoder, context.clone())),
-            _ => UnionA::_Unknown(u64::decode(decoder, context.clone())),
-        }
+            state.decode::<u32>()
+        };
+        Ok(match tag {
+            UnionATag_a => {
+                UnionA::a({
+                    match <u16>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_b => {
+                UnionA::b({
+                    match <u32>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_c => {
+                UnionA::c({
+                    match <Option<StructA>>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_d => {
+                UnionA::d({
+                    match <Option<Vec<u8>>>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_e => {
+                UnionA::e({
+                    match <Option<HashMap<String, u8>>>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_f => {
+                UnionA::f({
+                    match <Option<UnionB>>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_g => {
+                UnionA::g({
+                    match <StructA>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_h => {
+                UnionA::h({
+                    match <Vec<u8>>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_i => {
+                UnionA::i({
+                    match <HashMap<String, u8>>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionATag_j => {
+                UnionA::j({
+                    match <UnionB>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            _ => UnionA::_Unknown(u64::decode(decoder, context.clone()).unwrap()),
+        })
     }
 }
 
@@ -687,21 +807,50 @@ impl MojomUnion for UnionB {
             UnionB::_Unknown(val) => MojomEncodable::encode(val, encoder, context.clone()),
         }
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and tag
-        let (_bytes, tag) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let tag = {
             let mut state = decoder.get_mut(&context);
             let bytes = state.decode::<u32>();
-            let tag = state.decode::<u32>();
-            (bytes, tag)
+            if (bytes as usize) != UNION_SIZE {
+                return Err(ValidationError::UnexpectedNullUnion);
+            }
+            state.decode::<u32>()
         };
-        match tag {
-            UnionBTag_a => UnionB::a(<u16>::decode(decoder, context.clone())),
-            UnionBTag_b => UnionB::b(<u32>::decode(decoder, context.clone())),
-            UnionBTag_c => UnionB::c(<u64>::decode(decoder, context.clone())),
-            UnionBTag_d => UnionB::d(<u32>::decode(decoder, context.clone())),
-            _ => UnionB::_Unknown(u64::decode(decoder, context.clone())),
-        }
+        Ok(match tag {
+            UnionBTag_a => {
+                UnionB::a({
+                    match <u16>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionBTag_b => {
+                UnionB::b({
+                    match <u32>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionBTag_c => {
+                UnionB::c({
+                    match <u64>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            UnionBTag_d => {
+                UnionB::d({
+                    match <u32>::decode(decoder, context.clone()) {
+                        Ok(value) => value,
+                        Err(err) => return Err(err),
+                    }
+                })
+            }
+            _ => UnionB::_Unknown(u64::decode(decoder, context.clone()).unwrap()),
+        })
     }
 }
 
@@ -842,9 +991,12 @@ pub enum InterfaceARequestOption {
 }
 
 impl MojomMessageOption for InterfaceARequestOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            _ => panic!("Unknown message found: {}", ordinal),
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        match header.name {
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
@@ -854,12 +1006,15 @@ pub enum InterfaceAResponseOption {
 }
 
 impl MojomMessageOption for InterfaceAResponseOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            _ => {
-                panic!("Unknown message found, or message has no response: {}",
-                       ordinal)
-            }
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        if header.flags != message::MESSAGE_HEADER_IS_RESPONSE {
+            return Err(ValidationError::MessageHeaderInvalidFlags);
+        }
+        match header.name {
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
@@ -973,11 +1128,30 @@ pub enum BoundsCheckTestInterfaceRequestOption {
 }
 
 impl MojomMessageOption for BoundsCheckTestInterfaceRequestOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            BoundsCheckTestInterfaceMethod0::ORDINAL => BoundsCheckTestInterfaceRequestOption::BoundsCheckTestInterfaceMethod0(BoundsCheckTestInterfaceMethod0Request::deserialize(buffer, handles)),
-            BoundsCheckTestInterfaceMethod1::ORDINAL => BoundsCheckTestInterfaceRequestOption::BoundsCheckTestInterfaceMethod1(BoundsCheckTestInterfaceMethod1Request::deserialize(buffer, handles)),
-            _ => panic!("Unknown message found: {}", ordinal),
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        match header.name {
+            BoundsCheckTestInterfaceMethod0::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_EXPECT_RESPONSE {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match BoundsCheckTestInterfaceMethod0Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(BoundsCheckTestInterfaceRequestOption::BoundsCheckTestInterfaceMethod0(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            BoundsCheckTestInterfaceMethod1::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match BoundsCheckTestInterfaceMethod1Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(BoundsCheckTestInterfaceRequestOption::BoundsCheckTestInterfaceMethod1(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
@@ -987,13 +1161,21 @@ pub enum BoundsCheckTestInterfaceResponseOption {
 }
 
 impl MojomMessageOption for BoundsCheckTestInterfaceResponseOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            BoundsCheckTestInterfaceMethod0::ORDINAL => BoundsCheckTestInterfaceResponseOption::BoundsCheckTestInterfaceMethod0(BoundsCheckTestInterfaceMethod0Response::deserialize(buffer, handles)),
-            _ => {
-                panic!("Unknown message found, or message has no response: {}",
-                       ordinal)
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        if header.flags != message::MESSAGE_HEADER_IS_RESPONSE {
+            return Err(ValidationError::MessageHeaderInvalidFlags);
+        }
+        match header.name {
+            BoundsCheckTestInterfaceMethod0::ORDINAL => {
+                match BoundsCheckTestInterfaceMethod0Response::deserialize(buffer, handles) {
+                    Ok(value) => Ok(BoundsCheckTestInterfaceResponseOption::BoundsCheckTestInterfaceMethod0(value)),
+                    Err(err) => return Err(err),
+                }
             }
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
@@ -1026,16 +1208,19 @@ impl MojomPointer for BoundsCheckTestInterfaceMethod0Request {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&BoundsCheckTestInterfaceMethod0RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <u8>::decode(decoder, context.clone());
-        BoundsCheckTestInterfaceMethod0Request { param0: param0 }
+        let param0 = match <u8>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(BoundsCheckTestInterfaceMethod0Request { param0: param0 })
     }
 }
 
@@ -1081,16 +1266,19 @@ impl MojomPointer for BoundsCheckTestInterfaceMethod0Response {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&BoundsCheckTestInterfaceMethod0ResponseVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <u8>::decode(decoder, context.clone());
-        BoundsCheckTestInterfaceMethod0Response { param0: param0 }
+        let param0 = match <u8>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(BoundsCheckTestInterfaceMethod0Response { param0: param0 })
     }
 }
 
@@ -1140,16 +1328,19 @@ impl MojomPointer for BoundsCheckTestInterfaceMethod1Request {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&BoundsCheckTestInterfaceMethod1RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <u8>::decode(decoder, context.clone());
-        BoundsCheckTestInterfaceMethod1Request { param0: param0 }
+        let param0 = match <u8>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(BoundsCheckTestInterfaceMethod1Request { param0: param0 })
     }
 }
 
@@ -1276,44 +1467,175 @@ pub trait ConformanceTestInterfaceRequest: MojomMessage {}
 pub trait ConformanceTestInterfaceResponse: MojomMessage {}
 
 pub enum ConformanceTestInterfaceRequestOption {
-    ConformanceTestInterfaceMethod5(ConformanceTestInterfaceMethod5Request),
-    ConformanceTestInterfaceMethod11(ConformanceTestInterfaceMethod11Request),
-    ConformanceTestInterfaceMethod14(ConformanceTestInterfaceMethod14Request),
     ConformanceTestInterfaceMethod2(ConformanceTestInterfaceMethod2Request),
+    ConformanceTestInterfaceMethod3(ConformanceTestInterfaceMethod3Request),
     ConformanceTestInterfaceMethod4(ConformanceTestInterfaceMethod4Request),
+    ConformanceTestInterfaceMethod5(ConformanceTestInterfaceMethod5Request),
+    ConformanceTestInterfaceMethod10(ConformanceTestInterfaceMethod10Request),
     ConformanceTestInterfaceMethod6(ConformanceTestInterfaceMethod6Request),
     ConformanceTestInterfaceMethod7(ConformanceTestInterfaceMethod7Request),
-    ConformanceTestInterfaceMethod10(ConformanceTestInterfaceMethod10Request),
-    ConformanceTestInterfaceMethod12(ConformanceTestInterfaceMethod12Request),
-    ConformanceTestInterfaceMethod15(ConformanceTestInterfaceMethod15Request),
-    ConformanceTestInterfaceMethod0(ConformanceTestInterfaceMethod0Request),
-    ConformanceTestInterfaceMethod1(ConformanceTestInterfaceMethod1Request),
-    ConformanceTestInterfaceMethod3(ConformanceTestInterfaceMethod3Request),
     ConformanceTestInterfaceMethod8(ConformanceTestInterfaceMethod8Request),
     ConformanceTestInterfaceMethod9(ConformanceTestInterfaceMethod9Request),
+    ConformanceTestInterfaceMethod11(ConformanceTestInterfaceMethod11Request),
+    ConformanceTestInterfaceMethod12(ConformanceTestInterfaceMethod12Request),
+    ConformanceTestInterfaceMethod14(ConformanceTestInterfaceMethod14Request),
+    ConformanceTestInterfaceMethod0(ConformanceTestInterfaceMethod0Request),
+    ConformanceTestInterfaceMethod1(ConformanceTestInterfaceMethod1Request),
     ConformanceTestInterfaceMethod13(ConformanceTestInterfaceMethod13Request),
+    ConformanceTestInterfaceMethod15(ConformanceTestInterfaceMethod15Request),
 }
 
 impl MojomMessageOption for ConformanceTestInterfaceRequestOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            ConformanceTestInterfaceMethod5::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod5(ConformanceTestInterfaceMethod5Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod11::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod11(ConformanceTestInterfaceMethod11Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod14::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod14(ConformanceTestInterfaceMethod14Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod2::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod2(ConformanceTestInterfaceMethod2Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod4::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod4(ConformanceTestInterfaceMethod4Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod6::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod6(ConformanceTestInterfaceMethod6Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod7::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod7(ConformanceTestInterfaceMethod7Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod10::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod10(ConformanceTestInterfaceMethod10Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod12::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod12(ConformanceTestInterfaceMethod12Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod15::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod15(ConformanceTestInterfaceMethod15Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod0::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod0(ConformanceTestInterfaceMethod0Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod1::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod1(ConformanceTestInterfaceMethod1Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod3::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod3(ConformanceTestInterfaceMethod3Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod8::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod8(ConformanceTestInterfaceMethod8Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod9::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod9(ConformanceTestInterfaceMethod9Request::deserialize(buffer, handles)),
-            ConformanceTestInterfaceMethod13::ORDINAL => ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod13(ConformanceTestInterfaceMethod13Request::deserialize(buffer, handles)),
-            _ => panic!("Unknown message found: {}", ordinal),
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        match header.name {
+            ConformanceTestInterfaceMethod2::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod2Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod2(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod3::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod3Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod3(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod4::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod4Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod4(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod5::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod5Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod5(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod10::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod10Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod10(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod6::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod6Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod6(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod7::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod7Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod7(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod8::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod8Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod8(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod9::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod9Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod9(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod11::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod11Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod11(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod12::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_EXPECT_RESPONSE {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod12Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod12(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod14::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod14Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod14(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod0::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod0Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod0(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod1::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod1Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod1(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod13::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod13Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod13(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            ConformanceTestInterfaceMethod15::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_NO_FLAG {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match ConformanceTestInterfaceMethod15Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceRequestOption::ConformanceTestInterfaceMethod15(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
@@ -1323,203 +1645,24 @@ pub enum ConformanceTestInterfaceResponseOption {
 }
 
 impl MojomMessageOption for ConformanceTestInterfaceResponseOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            ConformanceTestInterfaceMethod12::ORDINAL => ConformanceTestInterfaceResponseOption::ConformanceTestInterfaceMethod12(ConformanceTestInterfaceMethod12Response::deserialize(buffer, handles)),
-            _ => {
-                panic!("Unknown message found, or message has no response: {}",
-                       ordinal)
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        if header.flags != message::MESSAGE_HEADER_IS_RESPONSE {
+            return Err(ValidationError::MessageHeaderInvalidFlags);
+        }
+        match header.name {
+            ConformanceTestInterfaceMethod12::ORDINAL => {
+                match ConformanceTestInterfaceMethod12Response::deserialize(buffer, handles) {
+                    Ok(value) => Ok(ConformanceTestInterfaceResponseOption::ConformanceTestInterfaceMethod12(value)),
+                    Err(err) => return Err(err),
+                }
             }
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
-
-/// Message: ConformanceTestInterfaceMethod5
-pub mod ConformanceTestInterfaceMethod5 {
-    pub const ORDINAL: u32 = 5;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod5Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod5RequestVersions: [(u32, u32); 1] = [(0, 24)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod5Request {
-    pub param0: StructE,
-    pub param1: system::data_pipe::Producer<u8>,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod5Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        24
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-        MojomEncodable::encode(self.param1, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <StructE>::decode(decoder, context.clone());
-        let param1 = <system::data_pipe::Producer<u8>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod5Request {
-            param0: param0,
-            param1: param1,
-        }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod5Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone()) +
-        self.param1.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod5Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod5Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod5::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod5Request {}
-
-/// Message: ConformanceTestInterfaceMethod11
-pub mod ConformanceTestInterfaceMethod11 {
-    pub const ORDINAL: u32 = 11;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod11Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod11RequestVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod11Request {
-    pub param0: StructG,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod11Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <StructG>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod11Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod11Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod11Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod11Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod11::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod11Request {}
-
-/// Message: ConformanceTestInterfaceMethod14
-pub mod ConformanceTestInterfaceMethod14 {
-    pub const ORDINAL: u32 = 14;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod14Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod14RequestVersions: [(u32, u32); 1] = [(0, 24)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod14Request {
-    pub param0: UnionA,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod14Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        24
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <UnionA>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod14Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod14Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod14Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod14Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod14::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod14Request {}
 
 /// Message: ConformanceTestInterfaceMethod2
 pub mod ConformanceTestInterfaceMethod2 {
@@ -1551,20 +1694,26 @@ impl MojomPointer for ConformanceTestInterfaceMethod2Request {
         MojomEncodable::encode(self.param1, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod2RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <StructB>::decode(decoder, context.clone());
-        let param1 = <StructA>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod2Request {
+        let param0 = match <StructB>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let param1 = match <StructA>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod2Request {
             param0: param0,
             param1: param1,
-        }
+        })
     }
 }
 
@@ -1587,6 +1736,69 @@ impl MojomMessage for ConformanceTestInterfaceMethod2Request {
     }
 }
 impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod2Request {}
+
+/// Message: ConformanceTestInterfaceMethod3
+pub mod ConformanceTestInterfaceMethod3 {
+    pub const ORDINAL: u32 = 3;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod3Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod3RequestVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod3Request {
+    pub param0: Vec<bool>,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod3Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod3RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <Vec<bool>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod3Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod3Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod3Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod3Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod3::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod3Request {}
 
 /// Message: ConformanceTestInterfaceMethod4
 pub mod ConformanceTestInterfaceMethod4 {
@@ -1618,20 +1830,26 @@ impl MojomPointer for ConformanceTestInterfaceMethod4Request {
         MojomEncodable::encode(self.param1, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod4RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <StructC>::decode(decoder, context.clone());
-        let param1 = <Vec<u8>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod4Request {
+        let param0 = match <StructC>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let param1 = match <Vec<u8>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod4Request {
             param0: param0,
             param1: param1,
-        }
+        })
     }
 }
 
@@ -1654,6 +1872,143 @@ impl MojomMessage for ConformanceTestInterfaceMethod4Request {
     }
 }
 impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod4Request {}
+
+/// Message: ConformanceTestInterfaceMethod5
+pub mod ConformanceTestInterfaceMethod5 {
+    pub const ORDINAL: u32 = 5;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod5Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod5RequestVersions: [(u32, u32); 1] = [(0, 24)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod5Request {
+    pub param0: StructE,
+    pub param1: system::data_pipe::Producer<u8>,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod5Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        24
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+        MojomEncodable::encode(self.param1, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod5RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <StructE>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let param1 =
+            match <system::data_pipe::Producer<u8>>::decode(decoder, context.clone()) {
+                Ok(value) => value,
+                Err(err) => return Err(err),
+            };
+        Ok(ConformanceTestInterfaceMethod5Request {
+            param0: param0,
+            param1: param1,
+        })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod5Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone()) +
+        self.param1.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod5Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod5Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod5::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod5Request {}
+
+/// Message: ConformanceTestInterfaceMethod10
+pub mod ConformanceTestInterfaceMethod10 {
+    pub const ORDINAL: u32 = 10;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod10Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod10RequestVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod10Request {
+    pub param0: HashMap<String, u8>,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod10Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod10RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <HashMap<String, u8>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod10Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod10Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod10Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod10Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod10::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod10Request {}
 
 /// Message: ConformanceTestInterfaceMethod6
 pub mod ConformanceTestInterfaceMethod6 {
@@ -1683,16 +2038,19 @@ impl MojomPointer for ConformanceTestInterfaceMethod6Request {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod6RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <Vec<Vec<u8>>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod6Request { param0: param0 }
+        let param0 = match <Vec<Vec<u8>>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod6Request { param0: param0 })
     }
 }
 
@@ -1745,20 +2103,26 @@ impl MojomPointer for ConformanceTestInterfaceMethod7Request {
         MojomEncodable::encode(self.param1, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod7RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <StructF>::decode(decoder, context.clone());
-        let param1 = <[Option<[u8; 3]>; 2]>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod7Request {
+        let param0 = match <StructF>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let param1 = match <[Option<[u8; 3]>; 2]>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod7Request {
             param0: param0,
             param1: param1,
-        }
+        })
     }
 }
 
@@ -1781,420 +2145,6 @@ impl MojomMessage for ConformanceTestInterfaceMethod7Request {
     }
 }
 impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod7Request {}
-
-/// Message: ConformanceTestInterfaceMethod10
-pub mod ConformanceTestInterfaceMethod10 {
-    pub const ORDINAL: u32 = 10;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod10Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod10RequestVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod10Request {
-    pub param0: HashMap<String, u8>,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod10Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <HashMap<String, u8>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod10Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod10Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod10Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod10Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod10::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod10Request {}
-
-/// Message: ConformanceTestInterfaceMethod12
-pub mod ConformanceTestInterfaceMethod12 {
-    pub const ORDINAL: u32 = 12;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod12Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod12RequestVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod12Request {
-    pub param0: f32,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod12Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <f32>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod12Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod12Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod12Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod12Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod12::ORDINAL,
-                           message::MESSAGE_HEADER_EXPECT_RESPONSE)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod12Request {}
-
-// -- ConformanceTestInterfaceMethod12Response --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod12ResponseVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod12Response {
-    pub param0: f32,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod12Response {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <f32>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod12Response { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod12Response {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod12Response {}
-
-impl MojomMessage for ConformanceTestInterfaceMethod12Response {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod12::ORDINAL,
-                           message::MESSAGE_HEADER_IS_RESPONSE)
-    }
-}
-impl ConformanceTestInterfaceResponse for ConformanceTestInterfaceMethod12Request {}
-/// Message: ConformanceTestInterfaceMethod15
-pub mod ConformanceTestInterfaceMethod15 {
-    pub const ORDINAL: u32 = 15;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod15Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod15RequestVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod15Request {
-    pub param0: StructH,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod15Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <StructH>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod15Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod15Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod15Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod15Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod15::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod15Request {}
-
-/// Message: ConformanceTestInterfaceMethod0
-pub mod ConformanceTestInterfaceMethod0 {
-    pub const ORDINAL: u32 = 0;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod0Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod0RequestVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod0Request {
-    pub param0: f32,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod0Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <f32>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod0Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod0Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod0Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod0Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod0::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod0Request {}
-
-/// Message: ConformanceTestInterfaceMethod1
-pub mod ConformanceTestInterfaceMethod1 {
-    pub const ORDINAL: u32 = 1;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod1Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod1RequestVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod1Request {
-    pub param0: StructA,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod1Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <StructA>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod1Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod1Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod1Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod1Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod1::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod1Request {}
-
-/// Message: ConformanceTestInterfaceMethod3
-pub mod ConformanceTestInterfaceMethod3 {
-    pub const ORDINAL: u32 = 3;
-    pub const MIN_VERSION: u32 = 0;
-}
-// -- ConformanceTestInterfaceMethod3Request --
-
-// Constants
-// Enums
-// Struct version information
-const ConformanceTestInterfaceMethod3RequestVersions: [(u32, u32); 1] = [(0, 16)];
-
-// Struct definition
-pub struct ConformanceTestInterfaceMethod3Request {
-    pub param0: Vec<bool>,
-}
-
-impl MojomPointer for ConformanceTestInterfaceMethod3Request {
-    fn header_data(&self) -> DataHeaderValue {
-        DataHeaderValue::Version(0)
-    }
-    fn serialized_size(&self, _context: &Context) -> usize {
-        16
-    }
-    fn encode_value(self, encoder: &mut Encoder, context: Context) {
-        MojomEncodable::encode(self.param0, encoder, context.clone());
-
-    }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
-            let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
-        };
-        let param0 = <Vec<bool>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod3Request { param0: param0 }
-    }
-}
-
-impl MojomEncodable for ConformanceTestInterfaceMethod3Request {
-    impl_encodable_for_pointer!();
-    fn compute_size(&self, context: Context) -> usize {
-        encoding::align_default(self.serialized_size(&context)) +
-        self.param0.compute_size(context.clone())
-    }
-}
-
-impl MojomStruct for ConformanceTestInterfaceMethod3Request {}
-impl MojomMessage for ConformanceTestInterfaceMethod3Request {
-    fn create_header() -> MessageHeader {
-        MessageHeader::new(ConformanceTestInterface::VERSION,
-                           ConformanceTestInterfaceMethod3::ORDINAL,
-                           message::MESSAGE_HEADER_NO_FLAG)
-
-    }
-}
-impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod3Request {}
 
 /// Message: ConformanceTestInterfaceMethod8
 pub mod ConformanceTestInterfaceMethod8 {
@@ -2224,16 +2174,19 @@ impl MojomPointer for ConformanceTestInterfaceMethod8Request {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod8RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <Vec<Option<Vec<String>>>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod8Request { param0: param0 }
+        let param0 = match <Vec<Option<Vec<String>>>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod8Request { param0: param0 })
     }
 }
 
@@ -2284,16 +2237,19 @@ impl MojomPointer for ConformanceTestInterfaceMethod9Request {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod9RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <Option<Vec<Vec<Option<system::UntypedHandle>>>>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod9Request { param0: param0 }
+        let param0 = match <Option<Vec<Vec<Option<system::UntypedHandle>>>>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod9Request { param0: param0 })
     }
 }
 
@@ -2315,6 +2271,378 @@ impl MojomMessage for ConformanceTestInterfaceMethod9Request {
     }
 }
 impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod9Request {}
+
+/// Message: ConformanceTestInterfaceMethod11
+pub mod ConformanceTestInterfaceMethod11 {
+    pub const ORDINAL: u32 = 11;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod11Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod11RequestVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod11Request {
+    pub param0: StructG,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod11Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod11RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <StructG>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod11Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod11Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod11Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod11Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod11::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod11Request {}
+
+/// Message: ConformanceTestInterfaceMethod12
+pub mod ConformanceTestInterfaceMethod12 {
+    pub const ORDINAL: u32 = 12;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod12Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod12RequestVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod12Request {
+    pub param0: f32,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod12Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod12RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <f32>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod12Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod12Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod12Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod12Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod12::ORDINAL,
+                           message::MESSAGE_HEADER_EXPECT_RESPONSE)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod12Request {}
+
+// -- ConformanceTestInterfaceMethod12Response --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod12ResponseVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod12Response {
+    pub param0: f32,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod12Response {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod12ResponseVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <f32>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod12Response { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod12Response {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod12Response {}
+
+impl MojomMessage for ConformanceTestInterfaceMethod12Response {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod12::ORDINAL,
+                           message::MESSAGE_HEADER_IS_RESPONSE)
+    }
+}
+impl ConformanceTestInterfaceResponse for ConformanceTestInterfaceMethod12Request {}
+/// Message: ConformanceTestInterfaceMethod14
+pub mod ConformanceTestInterfaceMethod14 {
+    pub const ORDINAL: u32 = 14;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod14Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod14RequestVersions: [(u32, u32); 1] = [(0, 24)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod14Request {
+    pub param0: UnionA,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod14Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        24
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod14RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <UnionA>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod14Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod14Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod14Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod14Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod14::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod14Request {}
+
+/// Message: ConformanceTestInterfaceMethod0
+pub mod ConformanceTestInterfaceMethod0 {
+    pub const ORDINAL: u32 = 0;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod0Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod0RequestVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod0Request {
+    pub param0: f32,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod0Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod0RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <f32>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod0Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod0Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod0Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod0Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod0::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod0Request {}
+
+/// Message: ConformanceTestInterfaceMethod1
+pub mod ConformanceTestInterfaceMethod1 {
+    pub const ORDINAL: u32 = 1;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod1Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod1RequestVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod1Request {
+    pub param0: StructA,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod1Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod1RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <StructA>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod1Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod1Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod1Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod1Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod1::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod1Request {}
 
 /// Message: ConformanceTestInterfaceMethod13
 pub mod ConformanceTestInterfaceMethod13 {
@@ -2348,22 +2676,31 @@ impl MojomPointer for ConformanceTestInterfaceMethod13Request {
         MojomEncodable::encode(self.param2, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod13RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <Option<InterfaceAClient>>::decode(decoder, context.clone());
-        let param1 = <u32>::decode(decoder, context.clone());
-        let param2 = <Option<InterfaceAClient>>::decode(decoder, context.clone());
-        ConformanceTestInterfaceMethod13Request {
+        let param0 = match <Option<InterfaceAClient>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let param1 = match <u32>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        let param2 = match <Option<InterfaceAClient>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod13Request {
             param0: param0,
             param1: param1,
             param2: param2,
-        }
+        })
     }
 }
 
@@ -2387,6 +2724,69 @@ impl MojomMessage for ConformanceTestInterfaceMethod13Request {
     }
 }
 impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod13Request {}
+
+/// Message: ConformanceTestInterfaceMethod15
+pub mod ConformanceTestInterfaceMethod15 {
+    pub const ORDINAL: u32 = 15;
+    pub const MIN_VERSION: u32 = 0;
+}
+// -- ConformanceTestInterfaceMethod15Request --
+
+// Constants
+// Enums
+// Struct version information
+const ConformanceTestInterfaceMethod15RequestVersions: [(u32, u32); 1] = [(0, 16)];
+
+// Struct definition
+pub struct ConformanceTestInterfaceMethod15Request {
+    pub param0: StructH,
+}
+
+impl MojomPointer for ConformanceTestInterfaceMethod15Request {
+    fn header_data(&self) -> DataHeaderValue {
+        DataHeaderValue::Version(0)
+    }
+    fn serialized_size(&self, _context: &Context) -> usize {
+        16
+    }
+    fn encode_value(self, encoder: &mut Encoder, context: Context) {
+        MojomEncodable::encode(self.param0, encoder, context.clone());
+
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
+            let mut state = decoder.get_mut(&context);
+            match state.decode_struct_header(&ConformanceTestInterfaceMethod15RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
+        };
+        let param0 = match <StructH>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(ConformanceTestInterfaceMethod15Request { param0: param0 })
+    }
+}
+
+impl MojomEncodable for ConformanceTestInterfaceMethod15Request {
+    impl_encodable_for_pointer!();
+    fn compute_size(&self, context: Context) -> usize {
+        encoding::align_default(self.serialized_size(&context)) +
+        self.param0.compute_size(context.clone())
+    }
+}
+
+impl MojomStruct for ConformanceTestInterfaceMethod15Request {}
+impl MojomMessage for ConformanceTestInterfaceMethod15Request {
+    fn create_header() -> MessageHeader {
+        MessageHeader::new(ConformanceTestInterface::VERSION,
+                           ConformanceTestInterfaceMethod15::ORDINAL,
+                           message::MESSAGE_HEADER_NO_FLAG)
+
+    }
+}
+impl ConformanceTestInterfaceRequest for ConformanceTestInterfaceMethod15Request {}
 
 
 // --- IntegrationTestInterface ---
@@ -2496,10 +2896,21 @@ pub enum IntegrationTestInterfaceRequestOption {
 }
 
 impl MojomMessageOption for IntegrationTestInterfaceRequestOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            IntegrationTestInterfaceMethod0::ORDINAL => IntegrationTestInterfaceRequestOption::IntegrationTestInterfaceMethod0(IntegrationTestInterfaceMethod0Request::deserialize(buffer, handles)),
-            _ => panic!("Unknown message found: {}", ordinal),
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        match header.name {
+            IntegrationTestInterfaceMethod0::ORDINAL => {
+                if header.flags != message::MESSAGE_HEADER_EXPECT_RESPONSE {
+                    return Err(ValidationError::MessageHeaderInvalidFlags);
+                }
+                match IntegrationTestInterfaceMethod0Request::deserialize(buffer, handles) {
+                    Ok(value) => Ok(IntegrationTestInterfaceRequestOption::IntegrationTestInterfaceMethod0(value)),
+                    Err(err) => return Err(err),
+                }
+            }
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
@@ -2509,13 +2920,21 @@ pub enum IntegrationTestInterfaceResponseOption {
 }
 
 impl MojomMessageOption for IntegrationTestInterfaceResponseOption {
-    fn decode_payload(ordinal: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
-        match ordinal {
-            IntegrationTestInterfaceMethod0::ORDINAL => IntegrationTestInterfaceResponseOption::IntegrationTestInterfaceMethod0(IntegrationTestInterfaceMethod0Response::deserialize(buffer, handles)),
-            _ => {
-                panic!("Unknown message found, or message has no response: {}",
-                       ordinal)
+    fn decode_payload(header: MessageHeader,
+                      buffer: &[u8],
+                      handles: Vec<UntypedHandle>)
+                      -> Result<Self, ValidationError> {
+        if header.flags != message::MESSAGE_HEADER_IS_RESPONSE {
+            return Err(ValidationError::MessageHeaderInvalidFlags);
+        }
+        match header.name {
+            IntegrationTestInterfaceMethod0::ORDINAL => {
+                match IntegrationTestInterfaceMethod0Response::deserialize(buffer, handles) {
+                    Ok(value) => Ok(IntegrationTestInterfaceResponseOption::IntegrationTestInterfaceMethod0(value)),
+                    Err(err) => return Err(err),
+                }
             }
+            _ => Err(ValidationError::MessageHeaderUnknownMethod),
         }
     }
 }
@@ -2548,16 +2967,19 @@ impl MojomPointer for IntegrationTestInterfaceMethod0Request {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&IntegrationTestInterfaceMethod0RequestVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <BasicStruct>::decode(decoder, context.clone());
-        IntegrationTestInterfaceMethod0Request { param0: param0 }
+        let param0 = match <BasicStruct>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(IntegrationTestInterfaceMethod0Request { param0: param0 })
     }
 }
 
@@ -2603,16 +3025,19 @@ impl MojomPointer for IntegrationTestInterfaceMethod0Response {
         MojomEncodable::encode(self.param0, encoder, context.clone());
 
     }
-    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
-        // TODO(mknyszek): Validate bytes and version
-        let (_bytes, version) = {
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Result<Self, ValidationError> {
+        let version = {
             let mut state = decoder.get_mut(&context);
-            let bytes = state.decode::<u32>();
-            let version = state.decode::<u32>();
-            (bytes, version)
+            match state.decode_struct_header(&IntegrationTestInterfaceMethod0ResponseVersions) {
+                Ok(header) => header.data(),
+                Err(err) => return Err(err),
+            }
         };
-        let param0 = <Vec<u8>>::decode(decoder, context.clone());
-        IntegrationTestInterfaceMethod0Response { param0: param0 }
+        let param0 = match <Vec<u8>>::decode(decoder, context.clone()) {
+            Ok(value) => value,
+            Err(err) => return Err(err),
+        };
+        Ok(IntegrationTestInterfaceMethod0Response { param0: param0 })
     }
 }
 
