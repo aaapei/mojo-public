@@ -10,7 +10,7 @@
 #include <mojo/bindings/internal/util.h>
 #include <string.h>
 
-#include "mojo/public/c/bindings/tests/testing_util.h"
+#include "mojo/public/c/tests/bindings/testing_util.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/bindings/tests/rect.mojom-c.h"
 #include "mojo/public/interfaces/bindings/tests/test_structs.mojom-c.h"

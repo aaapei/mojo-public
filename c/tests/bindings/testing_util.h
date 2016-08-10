@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_BINDINGS_TESTS_TESTING_UTIL_H_
-#define MOJO_PUBLIC_C_BINDINGS_TESTS_TESTING_UTIL_H_
+#ifndef MOJO_PUBLIC_C_TESTS_BINDINGS_TESTING_UTIL_H_
+#define MOJO_PUBLIC_C_TESTS_BINDINGS_TESTING_UTIL_H_
 
 #include <mojo/bindings/buffer.h>
 #include <mojo/system/handle.h>
@@ -44,4 +44,4 @@ void CopyAndCompare(
   decode_fn(in_struct, in_struct_size, NULL, 0);
 }
 
-#endif  // MOJO_PUBLIC_C_BINDINGS_TESTS_TESTING_UTIL_H_
+#endif  // MOJO_PUBLIC_C_TESTS_BINDINGS_TESTING_UTIL_H_

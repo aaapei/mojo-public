@@ -59,6 +59,36 @@ mojo_sdk_source_set("bindings") {
   ]
 }
 
+mojo_sdk_source_set("bindings_unittests") {
+  testonly = true
+
+  sources = [
+    "tests/bindings/array_unittest.cc",
+    "tests/bindings/buffer_unittest.cc",
+    "tests/bindings/message_unittest.cc",
+    "tests/bindings/struct_unittest.cc",
+    "tests/bindings/testing_util.h",
+    "tests/bindings/union_unittest.cc",
+    "tests/bindings/validation_unittest.cc",
+  ]
+
+  deps = [
+    ":bindings",
+    "//testing/gtest",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/cpp/bindings/tests:mojo_public_bindings_test_utils",
+    "mojo/public/cpp/bindings/tests:validation_util",
+    "mojo/public/cpp/test_support",
+    "mojo/public/cpp/system",
+
+    # The "_c" suffix'd target compiles the generated C bindings to this mojom
+    # target.
+    "mojo/public/interfaces/bindings/tests:test_interfaces_c",
+  ]
+}
+
 # common -----------------------------------------------------------------------
 
 # Headers in include/mojo (to be included as <mojo/HEADER.h>).
