@@ -138,6 +138,21 @@ mojo_sdk_source_set("environment") {
   ]
 }
 
+mojo_sdk_source_set("environment_perftest_helpers") {
+  testonly = true
+
+  sources = [
+    "tests/environment/async_waiter_perftest_helpers.cc",
+    "tests/environment/async_waiter_perftest_helpers.h",
+  ]
+
+  public_deps = [
+    ":environment",
+  ]
+
+  mojo_sdk_deps = [ "mojo/public/cpp/system" ]
+}
+
 # system -----------------------------------------------------------------------
 
 # Headers in include/mojo/system (to be included as <mojo/system/HEADER.h>).

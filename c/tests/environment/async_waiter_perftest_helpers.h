@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_ENVIRONMENT_TESTS_ASYNC_WAITER_PERFTEST_HELPERS_H_
-#define MOJO_PUBLIC_C_ENVIRONMENT_TESTS_ASYNC_WAITER_PERFTEST_HELPERS_H_
+#ifndef MOJO_PUBLIC_C_TESTS_ENVIRONMENT_ASYNC_WAITER_PERFTEST_HELPERS_H_
+#define MOJO_PUBLIC_C_TESTS_ENVIRONMENT_ASYNC_WAITER_PERFTEST_HELPERS_H_
 
 #include <mojo/environment/async_waiter.h>
 #include <stdint.h>
@@ -28,4 +28,4 @@ uint64_t DoAsyncWaiterPerfTest(const MojoAsyncWaiter* async_waiter,
 }  // namespace test
 }  // namespace mojo
 
-#endif  // MOJO_PUBLIC_C_ENVIRONMENT_TESTS_ASYNC_WAITER_PERFTEST_HELPERS_H_
+#endif  // MOJO_PUBLIC_C_TESTS_ENVIRONMENT_ASYNC_WAITER_PERFTEST_HELPERS_H_

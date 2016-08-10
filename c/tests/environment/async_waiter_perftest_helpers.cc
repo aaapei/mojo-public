@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/environment/tests/async_waiter_perftest_helpers.h"
+#include "mojo/public/c/tests/environment/async_waiter_perftest_helpers.h"
 
 #include <assert.h>
 #include <mojo/system/handle.h>
