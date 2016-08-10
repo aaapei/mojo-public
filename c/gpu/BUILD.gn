@@ -6,7 +6,6 @@ import("../../mojo_sdk.gni")
 
 config("gpu_configs") {
   include_dirs = [ "." ]
-  defines = [ "GLES2_USE_MOJO" ]
 }
 
 group("gpu") {

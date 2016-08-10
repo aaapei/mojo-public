@@ -15,17 +15,7 @@
 #define GL_PATH_MODELVIEW_MATRIX_CHROMIUM 0x0BA6
 #define GL_PATH_PROJECTION_MATRIX_CHROMIUM 0x0BA7
 
-#if defined(GLES2_USE_MOJO)
 #define GLES2_GET_FUN(name) MojoGLES2gl##name
-#else
-// Because we are using both the real system GL and our own
-// emulated GL we need to use different names to avoid conflicts.
-#if defined(GLES2_USE_CPP_BINDINGS)
-#define GLES2_GET_FUN(name) gles2::GetGLContext()->name
-#else
-#define GLES2_GET_FUN(name) GLES2##name
-#endif
-#endif
 
 #include <GLES2/gl2mojo_autogen.h>
 
