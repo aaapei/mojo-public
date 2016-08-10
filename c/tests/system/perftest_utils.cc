@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/system/tests/perftest_utils.h"
+#include "mojo/public/c/tests/system/perftest_utils.h"
 
 #include <assert.h>
 #include <mojo/macros.h>

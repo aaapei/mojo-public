@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 // This file just "forwards" to "pure" tests -- those that are written using
-// only headers from mojo/public/c/include/mojo and
-// mojo/public/c/include/mojo/system (and the C standard library), and not using
-// gtest.
+// only headers from mojo/public/c/include/mojo,
+// mojo/public/c/include/mojo/environment, mojo/public/c/include/mojo/system
+// (and the C standard library), and not using gtest.
 
 #include "testing/gtest/include/gtest/gtest.h"
 

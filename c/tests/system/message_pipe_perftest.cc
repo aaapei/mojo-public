@@ -17,7 +17,7 @@
 
 #include <thread>
 
-#include "mojo/public/c/system/tests/perftest_utils.h"
+#include "mojo/public/c/tests/system/perftest_utils.h"
 #include "mojo/public/cpp/test_support/test_support.h"
 #include "testing/gtest/include/gtest/gtest.h"
 

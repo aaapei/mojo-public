@@ -16,7 +16,10 @@ group("c") {
   ]
 }
 
+# common -----------------------------------------------------------------------
+
 # Headers in include/mojo (to be included as <mojo/HEADER.h>).
+
 mojo_sdk_source_set("common") {
   public_configs = [ ":c_config" ]
 
@@ -26,8 +29,25 @@ mojo_sdk_source_set("common") {
   ]
 }
 
+mojo_sdk_source_set("common_unittests") {
+  testonly = true
+
+  sources = [
+    "tests/macros_unittest.cc",
+    "tests/result_unittest.cc",
+  ]
+
+  deps = [
+    ":common",
+    "//testing/gtest",
+  ]
+}
+
+# environment ------------------------------------------------------------------
+
 # Headers in include/mojo/environment (to be included as
 # <mojo//environment/HEADER.h>).
+
 mojo_sdk_source_set("environment") {
   public_configs = [ ":c_config" ]
 
@@ -41,7 +61,10 @@ mojo_sdk_source_set("environment") {
   ]
 }
 
+# system -----------------------------------------------------------------------
+
 # Headers in include/mojo/system (to be included as <mojo/system/HEADER.h>).
+
 mojo_sdk_source_set("system") {
   public_configs = [ ":c_config" ]
 
@@ -59,4 +82,76 @@ mojo_sdk_source_set("system") {
   public_deps = [
     ":common",
   ]
+}
+
+mojo_sdk_source_set("system_unittests") {
+  testonly = true
+
+  sources = [
+    "tests/system/buffer_unittest.cc",
+    "tests/system/data_pipe_unittest.cc",
+    "tests/system/handle_unittest.cc",
+    "tests/system/message_pipe_unittest.cc",
+    "tests/system/time_unittest.cc",
+    "tests/system/wait_set_unittest.cc",
+    "tests/system/wait_unittest.cc",
+  ]
+
+  deps = [
+    ":system",
+    "//testing/gtest",
+  ]
+}
+
+mojo_sdk_source_set("system_perftests") {
+  testonly = true
+
+  sources = [
+    "tests/system/message_pipe_perftest.cc",
+    "tests/system/perftest_utils.cc",
+    "tests/system/perftest_utils.h",
+    "tests/system/reference_perftest.cc",
+    "tests/system/wait_set_perftest.cc",
+  ]
+
+  deps = [
+    ":system",
+    "//testing/gtest",
+  ]
+
+  mojo_sdk_deps = [ "mojo/public/cpp/test_support" ]
+}
+
+# Compilation tests ------------------------------------------------------------
+
+# This test ensures that various headers compile and link properly.
+mojo_sdk_source_set("compile_unittests") {
+  testonly = true
+
+  sources = [
+    "tests/compile/compile_unittest.cc",
+  ]
+
+  deps = [
+    ":pure_compile_tests",
+    "//testing/gtest",
+  ]
+}
+
+# This source set contains "pure" tests that only depend on the public SDK (and
+# the standard library), and in particular not on gtest (whose headers don't
+# compile with "-Wundef").
+mojo_sdk_source_set("pure_compile_tests") {
+  testonly = true
+
+  visibility = [ ":compile_unittests" ]
+
+  cflags = [ "-Wundef" ]
+
+  sources = [
+    "tests/compile/pure_c.c",
+    "tests/compile/pure_cpp.cc",
+  ]
+
+  mojo_sdk_deps = [ "mojo/public/c:environment" ]
 }
