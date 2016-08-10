@@ -7,6 +7,7 @@ mod macros;
 mod util;
 
 pub mod encoding;
+pub mod decoding;
 pub mod message;
 pub mod mojom;
 pub mod run_loop;

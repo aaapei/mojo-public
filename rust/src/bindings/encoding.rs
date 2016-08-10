@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use bindings::mojom::MOJOM_NULL_POINTER;
 use bindings::util;
 
 use std::mem;
@@ -69,7 +70,7 @@ impl Mul<usize> for Bits {
 /// This trait is intended to be used by Mojom primitive values
 /// in order to be identified in generic contexts.
 pub trait MojomNumeric: Copy + Clone + Sized + Add<Self> + Sub<Self, Output=Self> + Mul<Self> +
-    Div<Self, Output=Self> + Rem<Self, Output=Self> + PartialEq<Self> {
+    Div<Self, Output=Self> + Rem<Self, Output=Self> + PartialEq<Self> + Default {
 
     /// Converts the primitive to a little-endian representation (the mojom endianness).
     fn to_mojom_endian(self) -> Self;
@@ -287,7 +288,21 @@ impl<'slice> EncodingState<'slice> {
         self.write(0 as u64); // Data
     }
 
-    /// Encode a pointer into the buffer.
+    /// Encode a null pointer into the buffer.
+    pub fn encode_null_pointer(&mut self) {
+        self.align_to_byte();
+        self.align_to_bytes(8);
+        self.encode(MOJOM_NULL_POINTER);
+    }
+
+    /// Encode a null handle into the buffer.
+    pub fn encode_null_handle(&mut self) {
+        self.align_to_byte();
+        self.align_to_bytes(4);
+        self.encode(-1 as i32);
+    }
+
+    /// Encode a non-null pointer into the buffer.
     ///
     /// 'location' is an absolute location in the global buffer, but
     /// Mojom pointers are offsets relative to the pointer, so we

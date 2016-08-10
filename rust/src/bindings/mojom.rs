@@ -4,12 +4,16 @@
 
 use bindings::encoding;
 use bindings::encoding::{Bits, Encoder, Context, DATA_HEADER_SIZE, DataHeader, DataHeaderValue};
+use bindings::decoding::Decoder;
+
 use bindings::message::MessageHeader;
 
 use std::cmp::Eq;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::mem;
+use std::panic;
+use std::ptr;
 use std::vec::Vec;
 
 use system::{CastHandle, Handle, UntypedHandle};
@@ -57,6 +61,9 @@ pub trait MojomEncodable: Sized {
 
     /// Encodes this type into the encoder given a context.
     fn encode(self, encoder: &mut Encoder, context: Context);
+
+    /// Using a decoder, decodes itself out of a byte buffer.
+    fn decode(decoder: &mut Decoder, context: Context) -> Self;
 }
 
 /// Whatever implements this trait is a Mojom pointer type which means
@@ -72,6 +79,9 @@ pub trait MojomPointer: MojomEncodable {
     /// Encodes the actual values of the type into the encoder.
     fn encode_value(self, encoder: &mut Encoder, context: Context);
 
+    /// Decodes the actual values of the type into the decoder.
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Self;
+
     /// Writes a pointer inlined into the current context before calling
     /// encode_value.
     fn encode_new(self, encoder: &mut Encoder, context: Context) {
@@ -79,6 +89,13 @@ pub trait MojomPointer: MojomEncodable {
         let data_header = DataHeader::new(data_size, self.header_data());
         let new_context = encoder.add(&data_header).unwrap();
         self.encode_value(encoder, new_context);
+    }
+
+    /// Reads a pointer inlined into the current context before calling
+    /// decode_value.
+    fn decode_new(decoder: &mut Decoder, _context: Context, pointer: u64) -> Self {
+        let new_context = decoder.claim(pointer as usize).unwrap();
+        Self::decode_value(decoder, new_context)
     }
 }
 
@@ -92,12 +109,15 @@ pub trait MojomUnion: MojomEncodable {
     /// Encode the actual value of the union.
     fn encode_value(self, encoder: &mut Encoder, context: Context);
 
-    /// The embed_size for when the union is a pointer type.
+    /// Decode the actual value of the union.
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Self;
+
+    /// The embed_size for when the union acts as a pointer type.
     fn nested_embed_size() -> Bits {
         POINTER_BIT_SIZE
     }
 
-    /// The encoding routine for when the union is a pointer type.
+    /// The encoding routine for when the union acts as a pointer type.
     fn nested_encode(self, encoder: &mut Encoder, context: Context) {
         let loc = encoder.size() as u64;
         {
@@ -108,6 +128,16 @@ pub trait MojomUnion: MojomEncodable {
         let data_header = DataHeader::new(UNION_SIZE, tag);
         let new_context = encoder.add(&data_header).unwrap();
         self.encode_value(encoder, new_context.set_is_union(true));
+    }
+
+    /// The decoding routine for when the union acts as a pointer type.
+    fn nested_decode(decoder: &mut Decoder, context: Context) -> Self {
+        let global_offset = {
+            let state = decoder.get_mut(&context);
+            state.decode_pointer() as usize
+        };
+        let new_context = decoder.claim(global_offset).unwrap();
+        Self::decode_value(decoder, new_context)
     }
 
     /// The embed_size for when the union is inlined into the current context.
@@ -129,6 +159,22 @@ pub trait MojomUnion: MojomEncodable {
             state.align_to_bytes(8);
             state.align_to_byte();
         }
+    }
+
+    /// The decoding routine for when the union is inlined into the current context.
+    fn inline_decode(decoder: &mut Decoder, context: Context) -> Self {
+        {
+            let mut state = decoder.get_mut(&context);
+            state.align_to_byte();
+            state.align_to_bytes(8);
+        }
+        let value = Self::decode_value(decoder, context.clone());
+        {
+            let mut state = decoder.get_mut(&context);
+            state.align_to_byte();
+            state.align_to_bytes(8);
+        }
+        value
     }
 }
 
@@ -187,6 +233,24 @@ pub trait MojomInterfaceSend<R: MojomMessage>: MojomInterface {
     }
 }
 
+/// Whatever implements this trait is considered to be a Mojom
+/// interface that may recieve messages for some interface.
+///
+/// When implementing this trait, specify the container "union" type
+/// which can contain any of the potential messages that may be recieved.
+/// This way, we can return that type and let the user multiplex over
+/// what message was received.
+pub trait MojomInterfaceRecv: MojomInterface {
+    type Container: MojomMessageOption;
+
+    /// Tries to read a message from a pipe and decodes it.
+    fn recv_response(&self) -> Self::Container {
+        // TODO(mknyszek): Actually handle errors with reading
+        let (buffer, handles) = self.pipe().read(mpflags!(Read::None)).unwrap();
+        Self::Container::decode_message(buffer, handles)
+    }
+}
+
 /// Whatever implements this trait is considered to be a Mojom struct.
 ///
 /// Mojom structs are always the root of any Mojom message. Thus, we
@@ -208,12 +272,38 @@ pub trait MojomStruct: MojomPointer {
         let handles = self.serialize(&mut buf);
         (buf, handles)
     }
+
+    /// Decode the type from a byte array and a set of handles.
+    fn deserialize(buffer: &[u8], handles: Vec<UntypedHandle>) -> Self {
+        let mut decoder = Decoder::new(buffer, handles);
+        Self::decode_new(&mut decoder, Default::default(), 0)
+    }
 }
 
 /// Marks a MojomStruct as being capable of being sent across some
 /// Mojom interface.
 pub trait MojomMessage: MojomStruct {
     fn create_header() -> MessageHeader;
+}
+
+/// The trait for a "container" type intended to be used in MojomInterfaceRecv.
+///
+/// This trait contains the decode logic which decodes based on the message header
+/// and returns itself: a union type which may contain any of the possible messages
+/// that may be sent across this interface.
+pub trait MojomMessageOption: Sized {
+    /// Decodes the actual payload of the message.
+    ///
+    /// Implemented by a code generator.
+    fn decode_payload(name: u32, buffer: &[u8], handles: Vec<UntypedHandle>) -> Self;
+
+    /// Decodes the message header and then the payload, returning a new
+    /// copy of itself.
+    fn decode_message(mut buffer: Vec<u8>, handles: Vec<UntypedHandle>) -> Self {
+        let header = MessageHeader::deserialize(&buffer[..], Vec::new());
+        let payload_buffer = &mut buffer[header.serialized_size(&Default::default())..];
+        Self::decode_payload(header.name, payload_buffer, handles)
+    }
 }
 
 // ********************************************** //
@@ -240,6 +330,10 @@ macro_rules! impl_encodable_for_prim {
                 let mut state = encoder.get_mut(&context);
                 state.encode(self);
             }
+            fn decode(decoder: &mut Decoder, context: Context) -> Self {
+                let mut state = decoder.get_mut(&context);
+                state.decode::<Self>()
+            }
         }
         )*
     }
@@ -263,6 +357,10 @@ impl MojomEncodable for bool {
     fn encode(self, encoder: &mut Encoder, context: Context) {
         let mut state = encoder.get_mut(&context);
         state.encode_bool(self);
+    }
+    fn decode(decoder: &mut Decoder, context: Context) -> Self {
+        let mut state = decoder.get_mut(&context);
+        state.decode_bool()
     }
 }
 
@@ -291,16 +389,33 @@ impl<T: MojomEncodable> MojomEncodable for Option<T> {
             None => {
                 let mut state = encoder.get_mut(&context);
                 match T::mojom_type() {
-                    MojomType::Pointer => state.encode_pointer(MOJOM_NULL_POINTER),
+                    MojomType::Pointer => state.encode_null_pointer(),
                     MojomType::Union => state.encode_null_union(),
-                    MojomType::Handle => state.encode(-1 as i32),
+                    MojomType::Handle => state.encode_null_handle(),
                     MojomType::Interface => {
-                        state.encode(-1 as i32);
+                        state.encode_null_handle();
                         state.encode(0 as u32);
                     },
                     MojomType::Simple => panic!("Unexpected simple type in Option!"),
                 }
             },
+        }
+    }
+    fn decode(decoder: &mut Decoder, context: Context) -> Self {
+        let skipped = {
+            let mut state = decoder.get_mut(&context);
+            match T::mojom_type() {
+                MojomType::Pointer => state.skip_if_null_pointer(),
+                MojomType::Union => state.skip_if_null_union(),
+                MojomType::Handle => state.skip_if_null_handle(),
+                MojomType::Interface => state.skip_if_null_interface(),
+                MojomType::Simple => panic!("Unexpected simple type in Option!"),
+            }
+        };
+        if skipped {
+            None
+        } else {
+            Some(T::decode(decoder, context))
         }
     }
 }
@@ -340,24 +455,118 @@ impl<T: MojomEncodable> MojomPointer for Vec<T> {
             elem.encode(encoder, context.clone());
         }
     }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Vec<T> {
+        // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
+        let (_bytes, elems) = {
+            let mut state = decoder.get_mut(&context);
+            (state.decode::<u32>(), state.decode::<u32>())
+        };
+        let mut value = Vec::with_capacity(elems as usize);
+        // TODO(mknyszek): Don't trust elems blindly
+        for _ in 0..elems {
+            value.push(T::decode(decoder, context.clone()));
+        }
+        value
+    }
 }
 
 impl<T: MojomEncodable> MojomEncodable for Vec<T> {
     impl_encodable_for_array!();
 }
 
-macro_rules! impl_encodable_for_boxed_fixed_array {
+macro_rules! impl_encodable_for_fixed_array {
     ($($len:expr),*) => {
         $(
-        impl<T: MojomEncodable> MojomPointer for Box<[T; $len]> {
+        impl<T: MojomEncodable> MojomPointer for [T; $len] {
             impl_pointer_for_array!();
-            fn encode_value(self, encoder: &mut Encoder, context: Context) {
-                for elem in (self as Box<[T]>).into_vec().into_iter() {
-                    elem.encode(encoder, context.clone());
+            fn encode_value(mut self, encoder: &mut Encoder, context: Context) {
+                let mut panic_err = None;
+                let mut moves = 0;
+                unsafe {
+                    // In order to move elements out of an array we need to replace the
+                    // value with uninitialized memory.
+                    for elem in self.iter_mut() {
+                        let owned_elem = mem::replace(elem, mem::uninitialized());
+                        // We need to handle if an unwinding panic happens to prevent use of
+                        // uninitialized memory...
+                        let next_context = context.clone();
+                        // We assert everything going into this closure is unwind safe. If anything
+                        // is added, PLEASE make sure it is also unwind safe...
+                        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+                            owned_elem.encode(encoder, next_context);
+                        }));
+                        if let Err(err) = result {
+                            panic_err = Some(err);
+                            break;
+                        }
+                        moves += 1;
+                    }
+                    if let Some(err) = panic_err {
+                        for i in moves..self.len() {
+                            ptr::drop_in_place(&mut self[i] as *mut T);
+                        }
+                        // Forget the array to prevent a drop
+                        mem::forget(self);
+                        // Continue unwinding
+                        panic::resume_unwind(err);
+                    }
+                    // We cannot risk drop() getting run on the array values, so we just
+                    // forget self.
+                    mem::forget(self);
                 }
             }
+            fn decode_value(mut decoder: &mut Decoder, context: Context) -> [T; $len] {
+                // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
+                let (_bytes, elems) = {
+                    let mut state = decoder.get_mut(&context);
+                    (state.decode::<u32>(), state.decode::<u32>())
+                };
+                assert_eq!(elems, $len);
+                let mut array: [T; $len];
+                let mut panic_err = None;
+                let mut inits = 0;
+                unsafe {
+                    // Since we don't force Clone to be implemented on Mojom types
+                    // (mainly due to handles) we need to create this array as uninitialized
+                    // and initialize it manually.
+                    array = mem::uninitialized();
+                    for elem in &mut array[..] {
+                        // When a panic unwinds it may try to read and drop uninitialized
+                        // memory, so we need to catch this. However, we pass mutable state!
+                        // This could be bad as we could observe a broken invariant inside
+                        // of decoder and access it as usual, but we do NOT access decoder
+                        // here, nor do we ever unwind through one of decoder's methods.
+                        // Therefore, it should be safe to assert that decoder is unwind safe.
+                        let next_context = context.clone();
+                        // We assert everything going into this closure is unwind safe. If anything
+                        // is added, PLEASE make sure it is also unwind safe...
+                        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+                            T::decode(decoder, next_context)
+                        }));
+                        match result {
+                            Ok(value) => ptr::write(elem, value),
+                            Err(err) => {
+                                panic_err = Some(err);
+                                break;
+                            },
+                        }
+                        inits += 1;
+                    }
+                    if let Some(err) = panic_err {
+                        // Drop everything that was initialized
+                        for i in 0..inits {
+                            ptr::drop_in_place(&mut array[i] as *mut T);
+                        }
+                        // Forget the array to prevent a drop
+                        mem::forget(array);
+                        // Continue unwinding
+                        panic::resume_unwind(err);
+                    }
+                }
+                array
+            }
         }
-        impl<T: MojomEncodable> MojomEncodable for Box<[T; $len]> {
+        impl<T: MojomEncodable> MojomEncodable for [T; $len] {
             impl_encodable_for_array!();
         }
         )*
@@ -368,11 +577,11 @@ macro_rules! impl_encodable_for_boxed_fixed_array {
 // even though its part of the type (this will hopefully be added in the
 // future) so for now we implement encodable for only the first 33 fixed
 // size array types.
-impl_encodable_for_boxed_fixed_array!( 0,  1,  2,  3,  4,  5,  6,  7,
-                                       8,  9, 10, 11, 12, 13, 14, 15,
-                                      16, 17, 18, 19, 20, 21, 22, 23,
-                                      24, 25, 26, 27, 28, 29, 30, 31,
-                                      32);
+impl_encodable_for_fixed_array!( 0,  1,  2,  3,  4,  5,  6,  7,
+                                 8,  9, 10, 11, 12, 13, 14, 15,
+                                16, 17, 18, 19, 20, 21, 22, 23,
+                                24, 25, 26, 27, 28, 29, 30, 31,
+                                32);
 
 impl<T: MojomEncodable> MojomPointer for Box<[T]> {
     impl_pointer_for_array!();
@@ -380,6 +589,9 @@ impl<T: MojomEncodable> MojomPointer for Box<[T]> {
         for elem in self.into_vec().into_iter() {
             elem.encode(encoder, context.clone());
         }
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Box<[T]> {
+        Vec::<T>::decode_value(decoder, context).into_boxed_slice()
     }
 }
 
@@ -399,6 +611,22 @@ impl MojomPointer for String {
     fn encode_value(self, encoder: &mut Encoder, context: Context) {
         for byte in self.as_bytes() {
             byte.encode(encoder, context.clone());
+        }
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> String {
+        let mut state = decoder.get_mut(&context);
+        // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
+        let _bytes = state.decode::<u32>();
+        let elems = state.decode::<u32>();
+        let mut value = Vec::with_capacity(elems as usize);
+        // TODO(mknyszek): Don't trust elems blindly
+        for _ in 0..elems {
+            value.push(state.decode::<u8>());
+        }
+        match String::from_utf8(value) {
+            Ok(string) => string,
+            // TODO(mknyszek): Don't panic and return an error
+            Err(err) => panic!("Error decoding String: {}", err),
         }
     }
 }
@@ -442,6 +670,43 @@ impl<K: MojomEncodable + Eq + Hash, V: MojomEncodable> MojomPointer for HashMap<
         }
         // Encode vals
         vals_vec.encode(encoder, context.clone())
+    }
+    fn decode_value(decoder: &mut Decoder, context: Context) -> HashMap<K, V> {
+        // TODO(mknyszek): Verify elems, bytes, and T::embed_size match
+        let (keys_offset, vals_offset) = {
+            let mut state = decoder.get_mut(&context);
+            let _bytes = state.decode::<u32>();
+            let _version = state.decode::<u32>();
+            let keys_offset = state.decode_pointer() as usize;
+            let vals_offset = state.decode_pointer() as usize;
+            (keys_offset, vals_offset)
+        };
+        let keys_context = decoder.claim(keys_offset).unwrap();
+        let keys_elems = {
+            let state = decoder.get_mut(&keys_context);
+            let _size_keys = state.decode::<u32>();
+            state.decode::<u32>()
+        };
+        let mut keys_vec: Vec<K> = Vec::with_capacity(keys_elems as usize);
+        for _ in 0..keys_elems {
+            let key = K::decode(decoder, keys_context.clone());
+            keys_vec.push(key);
+        }
+        let vals_context = decoder.claim(vals_offset).unwrap();
+        let vals_elems = {
+            let state = decoder.get_mut(&vals_context);
+            let _size_vals = state.decode::<u32>();
+            state.decode::<u32>()
+        };
+        // TODO(mknyszek): Do a validation error instead
+        assert_eq!(keys_elems, vals_elems);
+        // TODO(mknyszek): Don't trust elems blindly
+        let mut map = HashMap::with_capacity(keys_elems as usize);
+        for key in keys_vec.into_iter() {
+            let val = V::decode(decoder, vals_context.clone());
+            map.insert(key, val);
+        }
+        map
     }
 }
 
@@ -492,6 +757,14 @@ macro_rules! impl_encodable_for_handle {
             let pos = encoder.add_handle(self.as_untyped());
             let mut state = encoder.get_mut(&context);
             state.encode(pos as i32);
+        }
+        fn decode(decoder: &mut Decoder, context: Context) -> $handle_type {
+            // TODO(mknyszek): Verify handle index
+            let handle_index = {
+                let mut state = decoder.get_mut(&context);
+                state.decode::<i32>()
+            };
+            decoder.claim_handle::<$handle_type>(handle_index)
         }
     }
 }

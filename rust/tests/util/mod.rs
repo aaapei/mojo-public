@@ -32,3 +32,4 @@ extern "C" {}
 extern "C" {
     pub fn InitializeMojoEmbedder();
 }
+

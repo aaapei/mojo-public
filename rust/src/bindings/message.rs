@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use bindings::decoding::Decoder;
 use bindings::encoding;
 use bindings::encoding::{Context, DATA_HEADER_SIZE, DataHeaderValue, Encoder};
 use bindings::mojom::{MojomEncodable, MojomPointer, MojomStruct};
@@ -19,9 +20,9 @@ pub const MESSAGE_HEADER_IS_RESPONSE: u32 = 2;
 
 /// A message header object implemented as a Mojom struct.
 pub struct MessageHeader {
-    version: u32,
-    name: u32,
-    flags: u32,
+    pub version: u32,
+    pub name: u32,
+    pub flags: u32,
     request_id: u64,
 }
 
@@ -64,6 +65,33 @@ impl MojomPointer for MessageHeader {
         MojomEncodable::encode(self.flags, encoder, context.clone());
         if self.flags != MESSAGE_HEADER_NO_FLAG {
             MojomEncodable::encode(self.request_id, encoder, context.clone());
+        }
+    }
+
+    fn decode_value(decoder: &mut Decoder, context: Context) -> Self {
+        let mut state = decoder.get_mut(&context);
+        // TODO(mknyszek): Verify bytes and T::embed_size match
+        let bytes = state.decode::<u32>();
+        let version = state.decode::<u32>();
+        // TODO(mknyszek): Don't trust bytes blindly
+        let name = state.decode::<u32>();
+        let flags = state.decode::<u32>();
+        if (bytes as usize) == DATA_HEADER_SIZE + 8 {
+            MessageHeader {
+                version: version,
+                name: name,
+                flags: flags,
+                request_id: 0,
+            }
+        } else if (bytes as usize) == DATA_HEADER_SIZE + 16 {
+            MessageHeader {
+                version: version,
+                name: name,
+                flags: flags,
+                request_id: state.decode::<u64>(),
+            }
+        } else {
+            panic!("Invalid message header size found: `{}`", bytes);
         }
     }
 }
