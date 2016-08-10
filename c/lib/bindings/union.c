@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/bindings/union.h"
+#include <mojo/bindings/union.h>
 
 #include <assert.h>
+#include <mojo/bindings/internal/type_descriptor.h>
 #include <string.h>
-
-#include "mojo/public/c/bindings/lib/type_descriptor.h"
 
 #define UNION_TAG_UNKNOWN ((uint32_t)0xFFFFFFFF)
 

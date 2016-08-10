@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_BINDINGS_LIB_UTIL_H_
-#define MOJO_PUBLIC_C_BINDINGS_LIB_UTIL_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERNAL_UTIL_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERNAL_UTIL_H_
 
 #include <mojo/macros.h>
+#include <stdint.h>
 
 // Rounds-up |num| to 8. The result is undefined if this results in an overflow.
 #define MOJOM_INTERNAL_ROUND_TO_8(num) (((num) + 7) & ~7)
@@ -34,4 +35,4 @@ struct MojomValidationContext {
   // TODO(vardhan): Include an error string? How big should it be?
 };
 
-#endif  // MOJO_PUBLIC_C_BINDINGS_LIB_UTIL_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERNAL_UTIL_H_

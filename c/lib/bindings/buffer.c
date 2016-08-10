@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/bindings/buffer.h"
+#include <mojo/bindings/buffer.h>
 
 #include <assert.h>
+#include <mojo/bindings/internal/util.h>
 #include <stddef.h>
-
-#include "mojo/public/c/bindings/lib/util.h"
 
 void* MojomBuffer_Allocate(struct MojomBuffer* buf, uint32_t num_bytes) {
   assert(buf);

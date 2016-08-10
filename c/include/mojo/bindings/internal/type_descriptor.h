@@ -21,18 +21,17 @@
 // of |MojomTypeDescriptorUnionEntry|. Arrays are described with
 // |MojomTypeDescriptorArray|.
 
-#ifndef MOJO_PUBLIC_C_BINDINGS_LIB_TYPE_DESCRIPTOR_H_
-#define MOJO_PUBLIC_C_BINDINGS_LIB_TYPE_DESCRIPTOR_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERNAL_TYPE_DESCRIPTOR_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERNAL_TYPE_DESCRIPTOR_H_
 
+#include <mojo/bindings/buffer.h>
+#include <mojo/bindings/internal/util.h>
+#include <mojo/bindings/validation.h>
 #include <mojo/macros.h>
 #include <mojo/system/handle.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#include "mojo/public/c/bindings/buffer.h"
-#include "mojo/public/c/bindings/lib/util.h"
-#include "mojo/public/c/bindings/validation.h"
 
 MOJO_BEGIN_EXTERN_C
 
@@ -216,4 +215,4 @@ bool MojomType_DispatchDeepCopy(struct MojomBuffer* buffer,
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_BINDINGS_LIB_TYPE_DESCRIPTOR_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERNAL_TYPE_DESCRIPTOR_H_

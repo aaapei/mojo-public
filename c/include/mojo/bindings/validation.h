@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_BINDINGS_VALIDATION_H_
-#define MOJO_PUBLIC_C_BINDINGS_VALIDATION_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_VALIDATION_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_VALIDATION_H_
 
 #include <mojo/macros.h>
 #include <stdint.h>
@@ -60,4 +60,4 @@ typedef uint32_t MojomValidationResult;
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_BINDINGS_VALIDATION_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_VALIDATION_H_

@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/bindings/lib/type_descriptor.h"
+#include <mojo/bindings/internal/type_descriptor.h>
 
 #include <assert.h>
+#include <mojo/bindings/array.h>
+#include <mojo/bindings/interface.h>
+#include <mojo/bindings/internal/util.h>
+#include <mojo/bindings/map.h>
+#include <mojo/bindings/struct.h>
+#include <mojo/bindings/union.h>
 #include <stddef.h>
-
-#include "mojo/public/c/bindings/array.h"
-#include "mojo/public/c/bindings/interface.h"
-#include "mojo/public/c/bindings/lib/util.h"
-#include "mojo/public/c/bindings/map.h"
-#include "mojo/public/c/bindings/struct.h"
-#include "mojo/public/c/bindings/union.h"
 
 const struct MojomTypeDescriptorArray g_mojom_string_type_description = {
   .elem_type = MOJOM_TYPE_DESCRIPTOR_TYPE_POD,

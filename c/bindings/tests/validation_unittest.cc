@@ -6,13 +6,14 @@
 // mojo/public/cpp/bindings/tests/validation_unittest.cc; extract it into a
 // library, and share?
 
+#include <mojo/bindings/internal/util.h>
+#include <mojo/bindings/message.h>
+#include <mojo/bindings/struct.h>
 #include <stdio.h>
+
 #include <functional>
 #include <string>
 
-#include "mojo/public/c/bindings/lib/util.h"
-#include "mojo/public/c/bindings/message.h"
-#include "mojo/public/c/bindings/struct.h"
 #include "mojo/public/cpp/bindings/tests/validation_util.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/cpp/test_support/test_support.h"

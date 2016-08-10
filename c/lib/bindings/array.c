@@ -2,18 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/bindings/array.h"
+#include <mojo/bindings/array.h>
 
 #include <assert.h>
+#include <mojo/bindings/buffer.h>
+#include <mojo/bindings/interface.h>
+#include <mojo/bindings/internal/type_descriptor.h>
+#include <mojo/bindings/internal/util.h>
+#include <mojo/bindings/union.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-
-#include "mojo/public/c/bindings/buffer.h"
-#include "mojo/public/c/bindings/interface.h"
-#include "mojo/public/c/bindings/lib/type_descriptor.h"
-#include "mojo/public/c/bindings/lib/util.h"
-#include "mojo/public/c/bindings/union.h"
 
 struct MojomArrayHeader* MojomArray_New(struct MojomBuffer* buf,
                                         uint32_t num_elements,

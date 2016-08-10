@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_BINDINGS_MAP_H_
-#define MOJO_PUBLIC_C_BINDINGS_MAP_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_MAP_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_MAP_H_
 
+#include <mojo/bindings/array.h>
+#include <mojo/bindings/internal/type_descriptor.h>
+#include <mojo/bindings/internal/util.h>
+#include <mojo/bindings/struct.h>
 #include <mojo/macros.h>
 #include <mojo/system/handle.h>
 #include <stdint.h>
-
-#include "mojo/public/c/bindings/array.h"
-#include "mojo/public/c/bindings/lib/type_descriptor.h"
-#include "mojo/public/c/bindings/lib/util.h"
-#include "mojo/public/c/bindings/struct.h"
 
 MOJO_BEGIN_EXTERN_C
 
@@ -43,4 +42,4 @@ MojomValidationResult MojomMap_Validate(
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_BINDINGS_MAP_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_MAP_H_

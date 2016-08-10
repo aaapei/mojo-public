@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_BINDINGS_INTERFACE_H_
-#define MOJO_PUBLIC_C_BINDINGS_INTERFACE_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERFACE_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERFACE_H_
 
 #include <mojo/macros.h>
 #include <mojo/system/handle.h>
@@ -24,4 +24,4 @@ MOJO_STATIC_ASSERT(sizeof(struct MojomInterfaceData) == 8,
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_BINDINGS_INTERFACE_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_INTERFACE_H_

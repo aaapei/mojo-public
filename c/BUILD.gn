@@ -16,9 +16,54 @@ group("c") {
   ]
 }
 
+# bindings ---------------------------------------------------------------------
+
+# Headers in include/mojo/bindings (to be included as <mojo/bindings/HEADER.h>)
+# and library in lib/bindings.
+#
+# Depends on :common and :system (minimally -- just <mojo/system/handle.h>).
+
+mojo_sdk_source_set("bindings") {
+  public_configs = [ ":c_config" ]
+
+  sources = [
+    # Public headers.
+    "include/mojo/bindings/array.h",
+    "include/mojo/bindings/buffer.h",
+    "include/mojo/bindings/interface.h",
+    "include/mojo/bindings/map.h",
+    "include/mojo/bindings/message.h",
+    "include/mojo/bindings/string.h",
+    "include/mojo/bindings/struct.h",
+    "include/mojo/bindings/union.h",
+    "include/mojo/bindings/validation.h",
+
+    # Internal headers.
+    "include/mojo/bindings/internal/type_descriptor.h",
+    "include/mojo/bindings/internal/util.h",
+
+    # Implementation library.
+    # TODO(vtl): Maybe separate this out into a separate source set (or even
+    # static library?).
+    "lib/bindings/array.c",
+    "lib/bindings/buffer.c",
+    "lib/bindings/map.c",
+    "lib/bindings/message.c",
+    "lib/bindings/struct.c",
+    "lib/bindings/type_descriptor.c",
+    "lib/bindings/union.c",
+  ]
+
+  deps = [
+    ":system",
+  ]
+}
+
 # common -----------------------------------------------------------------------
 
 # Headers in include/mojo (to be included as <mojo/HEADER.h>).
+#
+# Depends on nothing.
 
 mojo_sdk_source_set("common") {
   public_configs = [ ":c_config" ]
@@ -47,6 +92,8 @@ mojo_sdk_source_set("common_unittests") {
 
 # Headers in include/mojo/environment (to be included as
 # <mojo//environment/HEADER.h>).
+#
+# Depends on :system (and thus :common).
 
 mojo_sdk_source_set("environment") {
   public_configs = [ ":c_config" ]
@@ -64,6 +111,8 @@ mojo_sdk_source_set("environment") {
 # system -----------------------------------------------------------------------
 
 # Headers in include/mojo/system (to be included as <mojo/system/HEADER.h>).
+#
+# Depends on :common.
 
 mojo_sdk_source_set("system") {
   public_configs = [ ":c_config" ]

@@ -2,14 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_
-#define MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_MESSAGE_H_
+#define MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_MESSAGE_H_
 
+#include <mojo/bindings/struct.h>
+#include <mojo/bindings/validation.h>
 #include <mojo/macros.h>
 #include <stdint.h>
-
-#include "mojo/public/c/bindings/struct.h"
-#include "mojo/public/c/bindings/validation.h"
 
 MOJO_BEGIN_EXTERN_C
 
@@ -74,4 +73,4 @@ MojomValidationResult MojomMessage_ValidateResponse(const void* in_buf);
 
 MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_BINDINGS_MESSAGE_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MOJO_BINDINGS_MESSAGE_H_

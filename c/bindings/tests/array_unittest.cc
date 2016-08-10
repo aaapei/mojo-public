@@ -4,11 +4,11 @@
 
 // TODO(vardhan): Needs a lot more testing.
 
-#include "mojo/public/c/bindings/array.h"
+#include <mojo/bindings/array.h>
 
+#include <mojo/bindings/struct.h>
 #include <stddef.h>
 
-#include "mojo/public/c/bindings/struct.h"
 #include "mojo/public/c/bindings/tests/testing_util.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/bindings/tests/test_structs.mojom-c.h"

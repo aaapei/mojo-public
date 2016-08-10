@@ -2,13 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/bindings/struct.h"
+#include <mojo/bindings/struct.h>
 
 #include <assert.h>
+#include <mojo/bindings/internal/type_descriptor.h>
+#include <mojo/bindings/union.h>
 #include <string.h>
-
-#include "mojo/public/c/bindings/lib/type_descriptor.h"
-#include "mojo/public/c/bindings/union.h"
 
 size_t MojomStruct_ComputeSerializedSize(
     const struct MojomTypeDescriptorStruct* in_type_desc,

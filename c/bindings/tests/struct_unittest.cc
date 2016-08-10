@@ -4,12 +4,12 @@
 
 // TODO(vardhan): Needs a lot more testing.
 
-#include "mojo/public/c/bindings/struct.h"
+#include <mojo/bindings/struct.h>
 
+#include <mojo/bindings/array.h>
+#include <mojo/bindings/internal/util.h>
 #include <string.h>
 
-#include "mojo/public/c/bindings/array.h"
-#include "mojo/public/c/bindings/lib/util.h"
 #include "mojo/public/c/bindings/tests/testing_util.h"
 #include "mojo/public/cpp/system/macros.h"
 #include "mojo/public/interfaces/bindings/tests/rect.mojom-c.h"

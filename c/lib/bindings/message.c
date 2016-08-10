@@ -2,16 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "mojo/public/c/bindings/message.h"
+#include <mojo/bindings/message.h>
 
+#include <mojo/bindings/struct.h>
 #include <stdint.h>
-
-#include "mojo/public/c/bindings/struct.h"
 
 MojomValidationResult MojomMessage_ValidateHeader(const void* in_buf,
                                                   uint32_t in_buf_size) {
   const struct MojomStructHeader* header =
-    (const struct MojomStructHeader*)in_buf;
+      (const struct MojomStructHeader*)in_buf;
 
   if (in_buf_size < sizeof(struct MojomStructHeader) ||
       in_buf_size < header->num_bytes)
