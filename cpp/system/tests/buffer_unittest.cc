@@ -6,7 +6,7 @@
 
 #include "mojo/public/cpp/system/buffer.h"
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 namespace mojo {
 namespace {

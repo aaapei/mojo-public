@@ -4,8 +4,8 @@
 
 #include <mojo/environment/logger.h>
 
+#include "gtest/gtest.h"
 #include "mojo/public/cpp/environment/environment.h"
-#include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {
 namespace {

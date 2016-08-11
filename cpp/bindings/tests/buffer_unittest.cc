@@ -4,9 +4,9 @@
 
 #include <limits>
 
+#include "gtest/gtest.h"
 #include "mojo/public/cpp/bindings/lib/bindings_serialization.h"
 #include "mojo/public/cpp/bindings/lib/fixed_buffer.h"
-#include "testing/gtest/include/gtest/gtest.h"
 
 namespace mojo {
 namespace test {

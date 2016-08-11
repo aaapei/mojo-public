@@ -53,10 +53,10 @@ mojo_sdk_source_set("test_support") {
 
   deps = [
     ":application",
-    "//testing/gtest",
   ]
 
   mojo_sdk_deps = [
+    "mojo/public:gtest",
     "mojo/public/cpp/bindings",
     "mojo/public/cpp/environment",
     "mojo/public/cpp/system",

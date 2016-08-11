@@ -56,3 +56,13 @@ static_library("libmojo_sdk") {
     ":sdk",
   ]
 }
+
+# "Forwarding" target, to make it easy to put gtest wherever you want.
+# TODO(vtl): Maybe this should be parametrized and made into
+# //build/module_args/mojo.gni (but maybe that's overkill).
+group("gtest") {
+  testonly = true
+  public_deps = [
+    "//testing/gtest",
+  ]
+}
