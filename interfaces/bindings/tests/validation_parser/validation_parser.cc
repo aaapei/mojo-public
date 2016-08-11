@@ -4,6 +4,8 @@
 
 #include "mojo/public/interfaces/bindings/tests/validation_parser/validation_parser.h"
 
+#include <stdlib.h>
+
 #include "mojo/public/cpp/bindings/tests/validation_test_input_parser.h"
 
 // C interface for the validation test parser.
