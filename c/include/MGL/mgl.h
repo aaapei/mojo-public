@@ -4,17 +4,15 @@
 
 // Note: This header should be compilable as C.
 
-#ifndef MOJO_PUBLIC_C_GPU_MGL_MGL_H_
-#define MOJO_PUBLIC_C_GPU_MGL_MGL_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MGL_MGL_H_
+#define MOJO_PUBLIC_C_INCLUDE_MGL_MGL_H_
 
+#include <MGL/mgl_types.h>
+#include <mojo/macros.h>
 #include <mojo/system/handle.h>
 #include <stdint.h>
 
-#include "mojo/public/c/gpu/MGL/mgl_types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 typedef uint32_t MGLOpenGLAPIVersion;
 
@@ -62,8 +60,6 @@ MGLContext MGLGetCurrentContext(void);
 // |name| is the name of the GL function.
 MGLMustCastToProperFunctionPointerType MGLGetProcAddress(const char* name);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_GPU_MGL_MGL_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MGL_MGL_H_

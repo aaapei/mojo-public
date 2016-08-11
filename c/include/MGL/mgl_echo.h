@@ -4,23 +4,19 @@
 
 // Note: This header should be compilable as C.
 
-#ifndef MOJO_PUBLIC_C_GPU_MGL_MGL_ECHO_H_
-#define MOJO_PUBLIC_C_GPU_MGL_MGL_ECHO_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MGL_MGL_ECHO_H_
+#define MOJO_PUBLIC_C_INCLUDE_MGL_MGL_ECHO_H_
 
+#include <MGL/mgl_types.h>
+#include <mojo/macros.h>
 #include <stdint.h>
 
-#include "mojo/public/c/gpu/MGL/mgl_types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 typedef void (*MGLEchoCallback)(void* closure);
 
 void MGLEcho(MGLEchoCallback callback, void* closure);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_GPU_MGL_MGL_ECHO_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MGL_MGL_ECHO_H_

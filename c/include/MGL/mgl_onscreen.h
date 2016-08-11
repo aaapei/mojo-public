@@ -4,16 +4,14 @@
 
 // Note: This header should be compilable as C.
 
-#ifndef MOJO_PUBLIC_C_GPU_MGL_MGL_ONSCREEN_H_
-#define MOJO_PUBLIC_C_GPU_MGL_MGL_ONSCREEN_H_
+#ifndef MOJO_PUBLIC_C_INCLUDE_MGL_MGL_ONSCREEN_H_
+#define MOJO_PUBLIC_C_INCLUDE_MGL_MGL_ONSCREEN_H_
 
+#include <MGL/mgl_types.h>
+#include <mojo/macros.h>
 #include <stdint.h>
 
-#include "mojo/public/c/gpu/MGL/mgl_types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+MOJO_BEGIN_EXTERN_C
 
 // Resizes the default framebuffer for the currently bound onscreen MGLContext.
 void MGLResizeSurface(uint32_t width, uint32_t height);
@@ -22,8 +20,6 @@ void MGLResizeSurface(uint32_t width, uint32_t height);
 // to the windowing system or display.
 void MGLSwapBuffers(void);
 
-#ifdef __cplusplus
-}  // extern "C"
-#endif
+MOJO_END_EXTERN_C
 
-#endif  // MOJO_PUBLIC_C_GPU_MGL_MGL_ONSCREEN_H_
+#endif  // MOJO_PUBLIC_C_INCLUDE_MGL_MGL_ONSCREEN_H_
