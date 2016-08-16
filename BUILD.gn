@@ -17,7 +17,7 @@ group("public") {
     "interfaces/bindings/tests:test_interfaces",
   ]
 
-  if (is_linux && !is_fnl) {
+  if (is_linux) {
     deps += [
       "python",
       "tools/bindings",
