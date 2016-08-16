@@ -368,6 +368,5 @@ for the values. The `i`th element in the keys array corresponds to the `i`th
 element in the values array. As such, both arrays must have the same number
 of elements, and neither may be null.
 
-# Numbers on generated bindings.
-
-TODO(vardhan): Probably as a separate doc?
+# Additional Readings
+* [Internals of the generated bindings](INTERNALS.md)
