@@ -61,13 +61,13 @@ mojom. Since it's not immediately obvious where padding fields could be
 inserted, it helps to examine the generated C struct to make sure what the
 fields are, and if possible, set them using field initializers. The
 `example_PersonPtr` union is used to represent an offset in the encoded form, or
-a pointer in the unencoded form. 
+a pointer in the unencoded form.
 
 Since mojom objects appear in depth-first order relative to their parent object,
 we can use a `struct MojomBuffer` and calls to `MojomBuffer_Allocate(..)` to
 linearly allocate space. The struct needs to be constructed and provided by the
 user, and it contains 3 fields:  A pointer to the buffer, size of the buffer in
-bytes, and the byte-position of the next allocation, typically set to 0. 
+bytes, and the byte-position of the next allocation, typically set to 0.
 
 For instance, to allocate space for the `name` parameter of an `example_Person`,
 we can do so this way:
@@ -78,7 +78,7 @@ struct MojomBuffer buf = {byte_buffer, sizeof(byte_buffer), 0};
 // First allocate space for the example_Person struct:
 struct example_Person* person =
    (struct example_Person*)MojomBuffer_Allocate(&buf, sizeof(struct example_Person));
-   
+
 // Allocate enough space for a 10 character string.
 person->name.ptr = (struct MojomStringHeader*)MojomBuffer_Allocate(
     &buf,
@@ -95,11 +95,11 @@ struct, the following functions are generated:
 struct example_Person* example_Person_DeepCopy(
   struct MojomBuffer* in_buffer,
   struct example_Person* in_data);
-  
+
 void example_Person_EncodePointersAndHandles(
   struct example_Person* inout_struct, uint32_t in_struct_size,
   struct MojomHandleBuffer* inout_handle_buffer);
-  
+
 void example_Person_DecodePointersAndHandles(
   struct example_Person* inout_struct, uint32_t in_struct_size,
   MojomHandle inout_handles[], uin32_t in_num_handles);
@@ -230,7 +230,7 @@ must also validate the request or response mojom struct following the message
 header using the generated `*_Validate(..)` function.
 
 Note that validation is run on encoded messages and structs on the wire --
-decoding a struct without validating it first is dangerous. 
+decoding a struct without validating it first is dangerous.
 
 ## Enums and Constants
 
