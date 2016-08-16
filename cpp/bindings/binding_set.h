@@ -55,4 +55,4 @@ class BindingSet {
 
 }  // namespace mojo
 
-#endif  // MOJO_COMMON_BINDING_SET_H_
+#endif  // MOJO_PUBLIC_CPP_BINDINGS_BINDING_SET_H_
