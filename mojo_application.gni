@@ -2,261 +2,299 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//build/module_args/mojo.gni")
 import("mojo.gni")
 import("mojo_sdk.gni")
 
 # Generate a binary mojo application.The parameters of this template are those
 # of a shared library.
 template("mojo_native_application") {
-  if (defined(invoker.output_name)) {
-    base_target_name = invoker.output_name
+  if (is_fuchsia) {
+    # TODO(vtl): Something like (but I haven't tested this):
+    # executable(target_name) {
+    #   forward_variables_from(invoker,
+    #                         [
+    #                           "all_dependent_configs",
+    #                           "cflags",
+    #                           "cflags_c",
+    #                           "cflags_cc",
+    #                           "cflags_objc",
+    #                           "cflags_objcc",
+    #                           "check_includes",
+    #                           "data",
+    #                           "data_deps",
+    #                           "defines",
+    #                           "include_dirs",
+    #                           "inputs",
+    #                           "ldflags",
+    #                           "lib_dirs",
+    #                           "libs",
+    #                           "output_name",
+    #                           "public",
+    #                           "public_configs",
+    #                           "public_deps",
+    #                           "sources",
+    #                           "testonly",
+    #                           "visibility",
+    #                         ])
+    #  deps = [
+    #    "//mojo/system",
+    #  ]
+    #  if (defined(invoker.deps)) {
+    #    deps += invoker.deps
+    #  }
+    #}
   } else {
-    base_target_name = target_name
-  }
-
-  if (!is_nacl) {
-    final_target_name = target_name
-    output = base_target_name + ".mojo"
-    library_target_name = base_target_name + "_library"
-    copy_symbols_target = "__${final_target_name}_copy_symbols"
-
-    if (is_linux || is_android) {
-      library_name = "lib${library_target_name}.so"
-    } else if (is_win) {
-      library_name = "${library_target_name}.dll"
-    } else if (is_mac || is_ios) {
-      library_name = "lib${library_target_name}.dylib"
+    if (defined(invoker.output_name)) {
+      base_target_name = invoker.output_name
     } else {
-      assert(false, "Platform not supported.")
+      base_target_name = target_name
     }
 
-    if (is_android) {
-      # On android, use the stripped version of the library, because applications
-      # are always fetched over the network.
-      library_dir = "${root_out_dir}/lib.stripped"
-    } else {
-      library_dir = root_out_dir
-    }
+    if (!is_nacl) {
+      final_target_name = target_name
+      output = base_target_name + ".mojo"
+      library_target_name = base_target_name + "_library"
+      copy_symbols_target = "__${final_target_name}_copy_symbols"
 
-    shared_library(library_target_name) {
-      data_deps = []
-      forward_variables_from(invoker,
-                             [
-                               "cflags",
-                               "cflags_c",
-                               "cflags_cc",
-                               "cflags_objc",
-                               "cflags_objcc",
-                               "defines",
-                               "include_dirs",
-                               "ldflags",
-                               "lib_dirs",
-                               "libs",
-                             ])
-      if (defined(invoker.data_deps)) {
-        data_deps += invoker.data_deps
-      }
-
-      # Copy any necessary prebuilt artifacts.
-      if (mojo_use_prebuilt_mojo_shell) {
-        data_deps +=
-            [ rebase_path("mojo/public/tools:copy_mojo_shell", ".", mojo_root) ]
-      }
-      if (mojo_use_prebuilt_network_service) {
-        data_deps += [ rebase_path("mojo/public/tools:copy_network_service",
-                                   ".",
-                                   mojo_root) ]
-      }
-
-      deps = rebase_path([ "mojo/public/platform/native:system_thunks" ],
-                         ".",
-                         mojo_root)
-      if (defined(invoker.deps)) {
-        deps += invoker.deps
-      }
-      if (defined(invoker.configs)) {
-        configs += invoker.configs
-      }
-      forward_variables_from(invoker,
-                             [
-                               "public_deps",
-                               "all_dependent_configs",
-                               "public_configs",
-                               "check_includes",
-                               "data",
-                               "inputs",
-                               "public",
-                               "sources",
-                               "testonly",
-                             ])
-
-      visibility = [
-        ":${final_target_name}",
-        ":${copy_symbols_target}",
-      ]
-    }
-
-    copy(copy_symbols_target) {
-      if (defined(invoker.testonly)) {
-        testonly = invoker.testonly
-      }
-      visibility = [ ":${final_target_name}" ]
-      deps = [
-        ":${library_target_name}",
-      ]
-
-      sources = [
-        "${root_out_dir}/${library_name}",
-      ]
-      outputs = [
-        "${root_out_dir}/symbols/${library_name}",
-      ]
-    }
-
-    copy(final_target_name) {
-      forward_variables_from(invoker,
-                             [
-                               "testonly",
-                               "visibility",
-                             ])
-
-      public_deps = [
-        # We want to allow rules to depend on symbol libraries.
-        ":${copy_symbols_target}",
-      ]
-
-      deps = [
-        ":${library_target_name}",
-      ]
-
-      sources = [
-        "${library_dir}/${library_name}",
-      ]
-      outputs = [
-        "${root_out_dir}/${output}",
-      ]
-    }
-  } else {
-    nexe_target_name = base_target_name + "_nexe"
-    executable_target_name = base_target_name + "_exe"
-
-    executable(nexe_target_name) {
-      output_name = base_target_name
-      data_deps = []
-      forward_variables_from(invoker,
-                             [
-                               "cflags",
-                               "cflags_c",
-                               "cflags_cc",
-                               "cflags_objc",
-                               "cflags_objcc",
-                               "defines",
-                               "include_dirs",
-                               "ldflags",
-                               "lib_dirs",
-                               "libs",
-                             ])
-      if (defined(invoker.data_deps)) {
-        data_deps += invoker.data_deps
-      }
-
-      # Copy any necessary prebuilt artifacts.
-      if (mojo_use_prebuilt_mojo_shell) {
-        data_deps +=
-            [ rebase_path("mojo/public/tools:copy_mojo_shell", ".", mojo_root) ]
-      }
-      if (mojo_use_prebuilt_network_service) {
-        data_deps += [ rebase_path("mojo/public/tools:copy_network_service",
-                                   ".",
-                                   mojo_root) ]
-      }
-
-      deps = rebase_path([
-                           "mojo/public/c:system",
-                           "mojo/public/platform/nacl:system",
-                         ],
-                         ".",
-                         mojo_root)
-      if (defined(invoker.deps)) {
-        deps += invoker.deps
-      }
-      if (defined(invoker.configs)) {
-        configs += invoker.configs
-      }
-
-      forward_variables_from(invoker,
-                             [
-                               "forward_dependent_configs_from",
-                               "public_deps",
-                               "all_dependent_configs",
-                               "public_configs",
-                               "check_includes",
-                               "data",
-                               "inputs",
-                               "public",
-                               "sources",
-                               "testonly",
-                             ])
-
-      visibility = [ ":*" ]
-    }
-
-    group(target_name) {
-      # This group specifies two targets: first, it requests that the
-      # pexe be built, and secondly (if the toolchain is not requesting
-      # a pexe implicitly), it creates a nexe.
-      forward_variables_from(invoker, [ "testonly" ])
-      deps = [
-        ":${executable_target_name}(//build/toolchain/nacl:newlib_pnacl)",
-      ]
-      if (current_cpu != "pnacl") {
-        deps += [ ":${executable_target_name}" ]
-      }
-    }
-
-    action(executable_target_name) {
-      if (current_cpu == "pnacl") {
-        input_file_extension = ".pexe"
-        output_file_extension = ".pexe.mojo"
-        content_handler = "content_handler_nonsfi_pexe"
+      if (is_linux || is_android) {
+        library_name = "lib${library_target_name}.so"
+      } else if (is_win) {
+        library_name = "${library_target_name}.dll"
+      } else if (is_mac || is_ios) {
+        library_name = "lib${library_target_name}.dylib"
       } else {
-        input_file_extension = ".nexe"
-        output_file_extension = "_${target_cpu}.nexe.mojo"
-        content_handler = "content_handler_sfi_nexe"
+        assert(false, "Platform not supported.")
       }
-      input_file = "${base_target_name}${input_file_extension}"
-      output_file = "${base_target_name}${output_file_extension}"
 
-      forward_variables_from(invoker,
-                             [
-                               "testonly",
-                               "visibility",
-                             ])
+      if (is_android) {
+        # On android, use the stripped version of the library, because
+        # applications are always fetched over the network.
+        library_dir = "${root_out_dir}/lib.stripped"
+      } else {
+        library_dir = root_out_dir
+      }
 
-      script = rebase_path("mojo/public/tools/prepend.py", ".", mojo_root)
+      shared_library(library_target_name) {
+        data_deps = []
+        forward_variables_from(invoker,
+                               [
+                                 "cflags",
+                                 "cflags_c",
+                                 "cflags_cc",
+                                 "cflags_objc",
+                                 "cflags_objcc",
+                                 "defines",
+                                 "include_dirs",
+                                 "ldflags",
+                                 "lib_dirs",
+                                 "libs",
+                               ])
+        if (defined(invoker.data_deps)) {
+          data_deps += invoker.data_deps
+        }
 
-      input_path = "${root_out_dir}/${input_file}"
-      inputs = [
-        input_path,
-      ]
+        # Copy any necessary prebuilt artifacts.
+        if (mojo_use_prebuilt_mojo_shell) {
+          data_deps += [ rebase_path("mojo/public/tools:copy_mojo_shell",
+                                     ".",
+                                     mojo_root) ]
+        }
+        if (mojo_use_prebuilt_network_service) {
+          data_deps += [ rebase_path("mojo/public/tools:copy_network_service",
+                                     ".",
+                                     mojo_root) ]
+        }
 
-      output_path = "${root_build_dir}/${output_file}"
-      outputs = [
-        output_path,
-      ]
+        deps = rebase_path([ "mojo/public/platform/native:system_thunks" ],
+                           ".",
+                           mojo_root)
+        if (defined(invoker.deps)) {
+          deps += invoker.deps
+        }
+        if (defined(invoker.configs)) {
+          configs += invoker.configs
+        }
+        forward_variables_from(invoker,
+                               [
+                                 "public_deps",
+                                 "all_dependent_configs",
+                                 "public_configs",
+                                 "check_includes",
+                                 "data",
+                                 "inputs",
+                                 "public",
+                                 "sources",
+                                 "testonly",
+                               ])
 
-      deps = [
-        ":${nexe_target_name}",
-      ]
+        visibility = [
+          ":${final_target_name}",
+          ":${copy_symbols_target}",
+        ]
+      }
 
-      rebase_input = rebase_path(input_path, root_build_dir)
-      rebase_output = rebase_path(output_path, root_build_dir)
-      args = [
-        "--input=$rebase_input",
-        "--output=$rebase_output",
-        "--line=#!mojo mojo:$content_handler",
-      ]
+      copy(copy_symbols_target) {
+        if (defined(invoker.testonly)) {
+          testonly = invoker.testonly
+        }
+        visibility = [ ":${final_target_name}" ]
+        deps = [
+          ":${library_target_name}",
+        ]
+
+        sources = [
+          "${root_out_dir}/${library_name}",
+        ]
+        outputs = [
+          "${root_out_dir}/symbols/${library_name}",
+        ]
+      }
+
+      copy(final_target_name) {
+        forward_variables_from(invoker,
+                               [
+                                 "testonly",
+                                 "visibility",
+                               ])
+
+        public_deps = [
+          # We want to allow rules to depend on symbol libraries.
+          ":${copy_symbols_target}",
+        ]
+
+        deps = [
+          ":${library_target_name}",
+        ]
+
+        sources = [
+          "${library_dir}/${library_name}",
+        ]
+        outputs = [
+          "${root_out_dir}/${output}",
+        ]
+      }
+    } else {
+      nexe_target_name = base_target_name + "_nexe"
+      executable_target_name = base_target_name + "_exe"
+
+      executable(nexe_target_name) {
+        output_name = base_target_name
+        data_deps = []
+        forward_variables_from(invoker,
+                               [
+                                 "cflags",
+                                 "cflags_c",
+                                 "cflags_cc",
+                                 "cflags_objc",
+                                 "cflags_objcc",
+                                 "defines",
+                                 "include_dirs",
+                                 "ldflags",
+                                 "lib_dirs",
+                                 "libs",
+                               ])
+        if (defined(invoker.data_deps)) {
+          data_deps += invoker.data_deps
+        }
+
+        # Copy any necessary prebuilt artifacts.
+        if (mojo_use_prebuilt_mojo_shell) {
+          data_deps += [ rebase_path("mojo/public/tools:copy_mojo_shell",
+                                     ".",
+                                     mojo_root) ]
+        }
+        if (mojo_use_prebuilt_network_service) {
+          data_deps += [ rebase_path("mojo/public/tools:copy_network_service",
+                                     ".",
+                                     mojo_root) ]
+        }
+
+        deps = rebase_path([
+                             "mojo/public/c:system",
+                             "mojo/public/platform/nacl:system",
+                           ],
+                           ".",
+                           mojo_root)
+        if (defined(invoker.deps)) {
+          deps += invoker.deps
+        }
+        if (defined(invoker.configs)) {
+          configs += invoker.configs
+        }
+
+        forward_variables_from(invoker,
+                               [
+                                 "forward_dependent_configs_from",
+                                 "public_deps",
+                                 "all_dependent_configs",
+                                 "public_configs",
+                                 "check_includes",
+                                 "data",
+                                 "inputs",
+                                 "public",
+                                 "sources",
+                                 "testonly",
+                               ])
+
+        visibility = [ ":*" ]
+      }
+
+      group(target_name) {
+        # This group specifies two targets: first, it requests that the
+        # pexe be built, and secondly (if the toolchain is not requesting
+        # a pexe implicitly), it creates a nexe.
+        forward_variables_from(invoker, [ "testonly" ])
+        deps = [
+          ":${executable_target_name}(//build/toolchain/nacl:newlib_pnacl)",
+        ]
+        if (current_cpu != "pnacl") {
+          deps += [ ":${executable_target_name}" ]
+        }
+      }
+
+      action(executable_target_name) {
+        if (current_cpu == "pnacl") {
+          input_file_extension = ".pexe"
+          output_file_extension = ".pexe.mojo"
+          content_handler = "content_handler_nonsfi_pexe"
+        } else {
+          input_file_extension = ".nexe"
+          output_file_extension = "_${target_cpu}.nexe.mojo"
+          content_handler = "content_handler_sfi_nexe"
+        }
+        input_file = "${base_target_name}${input_file_extension}"
+        output_file = "${base_target_name}${output_file_extension}"
+
+        forward_variables_from(invoker,
+                               [
+                                 "testonly",
+                                 "visibility",
+                               ])
+
+        script = rebase_path("mojo/public/tools/prepend.py", ".", mojo_root)
+
+        input_path = "${root_out_dir}/${input_file}"
+        inputs = [
+          input_path,
+        ]
+
+        output_path = "${root_build_dir}/${output_file}"
+        outputs = [
+          output_path,
+        ]
+
+        deps = [
+          ":${nexe_target_name}",
+        ]
+
+        rebase_input = rebase_path(input_path, root_build_dir)
+        rebase_output = rebase_path(output_path, root_build_dir)
+        args = [
+          "--input=$rebase_input",
+          "--output=$rebase_output",
+          "--line=#!mojo mojo:$content_handler",
+        ]
+      }
     }
   }
 }

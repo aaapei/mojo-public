@@ -17,7 +17,7 @@ group("public") {
     "interfaces/bindings/tests:test_interfaces",
   ]
 
-  if (is_linux) {
+  if (is_linux && !is_fuchsia) {
     deps += [
       "python",
       "tools/bindings",
@@ -58,11 +58,9 @@ static_library("libmojo_sdk") {
 }
 
 # "Forwarding" target, to make it easy to put gtest wherever you want.
-# TODO(vtl): Maybe this should be parametrized and made into
-# //build/module_args/mojo.gni (but maybe that's overkill).
 group("gtest") {
   testonly = true
   public_deps = [
-    "//testing/gtest",
+    mojo_gtest,
   ]
 }
