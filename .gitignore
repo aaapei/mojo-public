@@ -15,3 +15,5 @@
 !/tools/bindings/mojom_tool/bin/mac64/generators/*.sha1
 !/tools/bindings/mojom_tool/bin/linux64/generators/legacy
 !/tools/bindings/mojom_tool/bin/mac64/generators/legacy
+
+/rust/Cargo.lock

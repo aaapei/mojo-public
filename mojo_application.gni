@@ -9,40 +9,39 @@ import("mojo_sdk.gni")
 # of a shared library.
 template("mojo_native_application") {
   if (is_fuchsia) {
-    # TODO(vtl): Something like (but I haven't tested this):
-    # executable(target_name) {
-    #   forward_variables_from(invoker,
-    #                         [
-    #                           "all_dependent_configs",
-    #                           "cflags",
-    #                           "cflags_c",
-    #                           "cflags_cc",
-    #                           "cflags_objc",
-    #                           "cflags_objcc",
-    #                           "check_includes",
-    #                           "data",
-    #                           "data_deps",
-    #                           "defines",
-    #                           "include_dirs",
-    #                           "inputs",
-    #                           "ldflags",
-    #                           "lib_dirs",
-    #                           "libs",
-    #                           "output_name",
-    #                           "public",
-    #                           "public_configs",
-    #                           "public_deps",
-    #                           "sources",
-    #                           "testonly",
-    #                           "visibility",
-    #                         ])
-    #  deps = [
-    #    "//mojo/system",
-    #  ]
-    #  if (defined(invoker.deps)) {
-    #    deps += invoker.deps
-    #  }
-    #}
+    executable(target_name) {
+      forward_variables_from(invoker,
+                             [
+                               "all_dependent_configs",
+                               "cflags",
+                               "cflags_c",
+                               "cflags_cc",
+                               "cflags_objc",
+                               "cflags_objcc",
+                               "check_includes",
+                               "data",
+                               "data_deps",
+                               "defines",
+                               "include_dirs",
+                               "inputs",
+                               "ldflags",
+                               "lib_dirs",
+                               "libs",
+                               "output_name",
+                               "public",
+                               "public_configs",
+                               "public_deps",
+                               "sources",
+                               "testonly",
+                               "visibility",
+                             ])
+      deps = [
+        "//mojo/system",
+      ]
+      if (defined(invoker.deps)) {
+        deps += invoker.deps
+      }
+    }
   } else {
     if (defined(invoker.output_name)) {
       base_target_name = invoker.output_name
