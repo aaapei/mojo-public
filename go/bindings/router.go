@@ -54,7 +54,7 @@ func (w *routerWorker) readAndDispatchOutstandingMessages() error {
 	}
 	for len(w.responders) > 0 {
 		result, bytes, handles := w.handle.ReadMessage(system.MOJO_READ_MESSAGE_FLAG_NONE)
-		if result == system.MOJO_RESULT_SHOULD_WAIT {
+		if result == system.MOJO_SYSTEM_RESULT_SHOULD_WAIT {
 			w.waitId = w.waiter.AsyncWait(w.handle, system.MOJO_HANDLE_SIGNAL_READABLE, w.waitChan)
 			return nil
 		}

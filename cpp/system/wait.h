@@ -5,8 +5,8 @@
 #ifndef MOJO_PUBLIC_CPP_SYSTEM_WAIT_H_
 #define MOJO_PUBLIC_CPP_SYSTEM_WAIT_H_
 
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 #include <mojo/system/wait.h>
 #include <stdint.h>
@@ -43,9 +43,9 @@ struct WaitManyResult {
   // but may or may not be returned if |WaitMany()| returns an error. Use this
   // helper function to check if |signals_states| holds valid data.
   bool AreSignalsStatesValid() const {
-    return result != MOJO_RESULT_INVALID_ARGUMENT &&
-           result != MOJO_RESULT_RESOURCE_EXHAUSTED &&
-           result != MOJO_RESULT_BUSY;
+    return result != MOJO_SYSTEM_RESULT_INVALID_ARGUMENT &&
+           result != MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED &&
+           result != MOJO_SYSTEM_RESULT_BUSY;
   }
 
   MojoResult result;
@@ -67,9 +67,9 @@ inline WaitManyResult WaitMany(
 
   if (signals.size() != handles.size() ||
       (signals_states && signals_states->size() != signals.size()))
-    return WaitManyResult(MOJO_RESULT_INVALID_ARGUMENT);
+    return WaitManyResult(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT);
   if (handles.size() >= kInvalidWaitManyIndexValue)
-    return WaitManyResult(MOJO_RESULT_RESOURCE_EXHAUSTED);
+    return WaitManyResult(MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED);
 
   if (handles.size() == 0) {
     return WaitManyResult(

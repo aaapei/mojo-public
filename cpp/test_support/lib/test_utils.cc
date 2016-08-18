@@ -28,7 +28,7 @@ bool ReadTextMessage(const MessagePipeHandle& handle, std::string* text) {
   for (;;) {
     rv = ReadMessageRaw(handle, nullptr, &num_bytes, nullptr, &num_handles,
                         MOJO_READ_MESSAGE_FLAG_NONE);
-    if (rv == MOJO_RESULT_SHOULD_WAIT) {
+    if (rv == MOJO_SYSTEM_RESULT_SHOULD_WAIT) {
       if (did_wait) {
         assert(false);  // Looping endlessly!?
         return false;

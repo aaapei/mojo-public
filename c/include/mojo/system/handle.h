@@ -10,7 +10,7 @@
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_HANDLE_H_
 
 #include <mojo/macros.h>
-#include <mojo/result.h>
+#include <mojo/system/result.h>
 #include <stdint.h>
 
 // |MojoHandle|: Handles to Mojo objects.
@@ -60,7 +60,8 @@ typedef uint32_t MojoHandleRights;
 // handle (and which can be triggered), e.g., the ability to read or write to
 // the handle.
 //   |MOJO_HANDLE_SIGNAL_NONE| - No flags. |MojoWait()|, etc. will return
-//       |MOJO_RESULT_FAILED_PRECONDITION| if you attempt to wait on this.
+//       |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if you attempt to wait on
+//       this.
 //   |MOJO_HANDLE_SIGNAL_READABLE| - Can read (e.g., a message) from the handle.
 //   |MOJO_HANDLE_SIGNAL_WRITABLE| - Can write (e.g., a message) to the handle.
 //   |MOJO_HANDLE_SIGNAL_PEER_CLOSED| - The peer handle is closed.
@@ -83,7 +84,7 @@ typedef uint32_t MojoHandleSignals;
 //         before the call returned.
 //   - |satisfiable signals|: These are the signals that are possible to
 //         satisfy. For example, if the return value was
-//         |MOJO_RESULT_FAILED_PRECONDITION|, you can use this field to
+//         |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION|, you can use this field to
 //         determine which, if any, of the signals can still be satisfied.
 // Note: This struct is not extensible (and only has 32-bit quantities), so it's
 // 32-bit-aligned.
@@ -102,15 +103,16 @@ MOJO_BEGIN_EXTERN_C
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
-//   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
-//       (that, e.g., may result in it being invalidated, such as being sent in
-//       a message).
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 //
 // Concurrent operations on |handle| may succeed (or fail as usual) if they
-// happen before the close, be cancelled with result |MOJO_RESULT_CANCELLED| if
-// they properly overlap (this is likely the case with |MojoWait()|, etc.), or
-// fail with |MOJO_RESULT_INVALID_ARGUMENT| if they happen after.
+// happen before the close, be cancelled with result
+// |MOJO_SYSTEM_RESULT_CANCELLED| if they properly overlap (this is likely the
+// case with |MojoWait()|, etc.), or fail with
+// |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if they happen after.
 MojoResult MojoClose(MojoHandle handle);  // In.
 
 // |MojoGetRights()|: Gets the given |handle|'s rights.
@@ -120,10 +122,10 @@ MojoResult MojoClose(MojoHandle handle);  // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
-//   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
-//       (that, e.g., may result in it being invalidated, such as being sent in
-//       a message).
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights);  // Out.
 
 // |MojoReplaceHandleWithReducedRights()|: Replaces |handle| with an equivalent
@@ -145,12 +147,12 @@ MojoResult MojoGetRights(MojoHandle handle, MojoHandleRights* rights);  // Out.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached.
-//   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
-//       (that, e.g., may result in it being invalidated, such as being sent in
-//       a message).
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoReplaceHandleWithReducedRights(
     MojoHandle handle,
     MojoHandleRights rights_to_remove,
@@ -168,14 +170,14 @@ MojoResult MojoReplaceHandleWithReducedRights(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
-//   |MOJO_RESULT_PERMISSION_DENIED| if |handle| does not have the
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |handle| does not have the
 //       |MOJO_HANDLE_RIGHT_DUPLICATE| right.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached.
-//   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
-//       (that, e.g., may result in it being invalidated, such as being sent in
-//       a message).
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoDuplicateHandleWithReducedRights(
     MojoHandle handle,
     MojoHandleRights rights_to_remove,
@@ -188,14 +190,14 @@ MojoResult MojoDuplicateHandleWithReducedRights(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
-//   |MOJO_RESULT_PERMISSION_DENIED| if |handle| does not have the
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle.
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |handle| does not have the
 //       |MOJO_HANDLE_RIGHT_DUPLICATE| right.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached.
-//   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
-//       (that, e.g., may result in it being invalidated, such as being sent in
-//       a message).
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 MojoResult MojoDuplicateHandle(MojoHandle handle,
                                MojoHandle* new_handle);  // Out.
 

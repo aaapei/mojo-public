@@ -8,9 +8,9 @@
 
 #include <assert.h>
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
 #include <mojo/system/message_pipe.h>
+#include <mojo/system/result.h>
 #include <stdint.h>
 #include <stdio.h>
 

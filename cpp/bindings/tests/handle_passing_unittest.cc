@@ -298,8 +298,8 @@ TEST_F(HandlePassingTest, PipesAreClosed) {
   }
 
   // We expect the pipes to have been closed.
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(handle0_value));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(handle1_value));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(handle0_value));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(handle1_value));
 }
 
 TEST_F(HandlePassingTest, IsHandle) {

@@ -21,7 +21,7 @@
 //       operation may result in the resource being invalidated. TODO(vtl): We
 //       should probably get rid of this, and report "invalid argument" instead
 //       (with a different subcode scheme). This is here now for ease of
-//       conversion with the existing |MOJO_RESULT_BUSY|.
+//       conversion with the existing |MOJO_SYSTEM_RESULT_BUSY|.
 #define MOJO_SYSTEM_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY \
   ((MojoResult)0x001u)
 

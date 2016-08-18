@@ -18,7 +18,7 @@ type ConsumerHandle interface {
 	// the element size.
 	//
 	// During a two-phase read, this handle is *not* readable. E.g., read
-	// from this handle will return |MOJO_RESULT_BUSY|.
+	// from this handle will return |MOJO_SYSTEM_RESULT_BUSY|.
 	//
 	// Once the caller has finished reading data from the slice, it should
 	// call |EndReadData()| to specify the amount read and to complete the
@@ -50,7 +50,7 @@ type ProducerHandle interface {
 	// length will always be a multiple of the element size.
 	//
 	// During a two-phase write, this handle is *not* writable. E.g., write
-	// to this handle will return |MOJO_RESULT_BUSY|.
+	// to this handle will return |MOJO_SYSTEM_RESULT_BUSY|.
 	//
 	// Once the caller has finished writing data to the buffer, it should
 	// call |EndWriteData()| to specify the amount written and to complete

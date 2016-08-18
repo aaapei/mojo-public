@@ -18,18 +18,18 @@ namespace {
 TEST(MessagePipeTest, InvalidArgs) {
   MessagePipeHandle h_invalid;
   EXPECT_FALSE(h_invalid.is_valid());
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             WriteMessageRaw(h_invalid, nullptr, 0, nullptr, 0,
                             MOJO_WRITE_MESSAGE_FLAG_NONE));
   char buffer[10] = {0};
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             WriteMessageRaw(h_invalid, buffer, sizeof(buffer), nullptr, 0,
                             MOJO_WRITE_MESSAGE_FLAG_NONE));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             ReadMessageRaw(h_invalid, nullptr, nullptr, nullptr, nullptr,
                            MOJO_READ_MESSAGE_FLAG_NONE));
   uint32_t buffer_size = static_cast<uint32_t>(sizeof(buffer));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             ReadMessageRaw(h_invalid, buffer, &buffer_size, nullptr, nullptr,
                            MOJO_READ_MESSAGE_FLAG_NONE));
 }
@@ -55,7 +55,7 @@ TEST(MessagePipeTest, BasicWaitingAndClosing) {
     MojoHandle hv1 = h1.get().value();
     MojoHandleSignalsState state;
 
-    EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
               Wait(h0.get(), MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
     EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
     EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
@@ -88,11 +88,11 @@ TEST(MessagePipeTest, BasicWaitingAndClosing) {
     EXPECT_FALSE(h1.get().is_valid());
 
     // Make sure |h1| is closed.
-    EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
               Wait(Handle(hv1), ~MOJO_HANDLE_SIGNAL_NONE,
                    MOJO_DEADLINE_INDEFINITE, nullptr));
 
-    EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
               Wait(h0.get(), MOJO_HANDLE_SIGNAL_READABLE,
                    MOJO_DEADLINE_INDEFINITE, &state));
     EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
@@ -100,7 +100,7 @@ TEST(MessagePipeTest, BasicWaitingAndClosing) {
   }
   // |hv0| should have been closed when |h0| went out of scope, so this close
   // should fail.
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(hv0));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(hv0));
 }
 
 TEST(MessagePipeTest, BasicWritingAndReading) {
@@ -155,7 +155,7 @@ TEST(MessagePipeTest, BasicWritingAndReading) {
               WriteMessageRaw(h1.get(), kHello, kHelloSize, handles,
                               handles_count, MOJO_WRITE_MESSAGE_FLAG_NONE));
     // |handles[0]| should actually be invalid now.
-    EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(handles[0]));
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(handles[0]));
 
     // Read "hello" and the sent handle.
     EXPECT_EQ(MOJO_RESULT_OK, Wait(h0.get(), MOJO_HANDLE_SIGNAL_READABLE,
@@ -205,7 +205,7 @@ TEST(MessagePipeTest, BasicWritingAndReading) {
     EXPECT_STREQ(kWorld, buffer);
     EXPECT_EQ(0u, handles_count);
   }
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(hv0));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(hv0));
 }
 
 // TODO(vtl): This is not the right level to test this at.
@@ -244,7 +244,7 @@ TEST(MessagePipeTest, TearDownWithMessagesEnqueued) {
               WriteMessageRaw(h1.get(), kHello, kHelloSize, &h3_value, 1,
                               MOJO_WRITE_MESSAGE_FLAG_NONE));
     // |h3_value| should actually be invalid now.
-    EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(h3_value));
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(h3_value));
 
     EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h0.release().value()));
     EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h1.release().value()));
@@ -285,7 +285,7 @@ TEST(MessagePipeTest, TearDownWithMessagesEnqueued) {
               WriteMessageRaw(h1.get(), kHello, kHelloSize, &h3_value, 1,
                               MOJO_WRITE_MESSAGE_FLAG_NONE));
     // |h3_value| should actually be invalid now.
-    EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(h3_value));
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(h3_value));
 
     EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h2.release().value()));
     EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h0.release().value()));

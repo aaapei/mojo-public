@@ -16,6 +16,7 @@
 #include <mojo/system/handle.h>
 #include <mojo/system/main.h>
 #include <mojo/system/message_pipe.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 #include <mojo/system/wait.h>
 #include <mojo/system/wait_set.h>
@@ -60,7 +61,7 @@ const char* MinimalCTest(void) {
   handle0 = MOJO_HANDLE_INVALID;
   EXPECT_NE(MOJO_RESULT_OK, MojoClose(handle0));
 
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoWait(handle0, ~MOJO_HANDLE_SIGNAL_NONE,
                      MOJO_DEADLINE_INDEFINITE, NULL));
 
@@ -70,7 +71,7 @@ const char* MinimalCTest(void) {
   signals = MOJO_HANDLE_SIGNAL_READABLE;
   uint32_t result_index = 123;
   struct MojoHandleSignalsState states[1];
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWaitMany(&handle0, &signals, 1, 1, &result_index, states));
 
   // "Deadline exceeded" doesn't apply to a single handle, so this should leave

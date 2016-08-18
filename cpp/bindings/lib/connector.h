@@ -6,7 +6,7 @@
 #define MOJO_PUBLIC_CPP_BINDINGS_LIB_CONNECTOR_H_
 
 #include <mojo/environment/async_waiter.h>
-#include <mojo/result.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 
 #include "mojo/public/cpp/bindings/callback.h"
@@ -72,8 +72,8 @@ class Connector : public MessageReceiver {
   // |deadline| elapses, or an error happens. Returns |true| if a message has
   // been delivered, |false| otherwise.
   // When returning |false| closes the message pipe, unless the reason for
-  // for returning |false| was |MOJO_RESULT_SHOULD_WAIT| or
-  // |MOJO_RESULT_DEADLINE_EXCEEDED|.
+  // for returning |false| was |MOJO_SYSTEM_RESULT_SHOULD_WAIT| or
+  // |MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED|.
   // Use |encountered_error| to see if an error occurred.
   bool WaitForIncomingMessage(MojoDeadline deadline);
 

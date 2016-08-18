@@ -5,7 +5,7 @@
 #ifndef MOJO_PUBLIC_CPP_UTILITY_RUN_LOOP_HANDLER_H_
 #define MOJO_PUBLIC_CPP_UTILITY_RUN_LOOP_HANDLER_H_
 
-#include <mojo/result.h>
+#include <mojo/system/result.h>
 #include <stdint.h>
 
 #include "mojo/public/cpp/system/handle.h"
@@ -23,8 +23,8 @@ class RunLoopHandler {
   virtual void OnHandleReady(Id id) = 0;
 
   // Called when waiting for the handle is no longer valid (i.e., waiting yields
-  // the error |result|). This is also called with MOJO_RESULT_ABORTED if the
-  // RunLoop is destroyed.
+  // the error |result|). This is also called with MOJO_SYSTEM_RESULT_ABORTED if
+  // the RunLoop is destroyed.
   virtual void OnHandleError(Id id, MojoResult result) = 0;
 
  protected:

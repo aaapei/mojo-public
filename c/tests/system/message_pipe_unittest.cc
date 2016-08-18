@@ -7,9 +7,9 @@
 
 #include <mojo/system/message_pipe.h>
 
-#include <mojo/result.h>
 #include <mojo/system/buffer.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <mojo/system/wait.h>
 
 #include "gtest/gtest.h"
@@ -23,11 +23,11 @@ const MojoHandleRights kDefaultMessagePipeHandleRights =
 
 TEST(MessagePipeTest, InvalidHandle) {
   char buffer[10] = {};
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoWriteMessage(MOJO_HANDLE_INVALID, buffer, 0u, nullptr, 0u,
                              MOJO_WRITE_MESSAGE_FLAG_NONE));
   uint32_t buffer_size = static_cast<uint32_t>(sizeof(buffer));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoReadMessage(MOJO_HANDLE_INVALID, buffer, &buffer_size, nullptr,
                             nullptr, MOJO_READ_MESSAGE_FLAG_NONE));
 }
@@ -51,18 +51,18 @@ TEST(MessagePipeTest, Basic) {
   // Shouldn't be able to duplicate either handle (just test "with reduced
   // rights" on one, and without on the other).
   MojoHandle handle_denied = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_PERMISSION_DENIED,
             MojoDuplicateHandleWithReducedRights(
                 h0, MOJO_HANDLE_RIGHT_DUPLICATE, &handle_denied));
   EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
   handle_denied = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_PERMISSION_DENIED,
             MojoDuplicateHandle(h1, &handle_denied));
   EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
 
   // Shouldn't be readable, we haven't written anything.
   MojoHandleSignalsState state;
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(h0, MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
@@ -84,7 +84,7 @@ TEST(MessagePipeTest, Basic) {
   // Try to read.
   char buffer[10] = {};
   uint32_t buffer_size = static_cast<uint32_t>(sizeof(buffer));
-  EXPECT_EQ(MOJO_RESULT_SHOULD_WAIT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_SHOULD_WAIT,
             MojoReadMessage(h0, buffer, &buffer_size, nullptr, nullptr,
                             MOJO_READ_MESSAGE_FLAG_NONE));
 
@@ -116,7 +116,7 @@ TEST(MessagePipeTest, Basic) {
   EXPECT_STREQ(kHello, buffer);
 
   // |h0| should no longer be readable.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(h0, MOJO_HANDLE_SIGNAL_READABLE, 10, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE |
@@ -128,7 +128,7 @@ TEST(MessagePipeTest, Basic) {
 
   // |h1| should no longer be readable or writable.
   EXPECT_EQ(
-      MOJO_RESULT_FAILED_PRECONDITION,
+      MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
       MojoWait(h1, MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_WRITABLE,
                1000, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
@@ -158,7 +158,7 @@ TEST(MessagePipeTest, ChecksTransferRight) {
                                              1u, MOJO_WRITE_MESSAGE_FLAG_NONE));
 
   // |h_not_transferrable| can be transferred.
-  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_PERMISSION_DENIED,
             MojoWriteMessage(h0, nullptr, 0u, &h_not_transferrable, 1u,
                              MOJO_WRITE_MESSAGE_FLAG_NONE));
 

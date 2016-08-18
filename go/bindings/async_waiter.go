@@ -49,7 +49,7 @@ type AsyncWaiter interface {
 
 	// CancelWait cancels an outstanding async wait (specified by |id|)
 	// initiated by |AsyncWait()|. A response with Mojo result
-	// |MOJO_RESULT_ABORTED| is sent to the corresponding |responseChan|.
+	// |MOJO_SYSTEM_RESULT_ABORTED| is sent to the corresponding |responseChan|.
 	CancelWait(id AsyncWaitId)
 }
 
@@ -160,7 +160,7 @@ func (w *asyncWaiterWorker) processIncomingRequests() {
 			// Do nothing if the id was not found as wait response may be
 			// already sent if the async wait was successful.
 			if index > 0 {
-				w.sendWaitResponseAndRemove(index, system.MOJO_RESULT_ABORTED, system.MojoHandleSignalsState{})
+				w.sendWaitResponseAndRemove(index, system.MOJO_SYSTEM_RESULT_ABORTED, system.MojoHandleSignalsState{})
 			}
 		default:
 			return

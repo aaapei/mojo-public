@@ -9,8 +9,8 @@
 
 #include <mojo/system/handle.h>
 
-#include <mojo/result.h>
 #include <mojo/system/message_pipe.h>
+#include <mojo/system/result.h>
 
 #include "gtest/gtest.h"
 
@@ -23,30 +23,31 @@ const MojoHandleRights kDefaultMessagePipeHandleRights =
 
 TEST(HandleTest, InvalidHandle) {
   // MojoClose:
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(MOJO_HANDLE_INVALID));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
+            MojoClose(MOJO_HANDLE_INVALID));
 
   // MojoGetRights:
   MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoGetRights(MOJO_HANDLE_INVALID, &rights));
 
   // MojoReplaceHandleWithReducedRights:
   MojoHandle replacement_handle = MOJO_HANDLE_INVALID;
   EXPECT_EQ(
-      MOJO_RESULT_INVALID_ARGUMENT,
+      MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
       MojoReplaceHandleWithReducedRights(
           MOJO_HANDLE_INVALID, MOJO_HANDLE_RIGHT_NONE, &replacement_handle));
 
   // MojoDuplicateHandleWithReducedRights:
   MojoHandle new_handle = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoDuplicateHandleWithReducedRights(
                 MOJO_HANDLE_INVALID, MOJO_HANDLE_RIGHT_DUPLICATE, &new_handle));
   EXPECT_EQ(MOJO_HANDLE_INVALID, new_handle);
 
   // MojoDuplicateHandle:
   new_handle = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoDuplicateHandle(MOJO_HANDLE_INVALID, &new_handle));
   EXPECT_EQ(MOJO_HANDLE_INVALID, new_handle);
 }
@@ -76,7 +77,7 @@ TEST(HandleTest, ReplaceHandleWithReducedRights) {
   EXPECT_NE(h0r0, h0);
   EXPECT_NE(h0r0, h1);  // |h0r0| should definitely not be the same as |h1|.
   // |h0| should be dead, so this should fail.
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(h0));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(h0));
 
   // Check that the rights remain the same.
   rights = MOJO_HANDLE_RIGHT_NONE;
@@ -99,7 +100,7 @@ TEST(HandleTest, ReplaceHandleWithReducedRights) {
   EXPECT_NE(h0r1, h0r0);
   EXPECT_NE(h0r1, h1);  // |h0r1| should definitely not be the same as |h1|.
   // |h0r0| should be dead, so this should fail.
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(h0r0));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(h0r0));
 
   // Check that |h0r1| has the expected rights.
   rights = MOJO_HANDLE_RIGHT_NONE;
@@ -108,7 +109,7 @@ TEST(HandleTest, ReplaceHandleWithReducedRights) {
 
   // Make sure that the rights are actually correctly enforced.
   EXPECT_EQ(
-      MOJO_RESULT_PERMISSION_DENIED,
+      MOJO_SYSTEM_RESULT_PERMISSION_DENIED,
       MojoWriteMessage(h0r1, &x, 1u, nullptr, 0, MOJO_WRITE_MESSAGE_FLAG_NONE));
 
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h0r1));

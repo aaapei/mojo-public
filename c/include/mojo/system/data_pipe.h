@@ -10,8 +10,8 @@
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_DATA_PIPE_H_
 
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 
 // |MojoCreateDataPipeOptions|: Used to specify creation parameters for a data
 // pipe to |MojoCreateDataPipe()|.
@@ -144,12 +144,13 @@ MOJO_BEGIN_EXTERN_C
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |*options| is invalid).
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached (e.g., if the requested capacity was too large, or if the
-//       maximum number of handles was exceeded).
-//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached (e.g., if the requested capacity was too large,
+//       or if the maximum number of handles was exceeded).
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if an unsupported flag was set in
+//       |*options|.
 MojoResult MojoCreateDataPipe(
     const struct MojoCreateDataPipeOptions* MOJO_RESTRICT
         options,                                           // Optional in.
@@ -172,14 +173,14 @@ MojoResult MojoCreateDataPipe(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a valid data pipe producer handle or
 //       |*options| is invalid).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_SET_OPTIONS| right.
-//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message).
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_SET_OPTIONS| right.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_producer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message).
 MojoResult MojoSetDataPipeProducerOptions(
     MojoHandle data_pipe_producer_handle,                // In.
     const struct MojoDataPipeProducerOptions* options);  // Optional in.
@@ -200,14 +201,14 @@ MojoResult MojoSetDataPipeProducerOptions(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a valid data pipe producer handle,
 //       |*options| is null, or |options_num_bytes| is too small).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_GET_OPTIONS| right.
-//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message).
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_GET_OPTIONS| right.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_producer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message).
 MojoResult MojoGetDataPipeProducerOptions(
     MojoHandle data_pipe_producer_handle,         // In.
     struct MojoDataPipeProducerOptions* options,  // Out.
@@ -225,23 +226,24 @@ MojoResult MojoGetDataPipeProducerOptions(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a handle to a data pipe producer or
 //       |*num_bytes| is not a multiple of the data pipe's element size).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_WRITE| right.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle has been
-//       closed.
-//   |MOJO_RESULT_OUT_OF_RANGE| if |flags| has
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_WRITE| right.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle
+//       has been closed.
+//   |MOJO_SYSTEM_RESULT_OUT_OF_RANGE| if |flags| has
 //       |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set and the required amount of data
 //       (specified by |*num_bytes|) could not be written.
-//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message), or if there is a two-phase write ongoing
-//       with |data_pipe_producer_handle| (i.e., |MojoBeginWriteData()| has been
-//       called, but not yet the matching |MojoEndWriteData()|).
-//   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be written (and the
-//       consumer is still open) and |flags| does *not* have
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_producer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message), or if there is a
+//       two-phase write ongoing with |data_pipe_producer_handle| (i.e.,
+//       |MojoBeginWriteData()| has been called, but not yet the matching
+//       |MojoEndWriteData()|).
+//   |MOJO_SYSTEM_RESULT_SHOULD_WAIT| if no data can currently be written (and
+//       the consumer is still open) and |flags| does *not* have
 //       |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set.
 //
 // TODO(vtl): Should there be a way of querying how much data can be written?
@@ -257,9 +259,9 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
 // currently no flags allowed, so |flags| should be |MOJO_WRITE_DATA_FLAG_NONE|.
 //
 // During a two-phase write, |data_pipe_producer_handle| is *not* writable.
-// E.g., if another thread tries to write to it, it will get |MOJO_RESULT_BUSY|;
-// that thread can then wait for |data_pipe_producer_handle| to become writable
-// again.
+// E.g., if another thread tries to write to it, it will get
+// |MOJO_SYSTEM_RESULT_BUSY|; that thread can then wait for
+// |data_pipe_producer_handle| to become writable again.
 //
 // When |MojoBeginWriteData()| returns |MOJO_RESULT_OK|, and the caller has
 // finished writing data to |*buffer|, it should call |MojoEndWriteData()| to
@@ -277,20 +279,21 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a handle to a data pipe producer or
 //       flags has |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_WRITE| right.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle has been
-//       closed.
-//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message), or if there is already a two-phase write
-//       ongoing with |data_pipe_producer_handle| (i.e., |MojoBeginWriteData()|
-//       has been called, but not yet the matching |MojoEndWriteData()|).
-//   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be written (and the
-//       consumer is still open).
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_WRITE| right.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle
+//       has been closed.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_producer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message), or if there is already a
+//       two-phase write ongoing with |data_pipe_producer_handle| (i.e.,
+//       |MojoBeginWriteData()| has been called, but not yet the matching
+//       |MojoEndWriteData()|).
+//   |MOJO_SYSTEM_RESULT_SHOULD_WAIT| if no data can currently be written (and
+//       the consumer is still open).
 MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
                               void** MOJO_RESTRICT buffer,               // Out.
                               uint32_t* MOJO_RESTRICT buffer_num_bytes,  // Out.
@@ -311,18 +314,18 @@ MojoResult MojoBeginWriteData(MojoHandle data_pipe_producer_handle,      // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_producer_handle| is not a handle to a data pipe producer or
 //       |num_bytes_written| is invalid (greater than the maximum value provided
 //       by |MojoBeginWriteData()| or not a multiple of the element size).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_WRITE| right.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer is not in a
-//       two-phase write (e.g., |MojoBeginWriteData()| was not called or
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_producer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_WRITE| right.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe producer is not
+//       in a two-phase write (e.g., |MojoBeginWriteData()| was not called or
 //       |MojoEndWriteData()| has already been called).
-//   |MOJO_RESULT_BUSY| if |data_pipe_producer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message).
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_producer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message).
 MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
                             uint32_t num_bytes_written);           // In.
 
@@ -338,14 +341,14 @@ MojoResult MojoEndWriteData(MojoHandle data_pipe_producer_handle,  // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a valid data pipe consumer handle or
 //       |*options| is invalid).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_SET_OPTIONS| right.
-//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message).
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_SET_OPTIONS| right.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message).
 MojoResult MojoSetDataPipeConsumerOptions(
     MojoHandle data_pipe_consumer_handle,                // In.
     const struct MojoDataPipeConsumerOptions* options);  // Optional in.
@@ -366,14 +369,14 @@ MojoResult MojoSetDataPipeConsumerOptions(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a valid data pipe consumer handle,
 //       |*options| is null, or |options_num_bytes| is too small).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_GET_OPTIONS| right.
-//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message).
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_GET_OPTIONS| right.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message).
 MojoResult MojoGetDataPipeConsumerOptions(
     MojoHandle data_pipe_consumer_handle,         // In.
     struct MojoDataPipeConsumerOptions* options,  // Out.
@@ -410,24 +413,26 @@ MojoResult MojoGetDataPipeConsumerOptions(
 // Returns:
 //   |MOJO_RESULT_OK| on success (see above for a description of the different
 //       operations).
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is invalid, the combination of flags in
 //       |flags| is invalid, etc.).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_READ| right.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer handle has been
-//       closed and data (or the required amount of data) was not available to
-//       be read or discarded.
-//   |MOJO_RESULT_OUT_OF_RANGE| if |flags| has |MOJO_READ_DATA_FLAG_ALL_OR_NONE|
-//       set and the required amount of data is not available to be read or
-//       discarded (and the producer is still open).
-//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message), or if there is a two-phase read ongoing
-//       with |data_pipe_consumer_handle| (i.e., |MojoBeginReadData()| has been
-//       called, but not yet the matching |MojoEndReadData()|).
-//   |MOJO_RESULT_SHOULD_WAIT| if there is no data to be read or discarded (and
-//       the producer is still open) and |flags| does *not* have
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_READ| right.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe producer handle
+//       has been closed and data (or the required amount of data) was not
+//       available to be read or discarded.
+//   |MOJO_SYSTEM_RESULT_OUT_OF_RANGE| if |flags| has
+//       |MOJO_READ_DATA_FLAG_ALL_OR_NONE| set and the required amount of data
+//       is not available to be read or discarded (and the producer is still
+//       open).
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message), or if there is a
+//       two-phase read ongoing with |data_pipe_consumer_handle| (i.e.,
+//       |MojoBeginReadData()| has been called, but not yet the matching
+//       |MojoEndReadData()|).
+//   |MOJO_SYSTEM_RESULT_SHOULD_WAIT| if there is no data to be read or
+//       discarded (and the producer is still open) and |flags| does *not* have
 //       |MOJO_READ_DATA_FLAG_ALL_OR_NONE| set.
 MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
                         void* MOJO_RESTRICT elements,          // Out.
@@ -442,8 +447,8 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
 //
 // During a two-phase read, |data_pipe_consumer_handle| is *not* readable.
 // E.g., if another thread tries to read from it, it will get
-// |MOJO_RESULT_BUSY|; that thread can then wait for |data_pipe_consumer_handle|
-// to become readable again.
+// |MOJO_SYSTEM_RESULT_BUSY|; that thread can then wait for
+// |data_pipe_consumer_handle| to become readable again.
 //
 // Once the caller has finished reading data from |*buffer|, it should call
 // |MojoEndReadData()| to specify the amount read and to complete the two-phase
@@ -460,19 +465,20 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a handle to a data pipe consumer,
 //       or |flags| has invalid flags set).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_READ| right.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe producer handle has been
-//       closed.
-//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message), or if there is already a two-phase read
-//       ongoing with |data_pipe_consumer_handle| (i.e., |MojoBeginReadData()|
-//       has been called, but not yet the matching |MojoEndReadData()|).
-//   |MOJO_RESULT_SHOULD_WAIT| if no data can currently be read (and the
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_READ| right.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe producer handle
+//       has been closed.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message), or if there is already a
+//       two-phase read ongoing with |data_pipe_consumer_handle| (i.e.,
+//       |MojoBeginReadData()| has been called, but not yet the matching
+//       |MojoEndReadData()|).
+//   |MOJO_SYSTEM_RESULT_SHOULD_WAIT| if no data can currently be read (and the
 //       producer is still open).
 MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,      // In.
                              const void** MOJO_RESTRICT buffer,         // Out.
@@ -491,18 +497,18 @@ MojoResult MojoBeginReadData(MojoHandle data_pipe_consumer_handle,      // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a handle to a data pipe consumer or
 //       |num_bytes_written| is greater than the maximum value provided by
 //       |MojoBeginReadData()| or not a multiple of the element size).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does not
-//       have the |MOJO_HANDLE_RIGHT_READ| right.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the data pipe consumer is not in a
-//       two-phase read (e.g., |MojoBeginReadData()| was not called or
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does
+//       not have the |MOJO_HANDLE_RIGHT_READ| right.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe consumer is not
+//       in a two-phase read (e.g., |MojoBeginReadData()| was not called or
 //       |MojoEndReadData()| has already been called).
-//   |MOJO_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in use in
-//       some transaction (that, e.g., may result in it being invalidated, such
-//       as being sent in a message).
+//   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in
+//       use in some transaction (that, e.g., may result in it being
+//       invalidated, such as being sent in a message).
 MojoResult MojoEndReadData(MojoHandle data_pipe_consumer_handle,  // In.
                            uint32_t num_bytes_read);              // In.
 

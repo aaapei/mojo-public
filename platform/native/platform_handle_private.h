@@ -5,8 +5,8 @@
 #ifndef MOJO_PUBLIC_PLATFORM_NATIVE_PLATFORM_HANDLE_PRIVATE_H_
 #define MOJO_PUBLIC_PLATFORM_NATIVE_PLATFORM_HANDLE_PRIVATE_H_
 
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 
 // |MojoPlatformHandle|: Type for "platform handles", i.e., the underlying OS's
 // handles. Currently this is always just a Unix file descriptor.
@@ -32,8 +32,9 @@ extern "C" {
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached (e.g., if the maximum number of handles was exceeded).
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached (e.g., if the maximum number of handles was
+//       exceeded).
 MojoResult MojoCreatePlatformHandleWrapper(
     MojoPlatformHandle platform_handle,
     MojoHandle* platform_handle_wrapper_handle);
@@ -57,10 +58,10 @@ MojoResult MojoCreatePlatformHandleWrapper(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |platform_handle_wrapper_handle| is not a valid wrapper handle).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |platform_handle_wrapper_handle| does
-//       not have the both the |MOJO_HANDLE_RIGHT_READ| and
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |platform_handle_wrapper_handle|
+//       does not have the both the |MOJO_HANDLE_RIGHT_READ| and
 //       |MOJO_HANDLE_RIGHT_WRITE| rights.
 MojoResult MojoExtractPlatformHandle(MojoHandle platform_handle_wrapper_handle,
                                      MojoPlatformHandle* platform_handle);

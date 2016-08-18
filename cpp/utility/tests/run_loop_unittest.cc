@@ -185,7 +185,7 @@ TEST(RunLoopTest, QuitWhenDeadlineExpired) {
   run_loop.Run();
   EXPECT_EQ(0, handler.ready_count());
   EXPECT_EQ(1, handler.error_count());
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED, handler.last_error_result());
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED, handler.last_error_result());
   EXPECT_EQ(0u, run_loop.num_handlers());
 }
 
@@ -201,7 +201,7 @@ TEST(RunLoopTest, Destruction) {
     handler.set_expected_handler_id(id);
   }
   EXPECT_EQ(1, handler.error_count());
-  EXPECT_EQ(MOJO_RESULT_ABORTED, handler.last_error_result());
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_ABORTED, handler.last_error_result());
 }
 
 class RemoveManyRunLoopHandler : public TestRunLoopHandler {
@@ -247,8 +247,8 @@ TEST(RunLoopTest, MultipleHandleDestruction) {
   }
   EXPECT_EQ(1, odd_handler.error_count());
   EXPECT_EQ(1, even_handler.error_count());
-  EXPECT_EQ(MOJO_RESULT_ABORTED, odd_handler.last_error_result());
-  EXPECT_EQ(MOJO_RESULT_ABORTED, even_handler.last_error_result());
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_ABORTED, odd_handler.last_error_result());
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_ABORTED, even_handler.last_error_result());
 }
 
 class AddHandlerOnErrorHandler : public TestRunLoopHandler {
@@ -261,7 +261,7 @@ class AddHandlerOnErrorHandler : public TestRunLoopHandler {
 
   // RunLoopHandler:
   void OnHandleError(Id id, MojoResult result) override {
-    EXPECT_EQ(MOJO_RESULT_ABORTED, result);
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_ABORTED, result);
 
     TestRunLoopHandler::OnHandleError(id, result);
 

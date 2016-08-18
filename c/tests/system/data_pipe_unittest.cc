@@ -7,8 +7,8 @@
 
 #include <mojo/system/data_pipe.h>
 
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <mojo/system/wait.h>
 #include <string.h>
 
@@ -26,40 +26,40 @@ const MojoHandleRights kDefaultDataPipeConsumerHandleRights =
 TEST(DataPipeTest, InvalidHandle) {
   MojoDataPipeProducerOptions dpp_options = {
       sizeof(MojoDataPipeProducerOptions), 0u};
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoSetDataPipeProducerOptions(MOJO_HANDLE_INVALID, &dpp_options));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoGetDataPipeProducerOptions(
                 MOJO_HANDLE_INVALID, &dpp_options,
                 static_cast<uint32_t>(sizeof(dpp_options))));
   char buffer[10] = {};
   uint32_t buffer_size = static_cast<uint32_t>(sizeof(buffer));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoWriteData(MOJO_HANDLE_INVALID, buffer, &buffer_size,
                           MOJO_WRITE_DATA_FLAG_NONE));
   void* write_pointer = nullptr;
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoBeginWriteData(MOJO_HANDLE_INVALID, &write_pointer,
                                &buffer_size, MOJO_WRITE_DATA_FLAG_NONE));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoEndWriteData(MOJO_HANDLE_INVALID, 1u));
   buffer_size = static_cast<uint32_t>(sizeof(buffer));
   MojoDataPipeConsumerOptions dpc_options = {
       sizeof(MojoDataPipeConsumerOptions), 0u};
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoSetDataPipeConsumerOptions(MOJO_HANDLE_INVALID, &dpc_options));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoGetDataPipeConsumerOptions(
                 MOJO_HANDLE_INVALID, &dpc_options,
                 static_cast<uint32_t>(sizeof(dpc_options))));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoReadData(MOJO_HANDLE_INVALID, buffer, &buffer_size,
                          MOJO_READ_DATA_FLAG_NONE));
   const void* read_pointer = nullptr;
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoBeginReadData(MOJO_HANDLE_INVALID, &read_pointer, &buffer_size,
                               MOJO_READ_DATA_FLAG_NONE));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoEndReadData(MOJO_HANDLE_INVALID, 1u));
 }
 
@@ -82,18 +82,18 @@ TEST(DataPipeTest, Basic) {
   // Shouldn't be able to duplicate either handle (just test "with reduced
   // rights" on one, and without on the other).
   MojoHandle handle_denied = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_PERMISSION_DENIED,
             MojoDuplicateHandleWithReducedRights(
                 hp, MOJO_HANDLE_RIGHT_DUPLICATE, &handle_denied));
   EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
   handle_denied = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_PERMISSION_DENIED,
             MojoDuplicateHandle(hc, &handle_denied));
   EXPECT_EQ(MOJO_HANDLE_INVALID, handle_denied);
 
   // The consumer |hc| shouldn't be readable.
   MojoHandleSignalsState state;
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, 0, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_NONE, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
@@ -112,12 +112,12 @@ TEST(DataPipeTest, Basic) {
   // Try to read from |hc|.
   char buffer[20] = {};
   uint32_t buffer_size = static_cast<uint32_t>(sizeof(buffer));
-  EXPECT_EQ(MOJO_RESULT_SHOULD_WAIT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_SHOULD_WAIT,
             MojoReadData(hc, buffer, &buffer_size, MOJO_READ_DATA_FLAG_NONE));
 
   // Try to begin a two-phase read from |hc|.
   const void* read_pointer = nullptr;
-  EXPECT_EQ(MOJO_RESULT_SHOULD_WAIT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_SHOULD_WAIT,
             MojoBeginReadData(hc, &read_pointer, &buffer_size,
                               MOJO_READ_DATA_FLAG_NONE));
 
@@ -185,7 +185,7 @@ TEST(DataPipeTest, Basic) {
   EXPECT_STREQ("hello world", buffer);
 
   // |hc| should no longer be readable.
-  EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, 1000, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfiable_signals);
@@ -234,7 +234,7 @@ TEST(DataPipeTest, WriteThreshold) {
   // Try setting the write threshold to something invalid.
   popts.struct_size = kPoptsSize;
   popts.write_threshold_num_bytes = 1u;
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoSetDataPipeProducerOptions(hp, &popts));
   // It shouldn't change the options.
   memset(&popts, 255, kPoptsSize);
@@ -263,7 +263,7 @@ TEST(DataPipeTest, WriteThreshold) {
 
   // Should no longer have the write threshold signal.
   state = MojoHandleSignalsState();
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0, &state));
   EXPECT_EQ(0u, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
@@ -282,7 +282,7 @@ TEST(DataPipeTest, WriteThreshold) {
   EXPECT_EQ(2u, popts.write_threshold_num_bytes);
 
   // Should still not have the write threshold signal.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0, nullptr));
 
   // Read an element.
@@ -309,7 +309,7 @@ TEST(DataPipeTest, WriteThreshold) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeProducerOptions(hp, &popts));
 
   // Should again not have the write threshold signal.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0, nullptr));
 
   // Close the consumer.
@@ -317,7 +317,7 @@ TEST(DataPipeTest, WriteThreshold) {
 
   // The write threshold signal should now be unsatisfiable.
   state = MojoHandleSignalsState();
-  EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
             MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, 0, &state));
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfied_signals);
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, state.satisfiable_signals);
@@ -344,7 +344,7 @@ TEST(DataPipeTest, ReadThreshold) {
   EXPECT_EQ(0u, copts.read_threshold_num_bytes);
 
   // Shouldn't have the read threshold signal yet.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
 
   // Write a byte to |hp|.
@@ -376,7 +376,7 @@ TEST(DataPipeTest, ReadThreshold) {
   EXPECT_EQ(3u, copts.read_threshold_num_bytes);
 
   // Shouldn't have the read threshold signal again.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
 
   // Write another byte to |hp|.
@@ -387,7 +387,7 @@ TEST(DataPipeTest, ReadThreshold) {
   EXPECT_EQ(1u, num_bytes);
 
   // Still shouldn't have the read threshold signal.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
 
   // Write a third byte to |hp|.
@@ -410,7 +410,7 @@ TEST(DataPipeTest, ReadThreshold) {
   EXPECT_EQ(kAByte, read_byte);
 
   // Shouldn't have the read threshold signal again.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
 
   // Set the read threshold to 2.

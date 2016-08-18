@@ -5,8 +5,8 @@
 #ifndef MOJO_PUBLIC_PLATFORM_DART_DART_HANDLE_WATCHER_H_
 #define MOJO_PUBLIC_PLATFORM_DART_DART_HANDLE_WATCHER_H_
 
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 
 #include <mutex>
 #include <thread>

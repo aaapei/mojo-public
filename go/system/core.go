@@ -29,10 +29,10 @@ type Core interface {
 	// simultaneously and completing when the first Wait would complete.
 	// Notes about return values:
 	//   |index| can be -1 if the error returned was not caused by a
-	//       particular handle. For example, the error MOJO_RESULT_DEADLINE_EXCEEDED
+	//       particular handle. For example, the error MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED
 	//       is not related to a particular handle.
 	//   |states| can be nil if the signal array could not be returned. This can
-	//       happen with errors such as MOJO_RESULT_INVALID_ARGUMENT.
+	//       happen with errors such as MOJO_SYSTEM_RESULT_INVALID_ARGUMENT.
 	WaitMany(handles []Handle, signals []MojoHandleSignals, deadline MojoDeadline) (result MojoResult, index int, states []MojoHandleSignalsState)
 
 	// CreateDataPipe creates a data pipe which is a unidirectional
@@ -102,7 +102,7 @@ func (impl *coreImpl) WaitMany(handles []Handle, signals []MojoHandleSignals, de
 		rawSignals[i] = uint32(signals[i])
 	}
 	r, index, rawSatisfiedSignals, rawSatisfiableSignals := sysImpl.WaitMany(rawHandles, rawSignals, uint64(deadline))
-	if MojoResult(r) == MOJO_RESULT_INVALID_ARGUMENT || MojoResult(r) == MOJO_RESULT_RESOURCE_EXHAUSTED {
+	if MojoResult(r) == MOJO_SYSTEM_RESULT_INVALID_ARGUMENT || MojoResult(r) == MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED {
 		return MojoResult(r), index, nil
 	}
 	signalsStates := make([]MojoHandleSignalsState, len(handles))

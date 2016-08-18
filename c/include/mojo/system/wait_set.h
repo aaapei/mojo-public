@@ -10,8 +10,8 @@
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_WAIT_SET_H_
 
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 #include <stdint.h>
 
@@ -76,11 +76,12 @@ MOJO_BEGIN_EXTERN_C
 // Returns:
 //   |MOJO_RESULT_OK| if a wait set was successfully created. On success,
 //       |*handle| will be the handle of the wait set.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |options| is non null and |*options| is invalid).
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached.
-//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached.
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if an unsupported flag was set in
+//       |*options|.
 MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions*
                                  MOJO_RESTRICT options,  // Optional in.
                              MojoHandle* handle);        // Out.
@@ -98,16 +99,16 @@ MojoResult MojoCreateWaitSet(const struct MojoCreateWaitSetOptions*
 //
 // Returns:
 //   |MOJO_RESULT_OK| if the handle was added to the wait set.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |wait_set_handle| or |handle| do not
-//       refer to valid handles, |wait_set_handle| is not a handle to a wait
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |wait_set_handle| or |handle| do
+//       not refer to valid handles, |wait_set_handle| is not a handle to a wait
 //       set, or |options| is not null and |*options| is not a valid options
 //       structure.
-//   |MOJO_RESULT_ALREADY_EXISTS| if there is already an entry in the wait set
-//       with the same |cookie| value.
-//   |MOJO_RESULT_BUSY| if |wait_set_handle| or |handle| are currently in use in
-//       some transaction.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the handle could not be added due to
-//       hitting a system or quota limitation.
+//   |MOJO_SYSTEM_RESULT_ALREADY_EXISTS| if there is already an entry in the
+//       wait set with the same |cookie| value.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |wait_set_handle| or |handle| are currently in
+//       use in some transaction.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if the handle could not be added
+//       due to hitting a system or quota limitation.
 //   |MOJO_ERROR_CODE_UNIMPLEMENTED| if some unknown/unsupported option has been
 //       specified in |*options|.
 MojoResult MojoWaitSetAdd(MojoHandle wait_set_handle,  // In.
@@ -122,10 +123,10 @@ MojoResult MojoWaitSetAdd(MojoHandle wait_set_handle,  // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| if the entry was successfully removed.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |wait_set_handle| does not refer to a
-//       valid wait set.
-//   |MOJO_RESULT_NOT_FOUND| if |cookie| does not identify an entry within the
-//       wait set.
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |wait_set_handle| does not refer
+//       to a valid wait set.
+//   |MOJO_SYSTEM_RESULT_NOT_FOUND| if |cookie| does not identify an entry
+//       within the wait set.
 MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
                              uint64_t cookie);            // In.
 
@@ -148,19 +149,20 @@ MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
 //   - |wait_result| is set to one of the following:
 //     - |MOJO_RESULT_OK| if the handle referred to by the entry satisfies one
 //         or more of the signals in the entry
-//     - |MOJO_RESULT_CANCELLED| if the handle referred to by the entry was
-//         closed
-//     - |MOJO_RESULT_BUSY| if the handle referred to by the entry is currently
-//         in use in some transaction
-//     - |MOJO_RESULT_FAILED_PRECONDITION| if it becomes impossible that the
-//         handle referred to by the entry will ever satisfy any of entry's
+//     - |MOJO_SYSTEM_RESULT_CANCELLED| if the handle referred to by the entry
+//         was closed
+//     - |MOJO_SYSTEM_RESULT_BUSY| if the handle referred to by the entry is
+//         currently in use in some transaction
+//     - |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if it becomes impossible that
+//         the handle referred to by the entry will ever satisfy any of entry's
 //         signals
 //   - |reserved| is set to 0
 //
-//   When |wait_result| is |MOJO_RESULT_OK| or |MOJO_RESULT_FAILED_PRECONDITION|
-//   |signals_state| is set to the handle's current signal state; otherwise, it
-//   is set to a zeroed |MojoHandleSignalsState| (in particular, both fields
-//   will then be |MOJO_HANDLE_SIGNALS_NONE|).
+//   When |wait_result| is |MOJO_SYSTEM_RESULT_OK| or
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION|, |signals_state| is set to the
+//   handle's current signal state; otherwise, it is set to a zeroed
+//   |MojoHandleSignalsState| (in particular, both fields will then be
+//   |MOJO_HANDLE_SIGNALS_NONE|).
 //
 // On any result other than |MOJO_RESULT_OK|, |*num_results|, |*results| and
 // |*max_results| are not modified.
@@ -168,16 +170,18 @@ MojoResult MojoWaitSetRemove(MojoHandle wait_set_handle,  // In.
 // Returns:
 //   |MOJO_RESULT_OK| if one or more entries in the wait set become satisfied or
 //       unsatisfiable.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |wait_set_handle| does not refer to a
-//       valid wait set handle.
-//   |MOJO_RESULT_CANCELLED| if |wait_set_handle| is closed during the wait.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a system/quota/etc. limit was reached.
-//   |MOJO_RESULT_BUSY| if |wait_set_handle| is in use in some transaction. Note
-//       that waiting on a wait set handle does not count as a transaction. It
-//       is valid to call |MojoWaitSetWait()| on the same wait set handle
-//       concurrently from different threads.
-//   |MOJO_RESULT_DEADLINE_EXCEEDED| if the deadline is passed without any
-//       entries in the wait set becoming satisfied or unsatisfiable.
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |wait_set_handle| does not refer
+//       to a valid wait set handle.
+//   |MOJO_SYSTEM_RESULT_CANCELLED| if |wait_set_handle| is closed during the
+//       wait.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a system/quota/etc. limit was
+//       reached.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |wait_set_handle| is in use in some
+//       transaction. Note that waiting on a wait set handle does not count as a
+//       transaction. It is valid to call |MojoWaitSetWait()| on the same wait
+//       set handle concurrently from different threads.
+//   |MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED| if the deadline is passed without
+//       any entries in the wait set becoming satisfied or unsatisfiable.
 MojoResult MojoWaitSetWait(
     MojoHandle wait_set_handle,                       // In.
     MojoDeadline deadline,                            // In.

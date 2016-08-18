@@ -11,7 +11,7 @@ import (
 	"mojo/public/go/system"
 )
 
-var errConnectionClosed = &ConnectionError{system.MOJO_RESULT_FAILED_PRECONDITION}
+var errConnectionClosed = &ConnectionError{system.MOJO_SYSTEM_RESULT_FAILED_PRECONDITION}
 
 // ConnectionError represents a error caused by an operation on a message pipe.
 type ConnectionError struct {
@@ -25,7 +25,7 @@ func (e *ConnectionError) Error() string {
 // Closed returnes true iff the error was caused by an operation on a closed
 // message pipe.
 func (e *ConnectionError) Closed() bool {
-	return e.Result == system.MOJO_RESULT_FAILED_PRECONDITION
+	return e.Result == system.MOJO_SYSTEM_RESULT_FAILED_PRECONDITION
 }
 
 // Connector owns a message pipe handle. It can read and write messages
@@ -72,7 +72,7 @@ func (c *Connector) ReadMessage() (*Message, error) {
 	}
 	// Check if we already have a message.
 	result, bytes, handles := c.pipe.ReadMessage(system.MOJO_READ_MESSAGE_FLAG_NONE)
-	if result == system.MOJO_RESULT_SHOULD_WAIT {
+	if result == system.MOJO_SYSTEM_RESULT_SHOULD_WAIT {
 		waitId := c.waiter.AsyncWait(c.pipe, system.MOJO_HANDLE_SIGNAL_READABLE, c.waitChan)
 		select {
 		case <-c.waitChan:

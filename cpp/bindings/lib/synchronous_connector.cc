@@ -39,11 +39,11 @@ bool SynchronousConnector::Write(Message* msg_to_send) {
     case MOJO_RESULT_OK:
       break;
 
-    case MOJO_RESULT_INVALID_ARGUMENT:
-    case MOJO_RESULT_RESOURCE_EXHAUSTED:
-    case MOJO_RESULT_FAILED_PRECONDITION:
-    case MOJO_RESULT_UNIMPLEMENTED:
-    case MOJO_RESULT_BUSY:
+    case MOJO_SYSTEM_RESULT_INVALID_ARGUMENT:
+    case MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED:
+    case MOJO_SYSTEM_RESULT_FAILED_PRECONDITION:
+    case MOJO_SYSTEM_RESULT_UNIMPLEMENTED:
+    case MOJO_SYSTEM_RESULT_BUSY:
     default:
       MOJO_LOG(WARNING) << "WriteMessageRaw unsuccessful. error = " << result;
       return false;

@@ -37,7 +37,7 @@ class RunLoop {
   //
   // The handler's OnHandleError() method is invoked if the deadline elapses, an
   // error is detected, or the RunLoop is being destroyed (with result
-  // MOJO_RESULT_ABORTED in this case). The handler is automatically
+  // MOJO_SYSTEM_RESULT_ABORTED in this case). The handler is automatically
   // unregistered before calling OnHandleError(), so it will not receive any
   // further notifications.
   //

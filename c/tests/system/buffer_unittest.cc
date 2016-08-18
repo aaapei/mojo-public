@@ -7,8 +7,8 @@
 
 #include <mojo/system/buffer.h>
 
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 
 #include "gtest/gtest.h"
 
@@ -25,20 +25,20 @@ const MojoHandleRights kDefaultSharedBufferHandleRights =
 TEST(BufferTest, InvalidHandle) {
   MojoHandle out_handle = MOJO_HANDLE_INVALID;
   EXPECT_EQ(
-      MOJO_RESULT_INVALID_ARGUMENT,
+      MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
       MojoDuplicateBufferHandle(MOJO_HANDLE_INVALID, nullptr, &out_handle));
   MojoBufferInformation buffer_info = {};
   EXPECT_EQ(
-      MOJO_RESULT_INVALID_ARGUMENT,
+      MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
       MojoGetBufferInformation(MOJO_HANDLE_INVALID, &buffer_info,
                                static_cast<uint32_t>(sizeof(buffer_info))));
   void* write_pointer = nullptr;
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             MojoMapBuffer(MOJO_HANDLE_INVALID, 0u, 1u, &write_pointer,
                           MOJO_MAP_BUFFER_FLAG_NONE));
   // This isn't an "invalid handle" test, but we'll throw it in here anyway
   // (since it involves a look-up).
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoUnmapBuffer(nullptr));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoUnmapBuffer(nullptr));
 }
 
 TEST(BufferTest, Basic) {
@@ -120,7 +120,7 @@ TEST(BufferTest, Basic) {
             rights);
   // Trying to duplicate |h2| should fail.
   MojoHandle h3 = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_PERMISSION_DENIED, MojoDuplicateHandle(h2, &h3));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_PERMISSION_DENIED, MojoDuplicateHandle(h2, &h3));
   EXPECT_EQ(MOJO_HANDLE_INVALID, h3);
 
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(h1));

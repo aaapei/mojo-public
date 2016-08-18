@@ -10,8 +10,8 @@
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_MESSAGE_PIPE_H_
 
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 
 // |MojoCreateMessagePipeOptions|: Used to specify creation parameters for a
 // message pipe to |MojoCreateMessagePipe()|.
@@ -70,11 +70,12 @@ MOJO_BEGIN_EXTERN_C
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |*options| is invalid).
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached.
-//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached.
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if an unsupported flag was set in
+//       |*options|.
 MojoResult MojoCreateMessagePipe(
     const struct MojoCreateMessagePipeOptions* MOJO_RESTRICT
         options,                                      // Optional in.
@@ -98,36 +99,38 @@ MojoResult MojoCreateMessagePipe(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success (i.e., the message was enqueued).
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g., if
-//       |message_pipe_handle| is not a valid handle, or some of the
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//       if |message_pipe_handle| is not a valid handle, or some of the
 //       requirements above are not satisfied).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |message_pipe_handle| does not have the
-//       |MOJO_HANDLE_RIGHT_WRITE| right or if one of the handles to be sent
-//       does not have the |MOJO_HANDLE_RIGHT_TRANSFER| right.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if some system limit has been reached, or
-//       the number of handles to send is too large (TODO(vtl): reconsider the
-//       latter case).
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the other endpoint has been closed.
-//       Note that closing an endpoint is not necessarily synchronous (e.g.,
-//       across processes), so this function may succeed even if the other
-//       endpoint has been closed (in which case the message would be dropped).
-//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
-//   |MOJO_RESULT_BUSY| if |message_pipe_handle| is currently in use in some
-//       transaction (that, e.g., may result in it being invalidated, such as
-//       being sent in a message), or if some handle to be sent is currently in
-//       use.
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |message_pipe_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_WRITE| right or if one of the handles to be
+//       sent does not have the |MOJO_HANDLE_RIGHT_TRANSFER| right.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if some system limit has been
+//       reached, or the number of handles to send is too large (TODO(vtl):
+//       reconsider the latter case).
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the other endpoint has been
+//       closed. Note that closing an endpoint is not necessarily synchronous
+//       (e.g., across processes), so this function may succeed even if the
+//       other endpoint has been closed (in which case the message would be
+//       dropped).
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if an unsupported flag was set in
+//       |*options|.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |message_pipe_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message), or if some handle to be sent is currently
+//       in use.
 //
-// Note: |MOJO_RESULT_BUSY| is generally "preferred" over
-// |MOJO_RESULT_PERMISSION_DENIED|. E.g., if a handle to be sent both is busy
-// and does not have the transfer right, then the result will be "busy".
+// Note: |MOJO_SYSTEM_RESULT_BUSY| is generally "preferred" over
+// |MOJO_SYSTEM_RESULT_PERMISSION_DENIED|. E.g., if a handle to be sent both is
+// busy and does not have the transfer right, then the result will be "busy".
 //
-// TODO(vtl): We'll also report |MOJO_RESULT_BUSY| if a (data pipe
+// TODO(vtl): We'll also report |MOJO_SYSTEM_RESULT_BUSY| if a (data pipe
 // producer/consumer) handle to be sent is in a two-phase write/read). But
 // should we? (For comparison, there's no such provision in |MojoClose()|.)
 // https://github.com/domokit/mojo/issues/782
 //
 // TODO(vtl): Add a notion of capacity for message pipes, and return
-// |MOJO_RESULT_SHOULD_WAIT| if the message pipe is full.
+// |MOJO_SYSTEM_RESULT_SHOULD_WAIT| if the message pipe is full.
 MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,  // In.
                             const void* bytes,               // Optional in.
                             uint32_t num_bytes,              // In.
@@ -149,7 +152,7 @@ MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,  // In.
 // message (even if the message was not retrieved due to being too large).
 // Either |num_bytes| or |num_handles| may be null if the message is not
 // expected to contain the corresponding type of data, but such a call would
-// fail with |MOJO_RESULT_RESOURCE_EXHAUSTED| if the message in fact did
+// fail with |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if the message in fact did
 // contain that type of data.
 //
 // |bytes| and |handles| will receive the contents of the message, if it is
@@ -158,20 +161,21 @@ MojoResult MojoWriteMessage(MojoHandle message_pipe_handle,  // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success (i.e., a message was actually read).
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if the other endpoint has been closed.
-//   |MOJO_RESULT_PERMISSION_DENIED| if |message_pipe_handle| does not have the
-//       |MOJO_HANDLE_RIGHT_READ| right.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the message was too large to fit in the
-//       provided buffer(s). The message will have been left in the queue or
-//       discarded, depending on flags.
-//   |MOJO_RESULT_SHOULD_WAIT| if no message was available to be read.
-//   |MOJO_RESULT_BUSY| if |message_pipe_handle| is currently in use in some
-//       transaction (that, e.g., may result in it being invalidated, such as
-//       being sent in a message).
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the other endpoint has been
+//       closed.
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |message_pipe_handle| does not
+//       have the |MOJO_HANDLE_RIGHT_READ| right.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if the message was too large to fit
+//       in the provided buffer(s). The message will have been left in the queue
+//       or discarded, depending on flags.
+//   |MOJO_SYSTEM_RESULT_SHOULD_WAIT| if no message was available to be read.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |message_pipe_handle| is currently in use in
+//       some transaction (that, e.g., may result in it being invalidated, such
+//       as being sent in a message).
 //
-// TODO(vtl): Reconsider the |MOJO_RESULT_RESOURCE_EXHAUSTED| error code; should
-// distinguish this from the hitting-system-limits case.
+// TODO(vtl): Reconsider the |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| error code;
+// should distinguish this from the hitting-system-limits case.
 MojoResult MojoReadMessage(
     MojoHandle message_pipe_handle,       // In.
     void* MOJO_RESTRICT bytes,            // Optional out.

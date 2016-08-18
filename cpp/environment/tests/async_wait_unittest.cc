@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include <mojo/environment/async_waiter.h>
-#include <mojo/result.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 
 #include <string>

@@ -51,7 +51,8 @@ bool Connector::WaitForIncomingMessage(MojoDeadline deadline) {
 
   MojoResult rv =
       Wait(message_pipe_.get(), MOJO_HANDLE_SIGNAL_READABLE, deadline, nullptr);
-  if (rv == MOJO_RESULT_SHOULD_WAIT || rv == MOJO_RESULT_DEADLINE_EXCEEDED)
+  if (rv == MOJO_SYSTEM_RESULT_SHOULD_WAIT ||
+      rv == MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED)
     return false;
   if (rv != MOJO_RESULT_OK) {
     NotifyError();
@@ -86,14 +87,14 @@ bool Connector::Accept(Message* message) {
       // to track their lifetime any longer.
       message->mutable_handles()->clear();
       break;
-    case MOJO_RESULT_FAILED_PRECONDITION:
+    case MOJO_SYSTEM_RESULT_FAILED_PRECONDITION:
       // There's no point in continuing to write to this pipe since the other
       // end is gone. Avoid writing any future messages. Hide write failures
       // from the caller since we'd like them to continue consuming any backlog
       // of incoming messages before regarding the message pipe as closed.
       drop_writes_ = true;
       break;
-    case MOJO_RESULT_BUSY:
+    case MOJO_SYSTEM_RESULT_BUSY:
       // We'd get a "busy" result if one of the message's handles is:
       //   - |message_pipe_|'s own handle;
       //   - simultaneously being used on another thread; or
@@ -161,7 +162,7 @@ bool Connector::ReadSingleMessage(MojoResult* read_result) {
   }
   destroyed_flag_ = previous_destroyed_flag;
 
-  if (rv == MOJO_RESULT_SHOULD_WAIT)
+  if (rv == MOJO_SYSTEM_RESULT_SHOULD_WAIT)
     return true;
 
   if (rv != MOJO_RESULT_OK ||
@@ -180,7 +181,7 @@ void Connector::ReadAllAvailableMessages() {
     if (!ReadSingleMessage(&rv))
       return;
 
-    if (rv == MOJO_RESULT_SHOULD_WAIT) {
+    if (rv == MOJO_SYSTEM_RESULT_SHOULD_WAIT) {
       WaitToReadMore();
       break;
     }

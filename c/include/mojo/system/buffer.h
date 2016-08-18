@@ -13,8 +13,8 @@
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_BUFFER_H_
 
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 
 // |MojoCreateSharedBufferOptions|: Used to specify creation parameters for a
 // shared buffer to |MojoCreateSharedBuffer()|.
@@ -114,12 +114,13 @@ MOJO_BEGIN_EXTERN_C
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |*options| is invalid).
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc. limit has
-//       been reached (e.g., if the requested size was too large, or if the
-//       maximum number of handles was exceeded).
-//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if a process/system/quota/etc.
+//       limit has been reached (e.g., if the requested size was too large, or
+//       if the maximum number of handles was exceeded).
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if an unsupported flag was set in
+//       |*options|.
 MojoResult MojoCreateSharedBuffer(
     const struct MojoCreateSharedBufferOptions* MOJO_RESTRICT
         options,                                      // Optional in.
@@ -143,12 +144,13 @@ MojoResult MojoCreateSharedBuffer(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |buffer_handle| is not a valid buffer handle or |*options| is invalid).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |buffer_handle| does not have the
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |buffer_handle| does not have the
 //       |MOJO_HANDLE_RIGHT_DUPLICATE| right.
-//   |MOJO_RESULT_UNIMPLEMENTED| if an unsupported flag was set in |*options|.
-//   |MOJO_RESULT_BUSY| if |buffer_handle| is currently in use in some
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if an unsupported flag was set in
+//       |*options|.
+//   |MOJO_SYSTEM_RESULT_BUSY| if |buffer_handle| is currently in use in some
 //       transaction (that, e.g., may result in it being invalidated, such as
 //       being sent in a message).
 MojoResult MojoDuplicateBufferHandle(
@@ -171,12 +173,12 @@ MojoResult MojoDuplicateBufferHandle(
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |buffer_handle| is not a valid buffer handle, |*info| is null, or
 //       |info_num_bytes| is too small).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |buffer_handle| does not have the
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |buffer_handle| does not have the
 //       |MOJO_HANDLE_RIGHT_GET_OPTIONS| right.
-//   |MOJO_RESULT_BUSY| if |buffer_handle| is currently in use in some
+//   |MOJO_SYSTEM_RESULT_BUSY| if |buffer_handle| is currently in use in some
 //       transaction (that, e.g., may result in it being invalidated, such as
 //       being sent in a message).
 MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
@@ -202,15 +204,15 @@ MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |buffer_handle| is not a valid buffer handle or the range specified by
 //       |offset| and |num_bytes| is not valid).
-//   |MOJO_RESULT_PERMISSION_DENIED| if |buffer_handle| does not have both the
-//       |MOJO_HANDLE_RIGHT_MAP_READABLE| and |MOJO_HANDLE_RIGHT_MAP_WRITABLE|
-//       rights.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if the mapping operation itself failed
-//       (e.g., due to not having appropriate address space available).
-//   |MOJO_RESULT_BUSY| if |buffer_handle| is currently in use in some
+//   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |buffer_handle| does not have
+//       both the |MOJO_HANDLE_RIGHT_MAP_READABLE| and
+//       |MOJO_HANDLE_RIGHT_MAP_WRITABLE| rights.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if the mapping operation itself
+//       failed (e.g., due to not having appropriate address space available).
+//   |MOJO_SYSTEM_RESULT_BUSY| if |buffer_handle| is currently in use in some
 //       transaction (that, e.g., may result in it being invalidated, such as
 //       being sent in a message).
 MojoResult MojoMapBuffer(MojoHandle buffer_handle,   // In.
@@ -227,8 +229,8 @@ MojoResult MojoMapBuffer(MojoHandle buffer_handle,   // In.
 //
 // Returns:
 //   |MOJO_RESULT_OK| on success.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |buffer| is invalid (e.g., is not the
-//       result of |MojoMapBuffer()| or has already been unmapped).
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |buffer| is invalid (e.g., is not
+//       the result of |MojoMapBuffer()| or has already been unmapped).
 MojoResult MojoUnmapBuffer(void* buffer);  // In.
 
 MOJO_END_EXTERN_C

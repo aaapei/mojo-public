@@ -78,7 +78,7 @@ MojoResult ReadMessage(MessagePipeHandle handle, Message* message) {
   uint32_t num_handles = 0;
   MojoResult rv = ReadMessageRaw(handle, nullptr, &num_bytes, nullptr,
                                  &num_handles, MOJO_READ_MESSAGE_FLAG_NONE);
-  if (rv != MOJO_RESULT_RESOURCE_EXHAUSTED)
+  if (rv != MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED)
     return rv;
 
   message->AllocUninitializedData(num_bytes);

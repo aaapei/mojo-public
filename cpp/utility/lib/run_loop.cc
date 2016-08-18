@@ -89,7 +89,7 @@ RunLoop::~RunLoop() {
     auto handler = it->second.handler;
     auto id = it->first;
     handlers_.erase(it);
-    handler->OnHandleError(id, MOJO_RESULT_ABORTED);
+    handler->OnHandleError(id, MOJO_SYSTEM_RESULT_ABORTED);
   }
 
   SetCurrentRunLoop(nullptr);
@@ -265,19 +265,19 @@ bool RunLoop::DoIteration(bool quit_when_idle) {
       }
       should_continue |= NotifyResults(run_state.results);
       break;
-    case MOJO_RESULT_INVALID_ARGUMENT:
+    case MOJO_SYSTEM_RESULT_INVALID_ARGUMENT:
       assert(false);  // This shouldn't happen.
       return false;
-    case MOJO_RESULT_CANCELLED:
+    case MOJO_SYSTEM_RESULT_CANCELLED:
       assert(false);  // This shouldn't happen.
       return false;
-    case MOJO_RESULT_RESOURCE_EXHAUSTED:
+    case MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED:
       assert(false);  // Sadness.
       return false;
-    case MOJO_RESULT_BUSY:
+    case MOJO_SYSTEM_RESULT_BUSY:
       assert(false);  // This shouldn't happen.
       return false;
-    case MOJO_RESULT_DEADLINE_EXCEEDED:
+    case MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED:
       should_continue |= NotifyHandlersDeadlineExceeded(absolute_deadline);
       // If we timed out due for a delayed task, pretend that we did work since
       // we're not idle yet (there'll be work to do immediately the next time
@@ -384,7 +384,7 @@ bool RunLoop::NotifyHandlersDeadlineExceeded(MojoTimeTicks absolute_deadline) {
     auto id = info.id;
     handlers_.erase(it);       // Invalidates |it|.
     handler_deadlines_.pop();  // Invalidates |info|.
-    handler->OnHandleError(id, MOJO_RESULT_DEADLINE_EXCEEDED);
+    handler->OnHandleError(id, MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED);
     did_work = true;
 
     if (current_run_state_->should_quit)

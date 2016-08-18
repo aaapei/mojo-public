@@ -47,8 +47,8 @@ void ApplicationImplBase::Initialize(InterfaceHandle<Shell> shell,
   shell_.set_connection_error_handler([this]() {
     OnQuit();
     service_provider_impls_.clear();
-    // TODO(vtl): Maybe this should be |MOJO_RESULT_UNKNOWN| or something else,
-    // but currently tests fail if we don't just report "OK".
+    // TODO(vtl): Maybe this should be |MOJO_SYSTEM_RESULT_UNKNOWN| or something
+    // else, but currently tests fail if we don't just report "OK".
     Terminate(MOJO_RESULT_OK);
   });
   url_ = url;

@@ -6,8 +6,8 @@
 #define MOJO_PUBLIC_CPP_SYSTEM_HANDLE_H_
 
 #include <assert.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <stdint.h>
 
 #include <limits>

@@ -10,8 +10,8 @@
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_SYSTEM_WAIT_H_
 
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 
 MOJO_BEGIN_EXTERN_C
@@ -19,14 +19,14 @@ MOJO_BEGIN_EXTERN_C
 // |MojoWait()|: Waits on the given handle until one of the following happens:
 //   - A signal indicated by |signals| is satisfied.
 //   - It becomes known that no signal indicated by |signals| will ever be
-//     satisfied. (See the description of the |MOJO_RESULT_CANCELLED| and
-//     |MOJO_RESULT_FAILED_PRECONDITION| return values below.)
+//     satisfied. (See the description of the |MOJO_SYSTEM_RESULT_CANCELLED| and
+//     |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| return values below.)
 //   - Until |deadline| has passed.
 //
 // If |deadline| is |MOJO_DEADLINE_INDEFINITE|, this will wait "forever" (until
 // one of the other wait termination conditions is satisfied). If |deadline| is
-// 0, this will return |MOJO_RESULT_DEADLINE_EXCEEDED| only if one of the other
-// termination conditions (e.g., a signal is satisfied, or all signals are
+// 0, this will return |MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED| only if one of the
+// other termination conditions (e.g., a signal is satisfied, or all signals are
 // unsatisfiable) is not already satisfied.
 //
 // |signals_state| (optional): See documentation for |MojoHandleSignalsState|.
@@ -34,20 +34,21 @@ MOJO_BEGIN_EXTERN_C
 // Returns:
 //   |MOJO_RESULT_OK| if some signal in |signals| was satisfied (or is already
 //       satisfied).
-//   |MOJO_RESULT_CANCELLED| if |handle| was closed (necessarily from another
-//       thread) during the wait.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle (e.g., if
-//       it has already been closed). The |signals_state| value is unchanged.
-//   |MOJO_RESULT_DEADLINE_EXCEEDED| if the deadline has passed without any of
-//       the signals being satisfied.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if it becomes known that none of the
-//       signals in |signals| can ever be satisfied (e.g., when waiting on one
-//       end of a message pipe and the other end is closed), at least not
+//   |MOJO_SYSTEM_RESULT_CANCELLED| if |handle| was closed (necessarily from
+//       another thread) during the wait.
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if |handle| is not a valid handle
+//       (e.g., if it has already been closed). The |signals_state| value is
+//       unchanged.
+//   |MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED| if the deadline has passed without
+//       any of the signals being satisfied.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if it becomes known that none of
+//       the signals in |signals| can ever be satisfied (e.g., when waiting on
+//       one end of a message pipe and the other end is closed), at least not
 //       without performing some action on |handle| (see, e.g., |struct
 //       MojoDataPipeConsumerOptions|).
-//   |MOJO_RESULT_BUSY| if |handle| is currently in use in some transaction
-//       (that, e.g., may result in it being invalidated, such as being sent in
-//       a message).
+//   |MOJO_SYSTEM_RESULT_BUSY| if |handle| is currently in use in some
+//       transaction (that, e.g., may result in it being invalidated, such as
+//       being sent in a message).
 //
 // If there are multiple waiters (on different threads, obviously) waiting on
 // the same handle and signal, and that signal becomes satisfied, all waiters
@@ -88,23 +89,24 @@ MojoResult MojoWait(
 //     MojoHandleSignalsState. See |MojoHandleSignalsState| for more details
 //     about the meaning of each array entry. This array is not an atomic
 //     snapshot. The array will be updated if the function does not return
-//     |MOJO_RESULT_INVALID_ARGUMENT| or |MOJO_RESULT_RESOURCE_EXHAUSTED|.
+//     |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| or
+//     |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED|.
 //
 // Returns:
-//   |MOJO_RESULT_CANCELLED| if some |handle[i]| was closed (necessarily from
-//       another thread) during the wait.
-//   |MOJO_RESULT_RESOURCE_EXHAUSTED| if there are too many handles. The
+//   |MOJO_SYSTEM_RESULT_CANCELLED| if some |handle[i]| was closed (necessarily
+//       from another thread) during the wait.
+//   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if there are too many handles. The
 //       |signals_state| array is unchanged.
-//   |MOJO_RESULT_INVALID_ARGUMENT| if some |handle[i]| is not a valid handle
-//       (e.g., if it is zero or if it has already been closed). The
+//   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some |handle[i]| is not a valid
+//       handle (e.g., if it is zero or if it has already been closed). The
 //       |signals_state| array is unchanged.
-//   |MOJO_RESULT_DEADLINE_EXCEEDED| if the deadline has passed without any of
-//       handles satisfying any of its signals.
-//   |MOJO_RESULT_FAILED_PRECONDITION| if it is or becomes impossible that SOME
-//       |handle[i]| will ever satisfy any of the signals in |signals[i]|, at
-//       least not without some action on |handle[i]| (see, e.g., |struct
-//       MojoDataPipeConsumerOptions|).
-//   |MOJO_RESULT_BUSY| if some |handle[i]| is currently in use in some
+//   |MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED| if the deadline has passed without
+//       any of handles satisfying any of its signals.
+//   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if it is or becomes impossible
+//       that SOME |handle[i]| will ever satisfy any of the signals in
+//       |signals[i]|, at least not without some action on |handle[i]| (see,
+//       e.g., |struct MojoDataPipeConsumerOptions|).
+//   |MOJO_SYSTEM_RESULT_BUSY| if some |handle[i]| is currently in use in some
 //       transaction (that, e.g., may result in it being invalidated, such as
 //       being sent in a message).
 MojoResult MojoWaitMany(const MojoHandle* MOJO_RESTRICT handles,         // In.

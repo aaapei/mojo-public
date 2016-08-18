@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
 #include <mojo/system/message_pipe.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 #include <mojo/system/wait.h>
 #include <stdio.h>
@@ -366,7 +366,7 @@ static bool ShouldCloseHandle(MojoHandle handle) {
   // DEADLINE_EXCEEDED, the handle is still open.
   MojoResult result = MojoWait(handle, MOJO_HANDLE_SIGNAL_ALL, 0, NULL);
   return (result != MOJO_RESULT_OK) &&
-         (result != MOJO_RESULT_DEADLINE_EXCEEDED);
+         (result != MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED);
 }
 
 void HandleWatcherThreadState::PruneClosedHandles(bool signals_state_is_valid) {
@@ -402,14 +402,14 @@ void HandleWatcherThreadState::PruneClosedHandles(bool signals_state_is_valid) {
 
 void HandleWatcherThreadState::ProcessWaitManyResults(MojoResult result,
                                                       uint32_t result_index) {
-  MOJO_CHECK(result != MOJO_RESULT_DEADLINE_EXCEEDED);
+  MOJO_CHECK(result != MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED);
   if (result != MOJO_RESULT_OK) {
     // The WaitMany call failed. We need to prune closed handles from our
     // wait many set and try again.
     //
     // If the result is an invalid argument |wait_many_signals_state_| is
     // meaningless.
-    PruneClosedHandles(result != MOJO_RESULT_INVALID_ARGUMENT);
+    PruneClosedHandles(result != MOJO_SYSTEM_RESULT_INVALID_ARGUMENT);
     return;
   }
   MOJO_CHECK(result == MOJO_RESULT_OK);
@@ -473,7 +473,7 @@ void HandleWatcherThreadState::Run() {
                                      &result_index,
                                      wait_many_signals_state_.data());
 
-    if (result == MOJO_RESULT_DEADLINE_EXCEEDED) {
+    if (result == MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED) {
       // Timers are ready.
       continue;
     }

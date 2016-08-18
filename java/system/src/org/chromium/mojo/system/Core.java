@@ -99,8 +99,8 @@ public interface Core {
 
         /**
          * Signals that are possible to satisfy. For example, if the return value was
-         * |MOJO_RESULT_FAILED_PRECONDITION|, you can use this field to determine which, if any, of
-         * the signals can still be satisfied.
+         * |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION|, you can use this field to determine which, if
+         * any, of the signals can still be satisfied.
          */
         private final HandleSignals mSatisfiableSignals;
 
@@ -209,7 +209,7 @@ public interface Core {
 
         /**
          * The signaling state of handles. Will not be set if |mojoResult| is
-         * |MOJO_RESULT_INVALID_ARGUMENT| or |MOJO_RESULT_RESOURCE_EXHAUSTED|
+         * |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| or |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED|
          */
         private List<HandleSignalsState> mSignalStates;
 

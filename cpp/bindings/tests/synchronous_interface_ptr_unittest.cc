@@ -125,7 +125,7 @@ TEST_F(SynchronousInterfacePtrTest, Resettable) {
   EXPECT_TRUE(!a);
 
   // Test that handle was closed.
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, CloseRaw(handle));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, CloseRaw(handle));
 }
 
 TEST_F(SynchronousInterfacePtrTest, SetNull) {

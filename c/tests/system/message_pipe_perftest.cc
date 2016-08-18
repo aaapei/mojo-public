@@ -8,8 +8,8 @@
 
 #include <assert.h>
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 #include <mojo/system/wait.h>
 #include <stdint.h>
@@ -83,7 +83,7 @@ TEST(MessagePipePerftest, EmptyRead) {
     MojoResult result = MojoReadMessage(h0, nullptr, nullptr, nullptr, nullptr,
                                         MOJO_READ_MESSAGE_FLAG_MAY_DISCARD);
     MOJO_ALLOW_UNUSED_LOCAL(result);
-    assert(result == MOJO_RESULT_SHOULD_WAIT);
+    assert(result == MOJO_SYSTEM_RESULT_SHOULD_WAIT);
   });
   result = MojoClose(h0);
   assert(result == MOJO_RESULT_OK);
@@ -134,8 +134,8 @@ void DoMessagePipeThreadedTest(unsigned num_writers,
 
           // We failed to write.
           // Either |h0| or its peer was closed.
-          assert(result == MOJO_RESULT_INVALID_ARGUMENT ||
-                 result == MOJO_RESULT_FAILED_PRECONDITION);
+          assert(result == MOJO_SYSTEM_RESULT_INVALID_ARGUMENT ||
+                 result == MOJO_SYSTEM_RESULT_FAILED_PRECONDITION);
           break;
         }
         *final_num_writes = num_writes;
@@ -157,7 +157,7 @@ void DoMessagePipeThreadedTest(unsigned num_writers,
             continue;
           }
 
-          if (result == MOJO_RESULT_SHOULD_WAIT) {
+          if (result == MOJO_SYSTEM_RESULT_SHOULD_WAIT) {
             result = MojoWait(h1, MOJO_HANDLE_SIGNAL_READABLE,
                               MOJO_DEADLINE_INDEFINITE, nullptr);
             if (result == MOJO_RESULT_OK) {
@@ -168,8 +168,8 @@ void DoMessagePipeThreadedTest(unsigned num_writers,
 
           // We failed to read and possibly failed to wait.
           // Either |h1| or its peer was closed.
-          assert(result == MOJO_RESULT_INVALID_ARGUMENT ||
-                 result == MOJO_RESULT_FAILED_PRECONDITION);
+          assert(result == MOJO_SYSTEM_RESULT_INVALID_ARGUMENT ||
+                 result == MOJO_SYSTEM_RESULT_FAILED_PRECONDITION);
           break;
         }
         *final_num_reads = num_reads;

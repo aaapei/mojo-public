@@ -6,8 +6,8 @@
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_ENVIRONMENT_ASYNC_WAITER_H_
 
 #include <mojo/macros.h>
-#include <mojo/result.h>
 #include <mojo/system/handle.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 #include <stdint.h>
 

@@ -46,7 +46,7 @@ TEST(DataPipe, Basic) {
   // Waiting for "read threshold" should fail. (Wait a nonzero amount, in case
   // there's some latency.)
   MojoHandleSignalsState state;
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, &state));
   // ... but it should be readable.
   EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE, state.satisfied_signals);
@@ -85,7 +85,7 @@ TEST(DataPipe, Basic) {
   EXPECT_EQ('A', read_byte);
 
   // Waiting for "read threshold" should now fail.
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 0, nullptr));
 
   // Reset the read threshold/options.
@@ -106,14 +106,14 @@ TEST(DataPipe, Basic) {
   EXPECT_EQ(MOJO_RESULT_OK, EndReadDataRaw(ch.get(), 1u));
 
   // Waiting for "read" should now fail (time out).
-  EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
             Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
 
   // Close the producer.
   ph.reset();
 
   // Waiting for "read" should now fail.
-  EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
             Wait(ch.get(), MOJO_HANDLE_SIGNAL_READ_THRESHOLD, 1000, nullptr));
 }
 

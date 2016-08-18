@@ -4,11 +4,11 @@
 
 package native_cgo
 
-//#include <mojo/result.h>
 //#include <mojo/system/buffer.h>
 //#include <mojo/system/data_pipe.h>
 //#include <mojo/system/handle.h>
 //#include <mojo/system/message_pipe.h>
+//#include <mojo/system/result.h>
 //#include <mojo/system/time.h>
 //#include <mojo/system/wait.h>
 //
@@ -206,7 +206,7 @@ func (c *CGoSystem) WaitMany(handles []uint32, signals []uint32, deadline uint64
 	cStates := make([]C.struct_MojoHandleSignalsState, len(handles))
 	r := C.MojoWaitMany(cHandles, cSignals, C.uint32_t(len(handles)), C.MojoDeadline(deadline), &index, &cStates[0])
 	var satisfied, satisfiable []uint32
-	if r != C.MOJO_RESULT_INVALID_ARGUMENT && r != C.MOJO_RESULT_RESOURCE_EXHAUSTED {
+	if r != C.MOJO_SYSTEM_RESULT_INVALID_ARGUMENT && r != C.MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED {
 		satisfied = make([]uint32, len(handles))
 		satisfiable = make([]uint32, len(handles))
 		for i := 0; i < len(handles); i++ {
@@ -244,7 +244,7 @@ func (c *CGoSystem) ReadMessage(handle uint32, flags uint32) (result uint32, buf
 	var numBytes, numHandles C.uint32_t
 	cHandle := C.MojoHandle(handle)
 	cFlags := C.MojoReadMessageFlags(flags)
-	if r := C.MojoReadMessage(cHandle, nil, &numBytes, nil, &numHandles, cFlags); r != C.MOJO_RESULT_RESOURCE_EXHAUSTED {
+	if r := C.MojoReadMessage(cHandle, nil, &numBytes, nil, &numHandles, cFlags); r != C.MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED {
 		return uint32(r), nil, nil
 	}
 	var bufPtr unsafe.Pointer

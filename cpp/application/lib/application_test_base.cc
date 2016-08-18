@@ -118,7 +118,7 @@ MojoResult RunAllTests(MojoHandle application_request_handle) {
   (void)g_application_request.PassMessagePipe();
   (void)g_shell.PassInterfaceHandle();
 
-  return (result == 0) ? MOJO_RESULT_OK : MOJO_RESULT_UNKNOWN;
+  return (result == 0) ? MOJO_RESULT_OK : MOJO_SYSTEM_RESULT_UNKNOWN;
 }
 
 ApplicationTestBase::ApplicationTestBase() {}

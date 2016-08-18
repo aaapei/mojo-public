@@ -109,8 +109,8 @@ TEST(ArrayTest, HandlesAreClosed) {
   }
 
   // We expect the pipes to have been closed.
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(pipe0_value));
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, MojoClose(pipe1_value));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(pipe0_value));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoClose(pipe1_value));
 }
 
 TEST(ArrayTest, Clone) {

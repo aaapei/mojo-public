@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <mojo/result.h>
 #include <mojo/system/buffer.h>
 #include <mojo/system/data_pipe.h>
 #include <mojo/system/handle.h>
 #include <mojo/system/message_pipe.h>
+#include <mojo/system/result.h>
 #include <mojo/system/time.h>
 #include <stdio.h>
 #include <string.h>
@@ -96,7 +96,7 @@ static void SetNullReturn(Dart_NativeArguments arguments) {
 
 static void SetInvalidArgumentReturn(Dart_NativeArguments arguments) {
   Dart_SetIntegerReturnValue(
-      arguments, static_cast<int64_t>(MOJO_RESULT_INVALID_ARGUMENT));
+      arguments, static_cast<int64_t>(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT));
 }
 
 static Dart_Handle SignalsStateToDart(const MojoHandleSignalsState& state) {
@@ -744,7 +744,8 @@ void MojoMessagePipe_QueryAndRead(Dart_NativeArguments arguments) {
       MojoReadMessage(static_cast<MojoHandle>(dart_handle), nullptr, &blen,
                       nullptr, &hlen, MOJO_READ_MESSAGE_FLAG_NONE);
 
-  if ((res != MOJO_RESULT_OK) && (res != MOJO_RESULT_RESOURCE_EXHAUSTED)) {
+  if ((res != MOJO_RESULT_OK) &&
+      (res != MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED)) {
     Dart_ListSetAt(result, 0, Dart_NewInteger(res));
     Dart_ListSetAt(result, 1, data);
     Dart_ListSetAt(result, 2, handles);

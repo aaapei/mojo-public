@@ -18,7 +18,7 @@ namespace {
 TEST(WaitTest, InvalidArgs) {
   ScopedHandle h;
 
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT,
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
             Wait(h.get(), ~MOJO_HANDLE_SIGNAL_NONE, 1000000, nullptr));
 
   std::vector<Handle> wh;
@@ -27,7 +27,7 @@ TEST(WaitTest, InvalidArgs) {
   sigs.push_back(~MOJO_HANDLE_SIGNAL_NONE);
   WaitManyResult wait_many_result =
       WaitMany(wh, sigs, MOJO_DEADLINE_INDEFINITE, nullptr);
-  EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, wait_many_result.result);
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, wait_many_result.result);
   EXPECT_TRUE(wait_many_result.IsIndexValid());
   EXPECT_FALSE(wait_many_result.AreSignalsStatesValid());
 }
@@ -38,7 +38,7 @@ TEST(WaitTest, TimeOut) {
     // Need a valid handle to wait on for |Wait()|.
     MessagePipe mp;
     EXPECT_EQ(
-        MOJO_RESULT_DEADLINE_EXCEEDED,
+        MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
         Wait(mp.handle0.get(), MOJO_HANDLE_SIGNAL_READABLE, 100u, nullptr));
   }
 
@@ -47,7 +47,7 @@ TEST(WaitTest, TimeOut) {
     std::vector<Handle> wh;
     std::vector<MojoHandleSignals> sigs;
     WaitManyResult wait_many_result = WaitMany(wh, sigs, 100u, nullptr);
-    EXPECT_EQ(MOJO_RESULT_DEADLINE_EXCEEDED, wait_many_result.result);
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED, wait_many_result.result);
     EXPECT_FALSE(wait_many_result.IsIndexValid());
     EXPECT_TRUE(wait_many_result.AreSignalsStatesValid());
   }
@@ -62,23 +62,23 @@ TEST(WaitTest, WaitManyResult) {
   }
 
   {
-    WaitManyResult wmr(MOJO_RESULT_FAILED_PRECONDITION);
+    WaitManyResult wmr(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION);
     EXPECT_FALSE(wmr.IsIndexValid());
     EXPECT_TRUE(wmr.AreSignalsStatesValid());
-    EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION, wmr.result);
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION, wmr.result);
   }
 
   {
-    WaitManyResult wmr(MOJO_RESULT_INVALID_ARGUMENT);
+    WaitManyResult wmr(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT);
     EXPECT_FALSE(wmr.IsIndexValid());
     EXPECT_FALSE(wmr.AreSignalsStatesValid());
-    EXPECT_EQ(MOJO_RESULT_INVALID_ARGUMENT, wmr.result);
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, wmr.result);
   }
 
   // These should be like "invalid argument".
-  EXPECT_FALSE(
-      WaitManyResult(MOJO_RESULT_RESOURCE_EXHAUSTED).AreSignalsStatesValid());
-  EXPECT_FALSE(WaitManyResult(MOJO_RESULT_BUSY).AreSignalsStatesValid());
+  EXPECT_FALSE(WaitManyResult(MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED)
+                   .AreSignalsStatesValid());
+  EXPECT_FALSE(WaitManyResult(MOJO_SYSTEM_RESULT_BUSY).AreSignalsStatesValid());
 
   {
     WaitManyResult wmr(MOJO_RESULT_OK, 5u);
@@ -89,10 +89,10 @@ TEST(WaitTest, WaitManyResult) {
   }
 
   {
-    WaitManyResult wmr(MOJO_RESULT_FAILED_PRECONDITION, 5u);
+    WaitManyResult wmr(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION, 5u);
     EXPECT_TRUE(wmr.IsIndexValid());
     EXPECT_TRUE(wmr.AreSignalsStatesValid());
-    EXPECT_EQ(MOJO_RESULT_FAILED_PRECONDITION, wmr.result);
+    EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION, wmr.result);
     EXPECT_EQ(5u, wmr.index);
   }
 }
