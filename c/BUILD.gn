@@ -302,6 +302,7 @@ mojo_sdk_source_set("system_unittests") {
     "tests/system/data_pipe_unittest.cc",
     "tests/system/handle_unittest.cc",
     "tests/system/message_pipe_unittest.cc",
+    "tests/system/result_unittest.cc",
     "tests/system/time_unittest.cc",
     "tests/system/wait_set_unittest.cc",
     "tests/system/wait_unittest.cc",

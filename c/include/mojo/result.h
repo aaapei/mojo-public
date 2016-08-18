@@ -5,9 +5,6 @@
 // This file contains the definition of |MojoResult| and related macros.
 //
 // Note: This header should be compilable as C.
-//
-// TODO(vtl): Should separate out "system" error space stuff to a separate
-// header, mojo/system/result.h.
 
 #ifndef MOJO_PUBLIC_C_INCLUDE_MOJO_RESULT_H_
 #define MOJO_PUBLIC_C_INCLUDE_MOJO_RESULT_H_
@@ -28,10 +25,15 @@
 //   - eeeeeeeeeeee is the error subcode (12 bits, 0-4095); and
 //   - sSSSSSSSSSSSSSSS (16 bits, 0-65535) is the error space.
 //
+// Alternatively, in hexadecimal:
+//
+//     0xSSSSeeeE
+//
 // The meaning of the base error codes is always the same. |MOJO_ERROR_CODE_OK|,
 // 0, always means "OK"; for this case, both the error subcode and error space
-// must also be 0. See the definitions of the |MOJO_ERROR_CODE_...| below for
-// information on the other base error codes.
+// must also be 0 (|MOJO_RESULT_OK| should be used for the entire "OK" result).
+// See the definitions of the |MOJO_ERROR_CODE_...| below for information on the
+// other base error codes.
 //
 // The meaning of the error subcode depends on both the error space and also the
 // base error code, though |MOJO_ERROR_SUBCODE_GENERIC|, 0, always means
@@ -127,38 +129,25 @@ typedef uint32_t MojoResult;
 #define MOJO_ERROR_CODE_UNAVAILABLE ((MojoResult)0xeu)
 #define MOJO_ERROR_CODE_DATA_LOSS ((MojoResult)0xfu)
 
-// System/generic error space --------------------------------------------------
-
-#define MOJO_ERROR_SPACE_SYSTEM ((MojoResult)0x0000u)
-
-// Common/generic subcode, valid for all error codes:
+// Common/generic subcode, valid for all error spaces and error codes:
 //   |MOJO_ERROR_SUBCODE_GENERIC| - No additional details about the error are
 //       specified.
 #define MOJO_ERROR_SUBCODE_GENERIC ((MojoResult)0x000u)
 
-// Subcodes valid for |MOJO_ERROR_CODE_FAILED_PRECONDITION|:
-//   |MOJO_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY| - One of the resources
-//       involved is currently being used (possibly on another thread) in a way
-//       that prevents the current operation from proceeding, e.g., if the other
-//       operation may result in the resource being invalidated. TODO(vtl): We
-//       should probably get rid of this, and report "invalid argument" instead
-//       (with a different subcode scheme). This is here now for ease of
-//       conversion with the existing |MOJO_RESULT_BUSY|.
-#define MOJO_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY ((MojoResult)0x001u)
-
-// Subcodes valid for MOJO_ERROR_CODE_UNAVAILABLE:
-//   |MOJO_ERROR_CODE_UNAVAILABLE_SUBCODE_SHOULD_WAIT| - The request cannot
-//       currently be completed (e.g., if the data requested is not yet
-//       available). The caller should wait for it to be feasible using one of
-//       the wait primitives.
-#define MOJO_ERROR_CODE_UNAVAILABLE_SUBCODE_SHOULD_WAIT ((MojoResult)0x001u)
-
-// Complete results:
-
-// Generic results:
-#define MOJO_RESULT_OK                                          \
-  MOJO_RESULT_MAKE(MOJO_ERROR_CODE_OK, MOJO_ERROR_SPACE_SYSTEM, \
+// "OK" result (error code and error subcode must both be zero).
+#define MOJO_RESULT_OK                                        \
+  MOJO_RESULT_MAKE(MOJO_ERROR_CODE_OK, ((MojoResult)0x0000u), \
                    MOJO_ERROR_SUBCODE_GENERIC)
+
+// Error spaces ----------------------------------------------------------------
+
+// See mojo/public/c/include/mojo/system/result.h.
+#define MOJO_ERROR_SPACE_SYSTEM ((MojoResult)0x0000u)
+
+// TODO(vtl): Remove the following (should use MOJO_SYSTEM_RESULT... from
+// <mojo/system/result.h> instead.
+#define MOJO_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY ((MojoResult)0x001u)
+#define MOJO_ERROR_CODE_UNAVAILABLE_SUBCODE_SHOULD_WAIT ((MojoResult)0x001u)
 #define MOJO_RESULT_CANCELLED                                          \
   MOJO_RESULT_MAKE(MOJO_ERROR_CODE_CANCELLED, MOJO_ERROR_SPACE_SYSTEM, \
                    MOJO_ERROR_SUBCODE_GENERIC)
@@ -204,8 +193,6 @@ typedef uint32_t MojoResult;
 #define MOJO_RESULT_DATA_LOSS                                          \
   MOJO_RESULT_MAKE(MOJO_ERROR_CODE_DATA_LOSS, MOJO_ERROR_SPACE_SYSTEM, \
                    MOJO_ERROR_SUBCODE_GENERIC)
-
-// Specific results (for backwards compatibility):
 #define MOJO_RESULT_BUSY                                \
   MOJO_RESULT_MAKE(MOJO_ERROR_CODE_FAILED_PRECONDITION, \
                    MOJO_ERROR_SPACE_SYSTEM,             \
