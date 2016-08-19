@@ -19,20 +19,22 @@ cdef extern from "mojo/system/result.h" nogil:
   const MojoResult MOJO_SYSTEM_RESULT_CANCELLED
   const MojoResult MOJO_SYSTEM_RESULT_UNKNOWN
   const MojoResult MOJO_SYSTEM_RESULT_INVALID_ARGUMENT
+  const MojoResult MOJO_SYSTEM_RESULT_BAD_HANDLE
+  const MojoResult MOJO_SYSTEM_RESULT_WRONG_TYPE
   const MojoResult MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED
   const MojoResult MOJO_SYSTEM_RESULT_NOT_FOUND
   const MojoResult MOJO_SYSTEM_RESULT_ALREADY_EXISTS
   const MojoResult MOJO_SYSTEM_RESULT_PERMISSION_DENIED
   const MojoResult MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED
   const MojoResult MOJO_SYSTEM_RESULT_FAILED_PRECONDITION
+  const MojoResult MOJO_SYSTEM_RESULT_BUSY
   const MojoResult MOJO_SYSTEM_RESULT_ABORTED
   const MojoResult MOJO_SYSTEM_RESULT_OUT_OF_RANGE
   const MojoResult MOJO_SYSTEM_RESULT_UNIMPLEMENTED
   const MojoResult MOJO_SYSTEM_RESULT_INTERNAL
   const MojoResult MOJO_SYSTEM_RESULT_UNAVAILABLE
-  const MojoResult MOJO_SYSTEM_RESULT_DATA_LOSS
-  const MojoResult MOJO_SYSTEM_RESULT_BUSY
   const MojoResult MOJO_SYSTEM_RESULT_SHOULD_WAIT
+  const MojoResult MOJO_SYSTEM_RESULT_DATA_LOSS
 
 cdef extern from "mojo/system/handle.h" nogil:
   ctypedef uint32_t MojoHandle

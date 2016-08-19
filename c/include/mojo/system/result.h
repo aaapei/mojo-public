@@ -14,14 +14,25 @@
 
 // System error space error subcodes -------------------------------------------
 
+// Subcodes valid for |MOJO_ERROR_CODE_INVALID_ARGUMENT|:
+//   |MOJO_SYSTEM_ERROR_CODE_INVALID_ARGUMENT_SUBCODE_BAD_HANDLE| - A handle
+//       argument is invalid.
+//   |MOJO_SYSTEM_ERROR_CODE_INVALID_ARGUMENT_SUBCODE_WRONG_TYPE| - An object
+//       (typically specified via a handle) is of the wrong type for the
+//       requested operation.
+#define MOJO_SYSTEM_ERROR_CODE_INVALID_ARGUMENT_SUBCODE_BAD_HANDLE \
+  ((MojoResult)0x001u)
+#define MOJO_SYSTEM_ERROR_CODE_INVALID_ARGUMENT_SUBCODE_WRONG_TYPE \
+  ((MojoResult)0x002u)
+
 // Subcodes valid for |MOJO_ERROR_CODE_FAILED_PRECONDITION|:
-//   |MOJO_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY| - One of the resources
-//       involved is currently being used (possibly on another thread) in a way
-//       that prevents the current operation from proceeding, e.g., if the other
-//       operation may result in the resource being invalidated. TODO(vtl): We
-//       should probably get rid of this, and report "invalid argument" instead
-//       (with a different subcode scheme). This is here now for ease of
-//       conversion with the existing |MOJO_SYSTEM_RESULT_BUSY|.
+//   |MOJO_SYSTEM_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY| - One of the
+//       resources involved is currently being used (possibly on another thread)
+//       in a way that prevents the current operation from proceeding, e.g., if
+//       the other operation may result in the resource being invalidated.
+//       TODO(vtl): We should probably get rid of this, and report "invalid
+//       argument" instead (with a different subcode scheme). This is here now
+//       for ease of conversion with the existing |MOJO_SYSTEM_RESULT_BUSY|.
 #define MOJO_SYSTEM_ERROR_CODE_FAILED_PRECONDITION_SUBCODE_BUSY \
   ((MojoResult)0x001u)
 
@@ -49,6 +60,12 @@
 #define MOJO_SYSTEM_RESULT_INVALID_ARGUMENT                                   \
   MOJO_RESULT_MAKE(MOJO_ERROR_CODE_INVALID_ARGUMENT, MOJO_ERROR_SPACE_SYSTEM, \
                    MOJO_ERROR_SUBCODE_GENERIC)
+#define MOJO_SYSTEM_RESULT_BAD_HANDLE                                         \
+  MOJO_RESULT_MAKE(MOJO_ERROR_CODE_INVALID_ARGUMENT, MOJO_ERROR_SPACE_SYSTEM, \
+                   MOJO_SYSTEM_ERROR_CODE_INVALID_ARGUMENT_SUBCODE_BAD_HANDLE)
+#define MOJO_SYSTEM_RESULT_WRONG_TYPE                                         \
+  MOJO_RESULT_MAKE(MOJO_ERROR_CODE_INVALID_ARGUMENT, MOJO_ERROR_SPACE_SYSTEM, \
+                   MOJO_SYSTEM_ERROR_CODE_INVALID_ARGUMENT_SUBCODE_WRONG_TYPE)
 
 // Error code |MOJO_ERROR_CODE_DEADLINE_EXCEEDED|:
 #define MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED                                   \
