@@ -65,9 +65,24 @@ typedef uint32_t MojoHandleRights;
 //   |MOJO_HANDLE_SIGNAL_READABLE| - Can read (e.g., a message) from the handle.
 //   |MOJO_HANDLE_SIGNAL_WRITABLE| - Can write (e.g., a message) to the handle.
 //   |MOJO_HANDLE_SIGNAL_PEER_CLOSED| - The peer handle is closed.
+//   |MOJO_HANDLE_SIGNAL_SIGNAL0| - Generic signal 0, whose meaning is dependent
+//       on the handle/object type (often the alias
+//       |MOJO_HANDLE_SIGNAL_SIGNALED| is used instead).
+//   |MOJO_HANDLE_SIGNAL_SIGNAL1| - Generic signal 1, used by events.
+//   |MOJO_HANDLE_SIGNAL_SIGNAL2| - Generic signal 2, used by events.
+//   |MOJO_HANDLE_SIGNAL_SIGNAL3| - Generic signal 3, used by events.
+//   |MOJO_HANDLE_SIGNAL_SIGNAL4| - Generic signal 4, used by events.
 //   |MOJO_HANDLE_SIGNAL_READ_THRESHOLD| - Can read a certain amount of data
 //       from the handle (e.g., a data pipe consumer; see
 //       |MojoDataPipeConsumerOptions|).
+//   |MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD| - Can write a certain amount of data
+//       to the handle (e.g., a data pipe producer; see
+//       |MojoDataPipeProducerOptions|).
+//
+// There are also some additional convenience macros:
+//   |MOJO_HANDLE_SIGNAL_SIGNALED| - Alias for |MOJO_HANDLE_SIGNAL_SIGNAL0|.
+//   |MOJO_HANDLE_SIGNAL_SIGNALS_MASK| - A mask for
+//       |MOJO_HANDLE_SIGNAL_SIGNAL[0-4].
 
 typedef uint32_t MojoHandleSignals;
 
@@ -75,8 +90,16 @@ typedef uint32_t MojoHandleSignals;
 #define MOJO_HANDLE_SIGNAL_READABLE ((MojoHandleSignals)1 << 0)
 #define MOJO_HANDLE_SIGNAL_WRITABLE ((MojoHandleSignals)1 << 1)
 #define MOJO_HANDLE_SIGNAL_PEER_CLOSED ((MojoHandleSignals)1 << 2)
-#define MOJO_HANDLE_SIGNAL_READ_THRESHOLD ((MojoHandleSignals)1 << 3)
-#define MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD ((MojoHandleSignals)1 << 4)
+#define MOJO_HANDLE_SIGNAL_SIGNAL0 ((MojoHandleSignals)1 << 3)
+#define MOJO_HANDLE_SIGNAL_SIGNAL1 ((MojoHandleSignals)1 << 4)
+#define MOJO_HANDLE_SIGNAL_SIGNAL2 ((MojoHandleSignals)1 << 5)
+#define MOJO_HANDLE_SIGNAL_SIGNAL3 ((MojoHandleSignals)1 << 6)
+#define MOJO_HANDLE_SIGNAL_SIGNAL4 ((MojoHandleSignals)1 << 7)
+#define MOJO_HANDLE_SIGNAL_READ_THRESHOLD ((MojoHandleSignals)1 << 8)
+#define MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD ((MojoHandleSignals)1 << 9)
+
+#define MOJO_HANDLE_SIGNAL_SIGNALED MOJO_HANDLE_SIGNAL_SIGNAL0
+#define MOJO_HANDLE_SIGNAL_SIGNALS_MASK ((MojoHandleSignals)31 << 3)
 
 // |MojoHandleSignalsState|: Returned by wait functions to indicate the
 // signaling state of handles. Members are as follows:
