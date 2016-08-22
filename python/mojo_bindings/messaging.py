@@ -281,7 +281,7 @@ class Connector(MessageReceiver):
     while dispatched:
       result, dispatched = _ReadAndDispatchMessage(
           self._handle, self._incoming_message_receiver)
-    if result == system.RESULT_SHOULD_WAIT:
+    if result == system.SYSTEM_RESULT_SHOULD_WAIT:
       self._RegisterAsyncWaiterForRead()
       return
     self._OnError(result)
@@ -398,7 +398,7 @@ def _ReadAndDispatchMessage(handle, message_receiver):
   (result, _, sizes) = handle.ReadMessage()
   if result == system.RESULT_OK and message_receiver:
     dispatched = message_receiver.Accept(Message(bytearray(), []))
-  if result != system.RESULT_RESOURCE_EXHAUSTED:
+  if result != system.SYSTEM_RESULT_RESOURCE_EXHAUSTED:
     return (result, dispatched)
   (result, data, _) = handle.ReadMessage(bytearray(sizes[0]), sizes[1])
   if result == system.RESULT_OK and message_receiver:
