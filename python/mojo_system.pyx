@@ -75,8 +75,8 @@ READ_DATA_FLAG_QUERY = c_core.MOJO_READ_DATA_FLAG_QUERY
 READ_DATA_FLAG_PEEK = c_core.MOJO_READ_DATA_FLAG_PEEK
 MAP_BUFFER_FLAG_NONE = c_core.MOJO_MAP_BUFFER_FLAG_NONE
 
-_WAITMANY_NO_SIGNAL_STATE_ERRORS = [RESULT_INVALID_ARGUMENT,
-                                    RESULT_RESOURCE_EXHAUSTED]
+_WAITMANY_NO_SIGNAL_STATE_ERRORS = [SYSTEM_RESULT_INVALID_ARGUMENT,
+                                    SYSTEM_RESULT_RESOURCE_EXHAUSTED]
 
 def GetTimeTicksNow():
   """Monotonically increasing tick count representing "right now."
@@ -439,10 +439,10 @@ cdef class Handle(object):
     - if code is RESULT_OK, sizes will be None, and data will be a pair of
       (buffer, handles) where buffer is a view of the input buffer with the read
       data, and handles is a list of received handles.
-    - if code is RESULT_RESOURCE_EXHAUSTED, data will be None and sizes will be
-      a pair of (buffer_size, handles_size) where buffer_size is the size of the
-      next message data and handles_size is the number of handles in the next
-      message.
+    - if code is SYSTEM_RESULT_RESOURCE_EXHAUSTED, data will be None and sizes
+      will be a pair of (buffer_size, handles_size) where buffer_size is the
+      size of the next message data and handles_size is the number of handles in
+      the next message.
     - if code is any other value, data and sizes will be None.
 
     See mojo/public/c/include/mojo/system/message_pipe.h
