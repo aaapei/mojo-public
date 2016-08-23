@@ -104,9 +104,9 @@ MOJO_BEGIN_EXTERN_C
 // On success, |*shared_buffer_handle| will be set to the handle for the shared
 // buffer. (On failure, it is not modified.) The handle has (at least) the
 // following rights: |MOJO_HANDLE_RIGHT_DUPLICATE|,
-// |MOJO_HANDLE_RIGHT_TRANSFER|, |MOJO_HANDLE_RIGHT_GET_OPTIONS|,
-// |MOJO_HANDLE_RIGHT_SET_OPTIONS|, |MOJO_HANDLE_RIGHT_MAP_READABLE|,
-// |MOJO_HANDLE_RIGHT_MAP_WRITABLE|, and |MOJO_HANDLE_RIGHT_MAP_EXECUTABLE|.
+// |MOJO_HANDLE_RIGHT_TRANSFER|, |MOJO_HANDLE_RIGHT_READ|,
+// |MOJO_HANDLE_RIGHT_WRITE|, |MOJO_HANDLE_RIGHT_EXECUTE|,
+// |MOJO_HANDLE_RIGHT_GET_OPTIONS|, and |MOJO_HANDLE_RIGHT_SET_OPTIONS|.
 //
 // Note: While more than |num_bytes| bytes may apparently be
 // available/visible/readable/writable, trying to use those extra bytes is
@@ -187,11 +187,10 @@ MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
 
 // |MojoMapBuffer()|: Maps the part (at offset |offset| of length |num_bytes|)
 // of the buffer given by |buffer_handle| (which must have both the
-// |MOJO_HANDLE_RIGHT_MAP_READABLE| and |MOJO_HANDLE_RIGHT_MAP_WRITABLE| rights)
-// into memory, with options specified by |flags|. |offset + num_bytes| must be
-// less than or equal to the size of the buffer. On success, |*buffer| points to
-// memory with the requested part of the buffer. (On failure, it is not
-// modified.)
+// |MOJO_HANDLE_RIGHT_READ| and |MOJO_HANDLE_RIGHT_WRITE| rights) into memory,
+// with options specified by |flags|. |offset + num_bytes| must be less than or
+// equal to the size of the buffer. On success, |*buffer| points to memory with
+// the requested part of the buffer. (On failure, it is not modified.)
 //
 // A single buffer handle may have multiple active mappings (possibly depending
 // on the buffer type). The permissions (e.g., writable or executable) of the
@@ -208,8 +207,7 @@ MojoResult MojoGetBufferInformation(MojoHandle buffer_handle,            // In.
 //       |buffer_handle| is not a valid buffer handle or the range specified by
 //       |offset| and |num_bytes| is not valid).
 //   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |buffer_handle| does not have
-//       both the |MOJO_HANDLE_RIGHT_MAP_READABLE| and
-//       |MOJO_HANDLE_RIGHT_MAP_WRITABLE| rights.
+//       both the |MOJO_HANDLE_RIGHT_READ| and |MOJO_HANDLE_RIGHT_WRITE| rights.
 //   |MOJO_SYSTEM_RESULT_RESOURCE_EXHAUSTED| if the mapping operation itself
 //       failed (e.g., due to not having appropriate address space available).
 //   |MOJO_SYSTEM_RESULT_BUSY| if |buffer_handle| is currently in use in some

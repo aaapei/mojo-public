@@ -29,19 +29,13 @@ typedef uint32_t MojoHandle;
 //   |MOJO_HANDLE_RIGHT_TRANSFER| - Right to transfer a handle (e.g., include in
 //       a message).
 //   |MOJO_HANDLE_RIGHT_READ| - Right to "read" from the handle (e.g., read a
-//       message).
+//       message, map memory as readable).
 //   |MOJO_HANDLE_RIGHT_WRITE| - Right to "write" to the handle (e.g., write a
-//       message).
+//       message, map memory as writable).
+//   |MOJO_HANDLE_RIGHT_EXECUTE| - Right to "execute" from the handle (e.g., map
+//       memory as executable).
 //   |MOJO_HANDLE_RIGHT_GET_OPTIONS| - Right to get a handle's options.
 //   |MOJO_HANDLE_RIGHT_SET_OPTIONS| - Right to set a handle's options.
-//   |MOJO_HANDLE_RIGHT_MAP_READABLE| - Right to "map" a (e.g., buffer) handle
-//       as readable memory.
-//   |MOJO_HANDLE_RIGHT_MAP_WRITABLE| - Right to "map" a (e.g., buffer) handle
-//       as writable memory.
-//   |MOJO_HANDLE_RIGHT_MAP_EXECUTABLE| - Right to "map" a (e.g., buffer) handle
-//       as executable memory.
-//
-// TODO(vtl): Add rights support/checking to existing handle types.
 
 typedef uint32_t MojoHandleRights;
 
@@ -50,11 +44,9 @@ typedef uint32_t MojoHandleRights;
 #define MOJO_HANDLE_RIGHT_TRANSFER ((MojoHandleRights)1 << 1)
 #define MOJO_HANDLE_RIGHT_READ ((MojoHandleRights)1 << 2)
 #define MOJO_HANDLE_RIGHT_WRITE ((MojoHandleRights)1 << 3)
-#define MOJO_HANDLE_RIGHT_GET_OPTIONS ((MojoHandleRights)1 << 4)
-#define MOJO_HANDLE_RIGHT_SET_OPTIONS ((MojoHandleRights)1 << 5)
-#define MOJO_HANDLE_RIGHT_MAP_READABLE ((MojoHandleRights)1 << 6)
-#define MOJO_HANDLE_RIGHT_MAP_WRITABLE ((MojoHandleRights)1 << 7)
-#define MOJO_HANDLE_RIGHT_MAP_EXECUTABLE ((MojoHandleRights)1 << 8)
+#define MOJO_HANDLE_RIGHT_EXECUTE ((MojoHandleRights)1 << 4)
+#define MOJO_HANDLE_RIGHT_GET_OPTIONS ((MojoHandleRights)1 << 5)
+#define MOJO_HANDLE_RIGHT_SET_OPTIONS ((MojoHandleRights)1 << 6)
 
 // |MojoHandleSignals|: Used to specify signals that can be waited on for a
 // handle (and which can be triggered), e.g., the ability to read or write to
