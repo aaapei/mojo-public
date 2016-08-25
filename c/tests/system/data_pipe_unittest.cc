@@ -13,15 +13,38 @@
 #include <string.h>
 
 #include "gtest/gtest.h"
+#include "mojo/public/cpp/system/macros.h"
 
 namespace {
 
-const MojoHandleRights kDefaultDataPipeProducerHandleRights =
+constexpr uint32_t kSizeOfOptions =
+    static_cast<uint32_t>(sizeof(MojoCreateDataPipeOptions));
+
+constexpr MojoHandleRights kDefaultDataPipeProducerHandleRights =
     MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_WRITE |
     MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS;
-const MojoHandleRights kDefaultDataPipeConsumerHandleRights =
+constexpr MojoHandleRights kDefaultDataPipeConsumerHandleRights =
     MOJO_HANDLE_RIGHT_TRANSFER | MOJO_HANDLE_RIGHT_READ |
     MOJO_HANDLE_RIGHT_GET_OPTIONS | MOJO_HANDLE_RIGHT_SET_OPTIONS;
+
+constexpr MojoDeadline kZeroTimeout = 0u;
+constexpr MojoDeadline kTinyTimeout = static_cast<MojoDeadline>(100u * 1000u);
+constexpr MojoDeadline kActionTimeout =
+    static_cast<MojoDeadline>(10u * 1000u * 1000u);
+
+// Helper for testing *successful* data pipe creates.
+void Create(const MojoCreateDataPipeOptions* options,
+            MojoHandle* data_pipe_producer_handle,
+            MojoHandle* data_pipe_consumer_handle) {
+  *data_pipe_producer_handle = MOJO_HANDLE_INVALID;
+  *data_pipe_consumer_handle = MOJO_HANDLE_INVALID;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoCreateDataPipe(options, data_pipe_producer_handle,
+                               data_pipe_consumer_handle));
+  EXPECT_NE(*data_pipe_producer_handle, MOJO_HANDLE_INVALID);
+  EXPECT_NE(*data_pipe_consumer_handle, MOJO_HANDLE_INVALID);
+  EXPECT_NE(*data_pipe_producer_handle, *data_pipe_consumer_handle);
+}
 
 TEST(DataPipeTest, InvalidHandle) {
   MojoDataPipeProducerOptions dpp_options = {
@@ -66,10 +89,7 @@ TEST(DataPipeTest, InvalidHandle) {
 TEST(DataPipeTest, Basic) {
   MojoHandle hp = MOJO_HANDLE_INVALID;
   MojoHandle hc = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoCreateDataPipe(nullptr, &hp, &hc));
-  EXPECT_NE(hp, MOJO_HANDLE_INVALID);
-  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
-  EXPECT_NE(hp, hc);
+  Create(nullptr, &hp, &hc);
 
   // Both handles should have the correct rights.
   MojoHandleRights rights = MOJO_HANDLE_RIGHT_NONE;
@@ -197,19 +217,15 @@ TEST(DataPipeTest, Basic) {
 }
 
 TEST(DataPipeTest, WriteThreshold) {
-  const MojoCreateDataPipeOptions options = {
-      static_cast<uint32_t>(
-          sizeof(MojoCreateDataPipeOptions)),   // |struct_size|.
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
       MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
       2u,                                       // |element_num_bytes|.
       4u                                        // |capacity_num_bytes|.
   };
   MojoHandle hp = MOJO_HANDLE_INVALID;
   MojoHandle hc = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoCreateDataPipe(&options, &hp, &hc));
-  EXPECT_NE(hp, MOJO_HANDLE_INVALID);
-  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
-  EXPECT_NE(hc, hp);
+  Create(&kOptions, &hp, &hc);
 
   MojoDataPipeProducerOptions popts;
   static const uint32_t kPoptsSize = static_cast<uint32_t>(sizeof(popts));
@@ -328,10 +344,7 @@ TEST(DataPipeTest, WriteThreshold) {
 TEST(DataPipeTest, ReadThreshold) {
   MojoHandle hp = MOJO_HANDLE_INVALID;
   MojoHandle hc = MOJO_HANDLE_INVALID;
-  EXPECT_EQ(MOJO_RESULT_OK, MojoCreateDataPipe(nullptr, &hp, &hc));
-  EXPECT_NE(hp, MOJO_HANDLE_INVALID);
-  EXPECT_NE(hc, MOJO_HANDLE_INVALID);
-  EXPECT_NE(hc, hp);
+  Create(nullptr, &hp, &hc);
 
   MojoDataPipeConsumerOptions copts;
   static const uint32_t kCoptsSize = static_cast<uint32_t>(sizeof(copts));
@@ -438,6 +451,371 @@ TEST(DataPipeTest, ReadThreshold) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
 }
+
+TEST(DataPipeTest, Create) {
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  // Default options.
+  Create(nullptr, &hp, &hc);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+
+  static constexpr MojoCreateDataPipeOptions kTestOptions[] = {
+      // Trivial element size, non-default capacity.
+      {kSizeOfOptions,                           // |struct_size|.
+       MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+       1,                                        // |element_num_bytes|.
+       1000},                                    // |capacity_num_bytes|.
+      // Nontrivial element size, non-default capacity.
+      {kSizeOfOptions,                           // |struct_size|.
+       MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+       4,                                        // |element_num_bytes|.
+       4000},                                    // |capacity_num_bytes|.
+      // Nontrivial element size, default capacity.
+      {kSizeOfOptions,                           // |struct_size|.
+       MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+       100,                                      // |element_num_bytes|.
+       0}                                        // |capacity_num_bytes|.
+  };
+
+  for (size_t i = 0; i < MOJO_ARRAYSIZE(kTestOptions); i++) {
+    Create(&kTestOptions[i], &hp, &hc);
+    EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+    EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+  }
+}
+
+TEST(DataPipeTest, SimpleReadWrite) {
+  static constexpr MojoCreateDataPipeOptions options = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      static_cast<uint32_t>(sizeof(int32_t)),   // |element_num_bytes|.
+      1000 * sizeof(int32_t)                    // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&options, &hp, &hc);
+
+  // Try reading; nothing there yet.
+  int32_t elements[10] = {};
+  uint32_t num_bytes =
+      static_cast<uint32_t>(MOJO_ARRAYSIZE(elements) * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_SHOULD_WAIT,
+            MojoReadData(hc, elements, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+
+  // Query; nothing there yet.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(0u, num_bytes);
+
+  // Discard; nothing there yet.
+  num_bytes = static_cast<uint32_t>(5u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_SHOULD_WAIT,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_DISCARD));
+
+  // Read with invalid |num_bytes|.
+  num_bytes = sizeof(elements[0]) + 1;
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
+            MojoReadData(hc, elements, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+
+  // Check that the readable signal isn't set yet.
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kZeroTimeout, nullptr));
+
+  // Write two elements.
+  elements[0] = 123;
+  elements[1] = 456;
+  num_bytes = static_cast<uint32_t>(2u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWriteData(hp, elements, &num_bytes, MOJO_WRITE_DATA_FLAG_NONE));
+  // It should have written everything (even without "all or none").
+  EXPECT_EQ(2u * sizeof(elements[0]), num_bytes);
+
+  // Wait (should already be readable).
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kActionTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Query.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(2 * sizeof(elements[0]), num_bytes);
+
+  // Read one element.
+  elements[0] = -1;
+  elements[1] = -1;
+  num_bytes = static_cast<uint32_t>(1u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, elements, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(1u * sizeof(elements[0]), num_bytes);
+  EXPECT_EQ(123, elements[0]);
+  EXPECT_EQ(-1, elements[1]);
+
+  // Query.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(1 * sizeof(elements[0]), num_bytes);
+
+  // Peek one element.
+  elements[0] = -1;
+  elements[1] = -1;
+  num_bytes = static_cast<uint32_t>(1u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, elements, &num_bytes, MOJO_READ_DATA_FLAG_PEEK));
+  EXPECT_EQ(1u * sizeof(elements[0]), num_bytes);
+  EXPECT_EQ(456, elements[0]);
+  EXPECT_EQ(-1, elements[1]);
+
+  // Query. Still has 1 element remaining.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(1 * sizeof(elements[0]), num_bytes);
+
+  // Try to read two elements, with "all or none".
+  elements[0] = -1;
+  elements[1] = -1;
+  num_bytes = static_cast<uint32_t>(2u * sizeof(elements[0]));
+  EXPECT_EQ(
+      MOJO_RESULT_OUT_OF_RANGE,
+      MojoReadData(hc, elements, &num_bytes, MOJO_READ_DATA_FLAG_ALL_OR_NONE));
+  EXPECT_EQ(-1, elements[0]);
+  EXPECT_EQ(-1, elements[1]);
+
+  // Try to read two elements, without "all or none".
+  elements[0] = -1;
+  elements[1] = -1;
+  num_bytes = static_cast<uint32_t>(2u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, elements, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(1u * sizeof(elements[0]), num_bytes);
+  EXPECT_EQ(456, elements[0]);
+  EXPECT_EQ(-1, elements[1]);
+
+  // Query.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(0u, num_bytes);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// Note: The "basic" waiting tests test that the "wait states" are correct in
+// various situations; they don't test that waiters are properly awoken on state
+// changes. (For that, we need to use multiple threads.)
+TEST(DataPipeTest, BasicProducerWaiting) {
+  // Note: We take advantage of the fact that current for current
+  // implementations capacities are strict maximums. This is not guaranteed by
+  // the API.
+
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      static_cast<uint32_t>(sizeof(int32_t)),   // |element_num_bytes|.
+      2 * sizeof(int32_t)                       // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Never readable.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_READABLE, kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Already writable.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, kZeroTimeout, &hss));
+
+  // Write two elements.
+  int32_t elements[2] = {123, 456};
+  uint32_t num_bytes = static_cast<uint32_t>(2u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, elements, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_ALL_OR_NONE));
+  EXPECT_EQ(static_cast<uint32_t>(2u * sizeof(elements[0])), num_bytes);
+
+  // It shouldn't be writable yet.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, kZeroTimeout, &hss));
+  EXPECT_EQ(0u, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Wait for data to become available to the consumer.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Peek one element.
+  elements[0] = -1;
+  elements[1] = -1;
+  num_bytes = static_cast<uint32_t>(1u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoReadData(hc, elements, &num_bytes,
+                                         MOJO_READ_DATA_FLAG_ALL_OR_NONE |
+                                             MOJO_READ_DATA_FLAG_PEEK));
+  EXPECT_EQ(static_cast<uint32_t>(1u * sizeof(elements[0])), num_bytes);
+  EXPECT_EQ(123, elements[0]);
+  EXPECT_EQ(-1, elements[1]);
+
+  // It still shouldn't be writable yet.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, kZeroTimeout, &hss));
+  EXPECT_EQ(0u, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Do it again; read one element.
+  elements[0] = -1;
+  elements[1] = -1;
+  num_bytes = static_cast<uint32_t>(1u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoReadData(hc, elements, &num_bytes,
+                                         MOJO_READ_DATA_FLAG_ALL_OR_NONE));
+  EXPECT_EQ(static_cast<uint32_t>(1u * sizeof(elements[0])), num_bytes);
+  EXPECT_EQ(123, elements[0]);
+  EXPECT_EQ(-1, elements[1]);
+
+  // Waiting should now succeed.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Try writing, using a two-phase write.
+  void* buffer = nullptr;
+  num_bytes = static_cast<uint32_t>(3u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginWriteData(hp, &buffer, &num_bytes,
+                                               MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_TRUE(buffer);
+  EXPECT_EQ(static_cast<uint32_t>(1u * sizeof(elements[0])), num_bytes);
+
+  static_cast<int32_t*>(buffer)[0] = 789;
+  EXPECT_EQ(
+      MOJO_RESULT_OK,
+      MojoEndWriteData(hp, static_cast<uint32_t>(1u * sizeof(elements[0]))));
+
+  // Read one element, using a two-phase read.
+  const void* read_buffer = nullptr;
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginReadData(hc, &read_buffer, &num_bytes,
+                                              MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_TRUE(read_buffer);
+  // Since we only read one element (after having written three in all), the
+  // two-phase read should only allow us to read one. This checks an
+  // implementation detail!
+  EXPECT_EQ(static_cast<uint32_t>(1u * sizeof(elements[0])), num_bytes);
+  EXPECT_EQ(456, static_cast<const int32_t*>(read_buffer)[0]);
+  EXPECT_EQ(
+      MOJO_RESULT_OK,
+      MojoEndReadData(hc, static_cast<uint32_t>(1u * sizeof(elements[0]))));
+
+  // Waiting should succeed.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Write one element.
+  elements[0] = 123;
+  num_bytes = static_cast<uint32_t>(1u * sizeof(elements[0]));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWriteData(hp, elements, &num_bytes, MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(static_cast<uint32_t>(1u * sizeof(elements[0])), num_bytes);
+
+  // Close the consumer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+
+  // It should now be never-writable.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+}
+
+TEST(DataPipeTest, PeerClosedProducerWaiting) {
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      static_cast<uint32_t>(sizeof(int32_t)),   // |element_num_bytes|.
+      2 * sizeof(int32_t)                       // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Close the consumer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+
+  // "Peer closed" should be signaled on the producer.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_PEER_CLOSED, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+}
+
+TEST(DataPipeTest, PeerClosedConsumerWaiting) {
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      static_cast<uint32_t>(sizeof(int32_t)),   // |element_num_bytes|.
+      2 * sizeof(int32_t)                       // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Close the producer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+
+  // "Peer closed" should be signaled on the consumer.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_PEER_CLOSED, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// TODO(vtl): Port more tests from the EDK's data_pipe_impl_unittest.cc.
 
 // TODO(vtl): Add multi-threaded tests.
 
