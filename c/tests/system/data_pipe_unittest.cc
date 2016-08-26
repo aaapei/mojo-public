@@ -1639,7 +1639,707 @@ TEST(DataPipeTest, TwoPhaseWriteCloseBoth) {
   EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
 }
 
-// TODO(vtl): Port more tests from the EDK's data_pipe_impl_unittest.cc.
+// Tests the behavior of writing, closing the producer, and then reading (with
+// and without data remaining).
+TEST(DataPipeTest, WriteCloseProducerReadNoData) {
+  const char kTestData[] = "hello world";
+  const uint32_t kTestDataSize = static_cast<uint32_t>(sizeof(kTestData));
+
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      1u,                                       // |element_num_bytes|.
+      1000u                                     // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Write some data, so we'll have something to read.
+  uint32_t num_bytes = kTestDataSize;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, kTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+
+  // Close the producer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+
+  // Wait. (Note that once the consumer knows that the producer is closed, it
+  // must also know about all the data that was sent.)
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_PEER_CLOSED, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Peek that data.
+  char buffer[1000];
+  num_bytes = static_cast<uint32_t>(sizeof(buffer));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, buffer, &num_bytes, MOJO_READ_DATA_FLAG_PEEK));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+  EXPECT_EQ(0, memcmp(buffer, kTestData, kTestDataSize));
+
+  // Read that data.
+  memset(buffer, 0, 1000);
+  num_bytes = static_cast<uint32_t>(sizeof(buffer));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, buffer, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+  EXPECT_EQ(0, memcmp(buffer, kTestData, kTestDataSize));
+
+  // A second read should fail.
+  num_bytes = static_cast<uint32_t>(sizeof(buffer));
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoReadData(hc, buffer, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+
+  // A two-phase read should also fail.
+  const void* read_buffer_ptr = nullptr;
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoBeginReadData(hc, &read_buffer_ptr, &num_bytes,
+                              MOJO_READ_DATA_FLAG_NONE));
+
+  // Ditto for discard.
+  num_bytes = 10u;
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_DISCARD));
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// Tests the behavior of writing, reading (all the data), closing the producer,
+// and then waiting for more data (with no data remaining).
+TEST(DataPipeTest, WriteReadCloseProducerWaitNoData) {
+  const int64_t kTestData = 123456789012345LL;
+  const uint32_t kTestDataSize = static_cast<uint32_t>(sizeof(kTestData));
+
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      kTestDataSize,                            // |element_num_bytes|.
+      100u * kTestDataSize                      // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Write some data, so we'll have something to read.
+  uint32_t num_bytes = kTestDataSize;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, &kTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+
+  // Wait.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Read that data.
+  int64_t data[10] = {};
+  num_bytes = static_cast<uint32_t>(sizeof(data));
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, data, &num_bytes, MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+  EXPECT_EQ(kTestData, data[0]);
+
+  // Close the producer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+
+  // Wait.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// During a two-phase read, the consumer is not readable so it may be waited
+// upon (to become readable again). If the producer is closed and the two-phase
+// read consumes the remaining data, that wait should become unsatisfiable.
+TEST(DataPipeTest, BeginReadCloseProducerWaitEndReadNoData) {
+  const int64_t kTestData = 123456789012345LL;
+  const uint32_t kTestDataSize = static_cast<uint32_t>(sizeof(kTestData));
+
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      kTestDataSize,                            // |element_num_bytes|.
+      100u * kTestDataSize                      // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Write some data, so we'll have something to read.
+  uint32_t num_bytes = kTestDataSize;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, &kTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+
+  // Wait.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Start a two-phase read.
+  num_bytes = 0u;
+  const void* read_ptr = nullptr;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginReadData(hc, &read_ptr, &num_bytes,
+                                              MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+  EXPECT_EQ(kTestData, static_cast<const int64_t*>(read_ptr)[0]);
+
+  // Close the producer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+
+  // Wait for producer close to be detected.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_PEER_CLOSED, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Complete the two-phase read.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoEndReadData(hc, kTestDataSize));
+
+  // Wait.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// During a two-phase write, the producer is not writable so it may be waited
+// upon (to become writable again). If the consumer is closed, that wait should
+// become unsatisfiable.
+TEST(DataPipeTest, BeginWriteCloseConsumerWaitEndWrite) {
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      1u,                                       // |element_num_bytes|.
+      100u                                      // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Start a two-phase write.
+  void* write_ptr = nullptr;
+  uint32_t num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginWriteData(hp, &write_ptr, &num_bytes,
+                                               MOJO_WRITE_DATA_FLAG_NONE));
+
+  // Close the consumer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+
+  // Wait for the consumer close to be detected.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_PEER_CLOSED, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  // Complete the two-phase write (with nothing written).
+  EXPECT_EQ(MOJO_RESULT_OK, MojoEndWriteData(hp, 0u));
+
+  // Wait.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+}
+
+// Test that two-phase reads/writes behave correctly when given invalid
+// arguments.
+TEST(DataPipeTest, TwoPhaseMoreInvalidArguments) {
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      static_cast<uint32_t>(sizeof(int32_t)),   // |element_num_bytes|.
+      10 * sizeof(int32_t)                      // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // No data.
+  uint32_t num_bytes = 1000u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(0u, num_bytes);
+
+  // Try "ending" a two-phase write when one isn't active.
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoEndWriteData(hp, 1u * sizeof(int32_t)));
+
+  // Still no data.
+  num_bytes = 1000u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(0u, num_bytes);
+
+  // Try ending a two-phase write with an invalid amount (too much).
+  void* write_ptr = nullptr;
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginWriteData(hp, &write_ptr, &num_bytes,
+                                               MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
+      MojoEndWriteData(hp, num_bytes + static_cast<uint32_t>(sizeof(int32_t))));
+
+  // But the two-phase write still ended.
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION, MojoEndWriteData(hp, 0u));
+
+  // Still no data.
+  num_bytes = 1000u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(0u, num_bytes);
+
+  // Try ending a two-phase write with an invalid amount (not a multiple of the
+  // element size).
+  write_ptr = nullptr;
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginWriteData(hp, &write_ptr, &num_bytes,
+                                               MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_GE(num_bytes, 1u);
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoEndWriteData(hp, 1u));
+
+  // But the two-phase write still ended.
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION, MojoEndWriteData(hp, 0u));
+
+  // Still no data.
+  num_bytes = 1000u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(0u, num_bytes);
+
+  // Now write some data, so we'll be able to try reading.
+  int32_t element = 123;
+  num_bytes = 1u * sizeof(int32_t);
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWriteData(hp, &element, &num_bytes, MOJO_WRITE_DATA_FLAG_NONE));
+
+  // Wait for data.
+  // TODO(vtl): (See corresponding TODO in AllOrNone.)
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // One element available.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(1u * sizeof(int32_t), num_bytes);
+
+  // Try "ending" a two-phase read when one isn't active.
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+            MojoEndReadData(hc, 1u * sizeof(int32_t)));
+
+  // Still one element available.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(1u * sizeof(int32_t), num_bytes);
+
+  // Try ending a two-phase read with an invalid amount (too much).
+  num_bytes = 0u;
+  const void* read_ptr = nullptr;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginReadData(hc, &read_ptr, &num_bytes,
+                                              MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_INVALID_ARGUMENT,
+      MojoEndReadData(hc, num_bytes + static_cast<uint32_t>(sizeof(int32_t))));
+
+  // Still one element available.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(1u * sizeof(int32_t), num_bytes);
+
+  // Try ending a two-phase read with an invalid amount (not a multiple of the
+  // element size).
+  num_bytes = 0u;
+  read_ptr = nullptr;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginReadData(hc, &read_ptr, &num_bytes,
+                                              MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(1u * sizeof(int32_t), num_bytes);
+  EXPECT_EQ(123, static_cast<const int32_t*>(read_ptr)[0]);
+  EXPECT_EQ(MOJO_SYSTEM_RESULT_INVALID_ARGUMENT, MojoEndReadData(hc, 1u));
+
+  // Still one element available.
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(1u * sizeof(int32_t), num_bytes);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// Tests the behavior of writing, closing the producer, and then doing a
+// two-phase read of all the data.
+// Note: If this test fails/crashes flakily, this is almost certainly an
+// indication of a problem in the implementation and not the test.
+TEST(DataPipeTest, WriteCloseProducerTwoPhaseReadAllData) {
+  const char kTestData[] = "hello world";
+  const uint32_t kTestDataSize = static_cast<uint32_t>(sizeof(kTestData));
+
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      1u,                                       // |element_num_bytes|.
+      1000u                                     // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  // Write some data, so we'll have something to read.
+  uint32_t num_bytes = kTestDataSize;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, kTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+
+  WaitForData(hc, kTestDataSize, kTinyTimeout);
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoReadData(hc, nullptr, &num_bytes, MOJO_READ_DATA_FLAG_QUERY));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+
+  const void* read_buffer_ptr = nullptr;
+  num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoBeginReadData(hc, &read_buffer_ptr, &num_bytes,
+                                              MOJO_READ_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+  EXPECT_EQ(0, memcmp(read_buffer_ptr, kTestData, kTestDataSize));
+
+  // Close the producer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoEndReadData(hc, num_bytes));
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// TODO(vtl): This and DataPipeTest.WriteThreshold have nontrivial overlap (I've
+// already deleted some of the overlap). Possibly this should just be deleted.
+TEST(DataPipeTest, WriteThreshold2) {
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      1u,                                       // |element_num_bytes|.
+      10u                                       // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  MojoDataPipeProducerOptions popts;
+  static const uint32_t kPoptsSize = static_cast<uint32_t>(sizeof(popts));
+
+  // Try to wait to the write threshold signal; it should already have it.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+                                     kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Write 5 bytes.
+  static const char kTestData[5] = {'A', 'B', 'C', 'D', 'E'};
+  uint32_t num_bytes = 5;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, kTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(5u, num_bytes);
+
+  // It should still have the write threshold signal.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+                                     kZeroTimeout, nullptr));
+
+  // Set the write threshold to 5.
+  popts.struct_size = kPoptsSize;
+  popts.write_threshold_num_bytes = 5u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeProducerOptions(hp, &popts));
+  popts.write_threshold_num_bytes = 123u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeProducerOptions(hp, &popts, kPoptsSize));
+  EXPECT_EQ(5u, popts.write_threshold_num_bytes);
+
+  // Should still have the write threshold signal.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+                                     kZeroTimeout, nullptr));
+
+  // Set the write threshold to 6.
+  popts.struct_size = kPoptsSize;
+  popts.write_threshold_num_bytes = 6u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeProducerOptions(hp, &popts));
+
+  // Should no longer have the write threshold signal.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+      MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Wait for the consumer to be readable.
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoWait(hc, MOJO_HANDLE_SIGNAL_READABLE, kTinyTimeout, nullptr));
+
+  // Read a byte.
+  char read_byte = 'a';
+  num_bytes = sizeof(read_byte);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoReadData(hc, &read_byte, &num_bytes,
+                                         MOJO_READ_DATA_FLAG_ALL_OR_NONE));
+  EXPECT_EQ(1u, num_bytes);
+  EXPECT_EQ(kTestData[0], read_byte);
+
+  // Wait; should get the write threshold signal.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+                                     kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_WRITABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Write 6 more bytes.
+  static const char kMoreTestData[6] = {'1', '2', '3', '4', '5', '6'};
+  num_bytes = 6;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, kMoreTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(6u, num_bytes);
+
+  // Should no longer have the write threshold signal.
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+      MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, kZeroTimeout, nullptr));
+
+  // Set the write threshold to 0 (which means the element size, 1).
+  popts.struct_size = kPoptsSize;
+  popts.write_threshold_num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeProducerOptions(hp, &popts));
+  popts.write_threshold_num_bytes = 123u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeProducerOptions(hp, &popts, kPoptsSize));
+  EXPECT_EQ(0u, popts.write_threshold_num_bytes);
+
+  // Should still not have the write threshold signal.
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+      MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, kZeroTimeout, nullptr));
+
+  // Close the consumer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+
+  // Wait; the condition should now never be satisfiable.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+      MojoWait(hp, MOJO_HANDLE_SIGNAL_WRITE_THRESHOLD, kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+}
+
+// TODO(vtl): This and DataPipeTest.ReadThreshold have nontrivial overlap (I've
+// already deleted some of the overlap). Possibly this should just be deleted.
+TEST(DataPipeTest, ReadThreshold2) {
+  static constexpr MojoCreateDataPipeOptions kOptions = {
+      kSizeOfOptions,                           // |struct_size|.
+      MOJO_CREATE_DATA_PIPE_OPTIONS_FLAG_NONE,  // |flags|.
+      1u,                                       // |element_num_bytes|.
+      1000u                                     // |capacity_num_bytes|.
+  };
+  MojoHandle hp = MOJO_HANDLE_INVALID;
+  MojoHandle hc = MOJO_HANDLE_INVALID;
+  Create(&kOptions, &hp, &hc);
+
+  MojoDataPipeConsumerOptions copts;
+  static const uint32_t kCoptsSize = static_cast<uint32_t>(sizeof(copts));
+
+  // Trivial wait: it shouldn't have the read threshold signal.
+  MojoHandleSignalsState hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+      MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, kZeroTimeout, &hss));
+  EXPECT_EQ(0u, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Write a byte.
+  const char kTestData[] = {'x'};
+  const uint32_t kTestDataSize = static_cast<uint32_t>(sizeof(kTestData));
+  uint32_t num_bytes = kTestDataSize;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, kTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+
+  // Wait for the read threshold signal.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                                     kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Set the read threshold to 1.
+  copts.struct_size = kCoptsSize;
+  copts.read_threshold_num_bytes = 1u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeConsumerOptions(hc, &copts));
+  copts.read_threshold_num_bytes = 123u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeConsumerOptions(hc, &copts, kCoptsSize));
+  EXPECT_EQ(1u, copts.read_threshold_num_bytes);
+
+  // Wait: it should (still) already have the read threshold signal.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                                     kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Set the read threshold to 2.
+  copts.struct_size = kCoptsSize;
+  copts.read_threshold_num_bytes = 2u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeConsumerOptions(hc, &copts));
+  copts.read_threshold_num_bytes = 123u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeConsumerOptions(hc, &copts, kCoptsSize));
+  EXPECT_EQ(2u, copts.read_threshold_num_bytes);
+
+  // Write another byte.
+  num_bytes = kTestDataSize;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWriteData(hp, kTestData, &num_bytes,
+                                          MOJO_WRITE_DATA_FLAG_NONE));
+  EXPECT_EQ(kTestDataSize, num_bytes);
+
+  // Wait for the read threshold signal.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                                     kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Read one byte.
+  char read_byte = 'a';
+  num_bytes = sizeof(read_byte);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoReadData(hc, &read_byte, &num_bytes,
+                                         MOJO_READ_DATA_FLAG_ALL_OR_NONE));
+  EXPECT_EQ(1u, num_bytes);
+  EXPECT_EQ(kTestData[0], read_byte);
+
+  // Trivial wait: it shouldn't have the read threshold signal.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_DEADLINE_EXCEEDED,
+      MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Close the producer.
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hp));
+
+  // Wait; the current read threshold becomes never satisfiable.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+      MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED,
+            hss.satisfiable_signals);
+
+  // Set the read threshold back to zero to 0.
+  copts.struct_size = kCoptsSize;
+  copts.read_threshold_num_bytes = 0u;
+  EXPECT_EQ(MOJO_RESULT_OK, MojoSetDataPipeConsumerOptions(hc, &copts));
+  copts.read_threshold_num_bytes = 123u;
+  EXPECT_EQ(MOJO_RESULT_OK,
+            MojoGetDataPipeConsumerOptions(hc, &copts, kCoptsSize));
+  // "Get options" should preserve 0 (and not set it to the element size).
+  EXPECT_EQ(0u, copts.read_threshold_num_bytes);
+
+  // Wait: it should have the read threshold signal.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(MOJO_RESULT_OK, MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+                                     kTinyTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_READABLE | MOJO_HANDLE_SIGNAL_PEER_CLOSED |
+                MOJO_HANDLE_SIGNAL_READ_THRESHOLD,
+            hss.satisfiable_signals);
+
+  // Read the other byte.
+  read_byte = 'a';
+  num_bytes = sizeof(read_byte);
+  EXPECT_EQ(MOJO_RESULT_OK, MojoReadData(hc, &read_byte, &num_bytes,
+                                         MOJO_READ_DATA_FLAG_ALL_OR_NONE));
+  EXPECT_EQ(1u, num_bytes);
+  EXPECT_EQ(kTestData[0], read_byte);
+
+  // Wait: the read threshold signal should be unsatisfiable.
+  hss = MojoHandleSignalsState{0u, 0u};
+  EXPECT_EQ(
+      MOJO_SYSTEM_RESULT_FAILED_PRECONDITION,
+      MojoWait(hc, MOJO_HANDLE_SIGNAL_READ_THRESHOLD, kZeroTimeout, &hss));
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfied_signals);
+  EXPECT_EQ(MOJO_HANDLE_SIGNAL_PEER_CLOSED, hss.satisfiable_signals);
+
+  EXPECT_EQ(MOJO_RESULT_OK, MojoClose(hc));
+}
+
+// TODO(vtl): Port options validation tests from the EDK's
+// data_pipe_unittest.cc.
 
 // TODO(vtl): Add multi-threaded tests.
 
