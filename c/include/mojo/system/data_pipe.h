@@ -106,12 +106,12 @@ MOJO_STATIC_ASSERT(sizeof(struct MojoDataPipeConsumerOptions) == 8,
 //   |MOJO_READ_DATA_FLAG_DISCARD| - Discard (up to) the requested number of
 //        elements.
 //   |MOJO_READ_DATA_FLAG_QUERY| - Query the number of elements available to
-//       read. For use with |MojoReadData()| only. Mutually exclusive with
-//       |MOJO_READ_DATA_FLAG_DISCARD|, and |MOJO_READ_DATA_FLAG_ALL_OR_NONE|
-//       is ignored if this flag is set.
+//       read. For use with |MojoReadData()| only.
+//       |MOJO_READ_DATA_FLAG_ALL_OR_NONE| is ignored if this flag is set.
 //   |MOJO_READ_DATA_FLAG_PEEK| - Read elements without removing them. For use
-//       with |MojoReadData()| only. Mutually exclusive with
-//       |MOJO_READ_DATA_FLAG_DISCARD| and |MOJO_READ_DATA_FLAG_QUERY|.
+//       with |MojoReadData()| only.
+// |MOJO_READ_DATA_FLAG_DISCARD|, |MOJO_READ_DATA_FLAG_QUERY|, and
+// |MOJO_READ_DATA_FLAG_PEEK| are mutually exclusive.
 
 typedef uint32_t MojoReadDataFlags;
 
@@ -236,6 +236,7 @@ MojoResult MojoGetDataPipeProducerOptions(
 //   |MOJO_SYSTEM_RESULT_OUT_OF_RANGE| if |flags| has
 //       |MOJO_WRITE_DATA_FLAG_ALL_OR_NONE| set and the required amount of data
 //       (specified by |*num_bytes|) could not be written.
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if |flags| has an unknown flag set.
 //   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_producer_handle| is currently in
 //       use in some transaction (that, e.g., may result in it being
 //       invalidated, such as being sent in a message), or if there is a
@@ -286,6 +287,7 @@ MojoResult MojoWriteData(MojoHandle data_pipe_producer_handle,  // In.
 //       not have the |MOJO_HANDLE_RIGHT_WRITE| right.
 //   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe consumer handle
 //       has been closed.
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if |flags| has an unknown flag set.
 //   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_producer_handle| is currently in
 //       use in some transaction (that, e.g., may result in it being
 //       invalidated, such as being sent in a message), or if there is already a
@@ -425,6 +427,7 @@ MojoResult MojoGetDataPipeConsumerOptions(
 //       |MOJO_READ_DATA_FLAG_ALL_OR_NONE| set and the required amount of data
 //       is not available to be read or discarded (and the producer is still
 //       open).
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if |flags| has an unknown flag set.
 //   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in
 //       use in some transaction (that, e.g., may result in it being
 //       invalidated, such as being sent in a message), or if there is a
@@ -467,11 +470,12 @@ MojoResult MojoReadData(MojoHandle data_pipe_consumer_handle,  // In.
 //   |MOJO_RESULT_OK| on success.
 //   |MOJO_SYSTEM_RESULT_INVALID_ARGUMENT| if some argument was invalid (e.g.,
 //       |data_pipe_consumer_handle| is not a handle to a data pipe consumer,
-//       or |flags| has invalid flags set).
+//       or |flags| has disallowed flags set).
 //   |MOJO_SYSTEM_RESULT_PERMISSION_DENIED| if |data_pipe_consumer_handle| does
 //       not have the |MOJO_HANDLE_RIGHT_READ| right.
 //   |MOJO_SYSTEM_RESULT_FAILED_PRECONDITION| if the data pipe producer handle
 //       has been closed.
+//   |MOJO_SYSTEM_RESULT_UNIMPLEMENTED| if |flags| has an unknown flag set.
 //   |MOJO_SYSTEM_RESULT_BUSY| if |data_pipe_consumer_handle| is currently in
 //       use in some transaction (that, e.g., may result in it being
 //       invalidated, such as being sent in a message), or if there is already a
