@@ -360,6 +360,12 @@ template("mojom") {
         dep_label = get_label_info(d, "label_no_toolchain")
         deps += [ "${dep_label}_dart" ]
       }
+
+      non_dart_deps = []
+      if (defined(invoker.sources)) {
+        non_dart_deps +=
+            [ get_label_info(":$generator_target_name", "label_no_toolchain") ]
+      }
     }
   }
 
