@@ -194,10 +194,10 @@ _spec_to_encode_method = {
 # they are used to generate mojom Type's and ServiceDescription implementations.
 # They need to be imported, unless the file itself is being generated.
 _service_describer_pkg_short = "service_describer"
-_service_describer_pkg = "package:mojo/mojo/bindings/types/%s.mojom.dart" % \
+_service_describer_pkg = "package:mojo.public.interfaces.bindings/%s.mojom.dart" % \
   _service_describer_pkg_short
 _mojom_types_pkg_short = "mojom_types"
-_mojom_types_pkg = "package:mojo/mojo/bindings/types/%s.mojom.dart" % \
+_mojom_types_pkg = "package:mojo.public.interfaces.bindings/%s.mojom.dart" % \
   _mojom_types_pkg_short
 
 def GetDartType(kind):
@@ -469,10 +469,7 @@ def GetPackage(module):
   return 'mojom'
 
 def GetImportUri(module):
-  package = GetPackage(module);
-  elements = module.namespace.split('.')
-  elements.append("%s" % module.name)
-  return os.path.join(package, *elements)
+  return os.path.join(GetPackage(module), module.name)
 
 def RaiseHelper(msg):
     raise Exception(msg)

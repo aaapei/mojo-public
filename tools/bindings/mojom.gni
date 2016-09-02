@@ -8,6 +8,10 @@
 
 import("../../mojo_sdk.gni")
 
+if (is_fuchsia) {
+  import("//build/dart/dart_package.gni")
+}
+
 # Generate C++/JavaScript/Java/Python/Dart/Go source files from mojom files. The
 # output files will go under the generated file directory tree with the same
 # path as each input file.
@@ -333,6 +337,29 @@ template("mojom") {
                 "{{source_gen_dir}}/{{source_name_part}}.mojom-c.c",
                 "{{source_gen_dir}}/{{source_name_part}}.mojom-c.h",
               ])
+    }
+  }
+
+  if (is_fuchsia) {
+    # This target is used to generate Dart package information
+    dart_package("${target_name}_dart") {
+      infer_package_name = true
+      source_dir = target_gen_dir
+
+      deps = []
+      mojom_deps = []
+      if (defined(invoker.deps)) {
+        mojom_deps += invoker.deps
+      }
+      if (defined(invoker.public_deps)) {
+        mojom_deps += invoker.public_deps
+      }
+
+      # Depend on the generated Dart package for all of our mojom dependencies.
+      foreach(d, mojom_deps) {
+        dep_label = get_label_info(d, "label_no_toolchain")
+        deps += [ "${dep_label}_dart" ]
+      }
     }
   }
 
