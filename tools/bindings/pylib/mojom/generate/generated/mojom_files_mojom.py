@@ -18,6 +18,7 @@ class MojomFile(object):
       _descriptor.SingleFieldGroup('imports', _descriptor.GenericArrayType(_descriptor.TYPE_STRING, nullable=True), 4, 0),
       _descriptor.SingleFieldGroup('declared_mojom_objects', _descriptor.StructType(lambda: KeysByType), 5, 0),
       _descriptor.SingleFieldGroup('serialized_runtime_type_info', _descriptor.TYPE_NULLABLE_STRING, 6, 0),
+      _descriptor.SingleFieldGroup('comments', _descriptor.StructType(lambda: mojom_types_mojom.Comments, nullable=True), 7, 0),
     ],
   }
 

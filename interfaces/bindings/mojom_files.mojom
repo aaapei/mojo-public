@@ -74,6 +74,9 @@ struct MojomFile {
   // this. This string contains the base64 encoding of the gzip-compressed
   // bytes.
   string? serialized_runtime_type_info;
+
+  // Comments attached to the file.
+  Comments? comments;
 };
 
 // Represents a directed acyclic graph of MojomFiles.

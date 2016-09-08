@@ -459,6 +459,28 @@ struct DeclarationData {
   // that refers to the containing struct or interface. This field plays a
   // role inverse to that of |contained_declarations|.
   string? container_type_key;
+
+  // Comments that are attached to the declared object.
+  Comments? comments;
+};
+
+struct Comments {
+  // Comments attached to the attributes attached to the declared object.
+  Comments? for_attributes;
+
+  // Comments above the declared object.
+  array<string> above;
+
+  // Comments to the left of the declared object.
+  array<string> left;
+
+  // Comments to the right of the declared object.
+  array<string> right;
+
+  // Comments that are in the body of the declared object but not attached to
+  // any contained declared objects. These comments are generally found at the
+  // bottom of the declared object's body.
+  array<string> at_bottom;
 };
 
 struct SourceFileInfo {

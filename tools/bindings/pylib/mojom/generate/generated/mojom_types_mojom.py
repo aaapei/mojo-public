@@ -238,6 +238,19 @@ class DeclarationData(object):
       _descriptor.SingleFieldGroup('source_file_info', _descriptor.StructType(lambda: SourceFileInfo, nullable=True), 5, 0),
       _descriptor.SingleFieldGroup('contained_declarations', _descriptor.StructType(lambda: ContainedDeclarations, nullable=True), 6, 0),
       _descriptor.SingleFieldGroup('container_type_key', _descriptor.TYPE_NULLABLE_STRING, 7, 0),
+      _descriptor.SingleFieldGroup('comments', _descriptor.StructType(lambda: Comments, nullable=True), 8, 0),
+    ],
+  }
+
+class Comments(object):
+  __metaclass__ = _reflection.MojoStructType
+  DESCRIPTOR = {
+    'fields': [
+      _descriptor.SingleFieldGroup('for_attributes', _descriptor.StructType(lambda: Comments, nullable=True), 0, 0),
+      _descriptor.SingleFieldGroup('above', _descriptor.GenericArrayType(_descriptor.TYPE_STRING), 1, 0),
+      _descriptor.SingleFieldGroup('left', _descriptor.GenericArrayType(_descriptor.TYPE_STRING), 2, 0),
+      _descriptor.SingleFieldGroup('right', _descriptor.GenericArrayType(_descriptor.TYPE_STRING), 3, 0),
+      _descriptor.SingleFieldGroup('at_bottom', _descriptor.GenericArrayType(_descriptor.TYPE_STRING), 4, 0),
     ],
   }
 
