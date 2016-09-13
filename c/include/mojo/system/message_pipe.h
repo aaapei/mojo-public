@@ -12,6 +12,7 @@
 #include <mojo/macros.h>
 #include <mojo/system/handle.h>
 #include <mojo/system/result.h>
+#include <stdint.h>
 
 // |MojoCreateMessagePipeOptions|: Used to specify creation parameters for a
 // message pipe to |MojoCreateMessagePipe()|.

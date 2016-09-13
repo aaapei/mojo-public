@@ -13,6 +13,7 @@
 #include <mojo/system/handle.h>
 #include <mojo/system/result.h>
 #include <mojo/system/time.h>
+#include <stdint.h>
 
 MOJO_BEGIN_EXTERN_C
 

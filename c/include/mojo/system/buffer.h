@@ -15,6 +15,7 @@
 #include <mojo/macros.h>
 #include <mojo/system/handle.h>
 #include <mojo/system/result.h>
+#include <stdint.h>
 
 // |MojoCreateSharedBufferOptions|: Used to specify creation parameters for a
 // shared buffer to |MojoCreateSharedBuffer()|.
