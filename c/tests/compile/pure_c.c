@@ -13,6 +13,7 @@
 #include <mojo/result.h>
 #include <mojo/system/buffer.h>
 #include <mojo/system/data_pipe.h>
+#include <mojo/system/event_pair.h>
 #include <mojo/system/handle.h>
 #include <mojo/system/main.h>
 #include <mojo/system/message_pipe.h>
